@@ -1,0 +1,15 @@
+name: 'terra-test-runner'
+
+author: ''
+
+description: ''
+
+inputs:
+  tests:
+    description: 'Comma-separated list of tests'
+    default: 'data-repo-resilency'
+    required: true
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
