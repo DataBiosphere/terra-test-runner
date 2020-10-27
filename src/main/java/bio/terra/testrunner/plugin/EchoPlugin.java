@@ -7,13 +7,13 @@ public class EchoPlugin implements Plugin<Project> {
   @Override
   public void apply(Project project) {
     EchoPluginExtension extension =
-        project.getExtensions().create("echoext", EchoPluginExtension.class);
+        project.getExtensions().create("echoPluginExt", EchoPluginExtension.class);
 
     project
         .task("echo")
         .doLast(
             task -> {
-              System.out.println("ACK: " + extension.getIn());
+              System.out.println("ACK: " + extension.getMsg());
             });
   }
 }
