@@ -1,13 +1,13 @@
 package bio.terra.testrunner.plugin;
 
 public class EchoPluginExtension {
-  String in = "echo";
+  String msg = "echo";
 
-  public String getIn() {
-    return in;
+  public String getMsg() {
+    return msg;
   }
 
-  public void setIn(String in) {
-    this.in = in;
+  public void setMsg(String msg) {
+    this.msg = msg;
   }
 }
