@@ -1,26 +1,43 @@
 plugins {
     id 'idea'
-    id 'java-library'
+    id 'java-gradle-plugin'
     id 'maven-publish'
     id 'com.jfrog.artifactory' version '4.17.2'
     id 'com.diffplug.spotless' version '5.5.1'
-    id 'org.springframework.boot' version '2.3.4.RELEASE'
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
 
-group 'bio.terra.test-runner'
+group 'bio.terra'
 version '0.0.1-SNAPSHOT'
 
+def artifactory_username = System.getenv('ARTIFACTORY_USERNAME')
+def artifactory_password = System.getenv('ARTIFACTORY_PASSWORD')
+
+gradlePlugin {
+    plugins {
+        testRunnerPlugins {
+            id = 'bio.terra.test-runner-plugin'
+            implementationClass = 'bio.terra.testrunner.plugin.EchoPlugin'
+        }
+    }
+}
+
 repositories {
+    jcenter()
     mavenCentral()
     google()
     maven {
         url 'https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot-local/'
+        credentials {
+            username = "${artifactory_username}"
+            password = "${artifactory_password}"
+        }
     }
 }
 
 dependencies {
+    implementation 'com.google.guava:guava:29.0-jre'
     implementation group: "com.fasterxml.jackson.core", name: "jackson-databind", version: "2.11.2"
     implementation group: "javax.annotation", name: "javax.annotation-api", version: "1.3.2"
 
@@ -57,8 +74,18 @@ spotless {
     }
 }
 
-def artifactory_username = System.getenv('ARTIFACTORY_USERNAME')
-def artifactory_password = System.getenv('ARTIFACTORY_PASSWORD')
+publishing {
+    publications {
+        testRunnerLibrary(MavenPublication) {
+            from components.java
+            versionMapping {
+                usage("java-runtime") {
+                    fromResolutionResult()
+                }
+            }
+        }
+    }
+}
 
 gradle.taskGraph.whenReady { taskGraph ->
     if (taskGraph.hasTask(artifactoryPublish) &&
@@ -67,28 +94,18 @@ gradle.taskGraph.whenReady { taskGraph ->
     }
 }
 
-publishing {
-    publications {
-        "$rootProject.name"(MavenPublication) {
-            groupId group
-            artifactId rootProject.name
-            version version
-            from components.java
-        }
-    }
-}
-
 artifactory {
     publish {
-        contextUrl = 'https://broadinstitute.jfrog.io/broadinstitute/'
+        contextUrl = 'https://broadinstitute.jfrog.io/broadinstitute'
         repository {
             repoKey = 'libs-snapshot-local'
             username = "${artifactory_username}"
             password = "${artifactory_password}"
         }
         defaults {
-            publications(
-                    'terra-test-runner')
+            publications('testRunnerLibrary')
+            publishArtifacts = true
+            publishPom = true
         }
     }
 }
