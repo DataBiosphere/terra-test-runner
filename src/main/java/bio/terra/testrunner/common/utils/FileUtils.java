@@ -14,11 +14,11 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.ArchiveOutputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
-import org.gradle.internal.impldep.org.apache.commons.compress.archivers.ArchiveEntry;
-import org.gradle.internal.impldep.org.apache.commons.compress.archivers.ArchiveOutputStream;
-import org.gradle.internal.impldep.org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.gradle.internal.impldep.org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 
 public final class FileUtils {
   private FileUtils() {}

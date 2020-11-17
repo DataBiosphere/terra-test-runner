@@ -11,9 +11,30 @@ import java.util.List;
 
 public class PrintHelp {
   public static void main(String[] args) throws IOException {
+    System.out.println(
+        ANSI_PURPLE
+            + "Usage (PrintHelp): ./gradlew printHelp --args=\"parentDirectory\""
+            + ANSI_RESET
+            + System.lineSeparator()
+            + "  parentDirectory = parent directory to look for test configuration or suite JSON file"
+            + System.lineSeparator());
+    File file;
+    if (args.length >= 1) {
+      file = new File(args[0]);
+      if (!file.isAbsolute()) {
+        String cwd = System.getProperty("user.dir");
+        file = new File(cwd, args[0]);
+      }
+      if (file.exists()) parentDirectory = file.toPath();
+      else {
+        System.out.println(
+            String.format("Directory %s does not exist ", parentDirectory.toString()));
+      }
+    }
     printHelp();
   }
 
+  private static Path parentDirectory = null;
   public static final String ANSI_RESET = "\u001B[0m";
   public static final String ANSI_PURPLE = "\u001B[35m";
 
@@ -33,9 +54,9 @@ public class PrintHelp {
             + System.lineSeparator());
     // print out the available test configurations and suites found in the resources directory
     System.out.println("  The following test configuration files were found:");
-    printAvailableFiles(TestConfiguration.resourceDirectory, null);
+    printAvailableFiles(TestConfiguration.resourceDirectory, parentDirectory);
     System.out.println("  The following test suite files were found:");
-    printAvailableFiles(TestSuite.resourceDirectory, null);
+    printAvailableFiles(TestSuite.resourceDirectory, parentDirectory);
     // execute a test configuration or suite while locking server
     System.out.println(
         ANSI_PURPLE
@@ -85,7 +106,7 @@ public class PrintHelp {
             + System.lineSeparator());
     // print out the available measurement lists found in the resources directory
     System.out.println("  The following measurement lists were found:");
-    printAvailableFiles(MeasurementList.resourceDirectory, null);
+    printAvailableFiles(MeasurementList.resourceDirectory, parentDirectory);
 
     // upload results and measurements for a test run
     System.out.println(
@@ -147,7 +168,9 @@ public class PrintHelp {
       parentDirectoryFile =
           new File(PrintHelp.class.getClassLoader().getResource(subDirectoryName).getFile());
     } else {
+      System.out.println(subDirectoryName);
       parentDirectoryFile = parentDirectory.resolve(subDirectoryName).toFile();
+      System.out.println(parentDirectoryFile.toString());
     }
 
     List<String> availableTestConfigs = FileUtils.getFilesInDirectory(parentDirectoryFile);
