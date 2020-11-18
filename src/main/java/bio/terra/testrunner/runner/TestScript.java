@@ -2,8 +2,13 @@ package bio.terra.testrunner.runner;
 
 import bio.terra.testrunner.runner.config.ServerSpecification;
 import bio.terra.testrunner.runner.config.TestUserSpecification;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 
+@SuppressFBWarnings(
+    value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
+    justification =
+        "This is an abstract base class, so some properties are only used in sub-classes.")
 public abstract class TestScript {
   /** Public constructor so that this class can be instantiated via reflection. */
   public TestScript() {}

@@ -2,6 +2,7 @@ package bio.terra.testrunner.runner;
 
 import bio.terra.testrunner.common.BasicStatistics;
 import bio.terra.testrunner.runner.config.TestScriptSpecification;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
@@ -14,9 +15,9 @@ public class TestScriptResult {
    * This class does not include a reference to the full TestScriptSpecification or the list of
    * UserJourneyResults.
    */
-  // @SuppressFBWarnings(
-  //        value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
-  //        justification = "This POJO class is used for easy serialization to JSON using Jackson.")
+  @SuppressFBWarnings(
+      value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
+      justification = "This POJO class is used for easy serialization to JSON using Jackson.")
   public static class TestScriptResultSummary {
     public String testScriptDescription;
 

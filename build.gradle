@@ -4,6 +4,7 @@ plugins {
     id 'maven-publish'
     id 'com.jfrog.artifactory' version '4.17.2'
     id 'com.diffplug.spotless' version '5.5.1'
+    id 'com.github.spotbugs' version '4.0.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8
@@ -42,56 +43,34 @@ repositories {
 
 dependencies {
     ext {
-        apacheCompress = '1.20'
-        apacheLang3 = '3.11'
-        apacheMath = '3.6.1'
-        googleCloud = '1.124.2'
-        googleHttpClient = '1.38.0'
-        googleOauth2 = '0.22.0'
-        googleLogging = '1.102.0'
-        googleMonitoring = '2.0.7'
-        googleStorage = '1.113.2'
+        findbugsAnnotations = "3.0.1"
+
         jackson = '2.11.3'
         kubernetesClient = '10.0.0'
+        logback = '1.2.3'
         slf4j = '1.7.30'
+        apacheMath = '3.6.1'
+
+        googleOauth2 = '0.22.0'
+        googleCloud = '1.124.2'
+        googleMonitoring = '2.0.7'
+        googleLogging = '1.102.0'
+        googleStorage = '1.113.2'
     }
 
-    implementation 'com.google.guava:guava:29.0-jre'
-    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: "${jackson}"
+    compileOnly "com.google.code.findbugs:annotations:${findbugsAnnotations}"
+
     implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: "${jackson}"
-    implementation group: "javax.annotation", name: "javax.annotation-api", version: "1.3.2"
-
     implementation group: 'io.kubernetes', name: 'client-java', version: "${kubernetesClient}"
-
-    implementation group: 'org.springframework.boot', name: 'spring-boot', version: '2.3.4.RELEASE'
-    implementation group: 'org.springframework.boot', name: 'spring-boot-autoconfigure', version: '2.3.4.RELEASE'
-    implementation group: 'org.springframework.boot', name: 'spring-boot-starter', version: '2.3.4.RELEASE'
-    implementation group: 'org.springframework', name: 'spring-context', version: '5.2.9.RELEASE'
-    implementation group: 'commons-io', name: 'commons-io', version: '2.8.0'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: "${logback}"
     implementation group: 'org.slf4j', name: 'slf4j-api', version: "${slf4j}"
     implementation group: 'org.apache.commons', name: 'commons-math3', version: "${apacheMath}"
-    implementation group: 'org.apache.commons', name: 'commons-lang3', version: "${apacheLang3}"
+
     implementation group: 'com.google.auth', name: 'google-auth-library-oauth2-http', version: "${googleOauth2}"
     implementation group: 'com.google.cloud', name: 'google-cloud-bigquery', version: "${googleCloud}"
     implementation group: 'com.google.cloud', name: 'google-cloud-monitoring', version: "${googleMonitoring}"
     implementation group: 'com.google.cloud', name: 'google-cloud-logging', version: "${googleLogging}"
     implementation group: 'com.google.cloud', name: 'google-cloud-storage', version: "${googleStorage}"
-    implementation group: 'com.google.http-client', name: 'google-http-client', version: "${googleHttpClient}"
-    implementation group: 'org.apache.commons', name: 'commons-compress', version: "${apacheCompress}"
-
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-
-    testImplementation group: "org.junit.jupiter", name: "junit-jupiter-engine", version: "5.6.2"
-    testImplementation group: "org.springframework", name: "spring-test", version: "5.2.9.RELEASE"
-
-    annotationProcessor group: "org.springframework.boot", name: "spring-boot-configuration-processor", version: "2.3.4.RELEASE"
-}
-
-// Exclude the Spring logger, so everything will use SLF4J
-configurations {
-    all {
-        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
-    }
 }
 
 test {
@@ -105,35 +84,6 @@ spotless {
     java {
         googleJavaFormat()
     }
-}
-
-task(runTest, dependsOn: 'classes', type: JavaExec) {
-    main = "bio.terra.testrunner.common.commands.RunTest"
-    classpath = sourceSets.main.runtimeClasspath
-}
-task(lockNamespace, dependsOn: 'classes', type: JavaExec) {
-    main = "bio.terra.testrunner.common.commands.LockNamespace"
-    classpath = sourceSets.main.runtimeClasspath
-}
-task(unlockNamespace, dependsOn: 'classes', type: JavaExec) {
-    main = "bio.terra.testrunner.common.commands.UnlockNamespace"
-    classpath = sourceSets.main.runtimeClasspath
-}
-task(lockAndRunTest, dependsOn: 'classes', type: JavaExec) {
-    main = "bio.terra.testrunner.common.commands.LockAndRunTest"
-    classpath = sourceSets.main.runtimeClasspath
-}
-task(collectMeasurements, dependsOn: 'classes', type: JavaExec) {
-    main = "bio.terra.testrunner.common.commands.CollectMeasurements"
-    classpath = sourceSets.main.runtimeClasspath
-}
-task(uploadResults, dependsOn: 'classes', type: JavaExec) {
-    main = "bio.terra.testrunner.common.commands.UploadResults"
-    classpath = sourceSets.main.runtimeClasspath
-}
-task(printHelp, dependsOn: 'classes', type: JavaExec) {
-    main = "bio.terra.testrunner.common.commands.PrintHelp"
-    classpath = sourceSets.main.runtimeClasspath
 }
 
 publishing {
