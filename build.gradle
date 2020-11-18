@@ -6,7 +6,7 @@ plugins {
     id 'com.diffplug.spotless' version '5.5.1'
 }
 
-sourceCompatibility = JavaVersion.VERSION_11
+sourceCompatibility = JavaVersion.VERSION_1_8
 
 group 'bio.terra'
 version '0.0.1-SNAPSHOT'
