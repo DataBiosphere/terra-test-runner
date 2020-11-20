@@ -18,10 +18,6 @@ def artifactory_password = System.getenv('ARTIFACTORY_PASSWORD')
 
 gradlePlugin {
     plugins {
-        testRunnerEchoPlugin {
-            id = 'bio.terra.test-runner-echo-plugin'
-            implementationClass = 'bio.terra.testrunner.plugin.EchoPlugin'
-        }
         testRunnerPlugin {
             id = 'bio.terra.test-runner-plugin'
             implementationClass = 'bio.terra.testrunner.plugin.TestRunnerPlugin'
