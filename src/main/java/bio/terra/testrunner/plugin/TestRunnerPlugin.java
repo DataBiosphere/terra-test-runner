@@ -16,9 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class implements a Gradle plugin that auto-populates the Test Runner tasks.
- * These tasks all extend JavaExec, which jobs off a separate JVM to run the task,
- * instead of running in-process with Gradle.
+ * This class implements a Gradle plugin that auto-populates the Test Runner tasks. These tasks all
+ * extend JavaExec, which jobs off a separate JVM to run the task, instead of running in-process
+ * with Gradle.
  */
 public class TestRunnerPlugin implements Plugin<Project> {
   private static final Logger logger = LoggerFactory.getLogger(TestRunnerPlugin.class);
