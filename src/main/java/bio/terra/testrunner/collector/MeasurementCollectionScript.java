@@ -22,10 +22,11 @@ public abstract class MeasurementCollectionScript<T> {
   protected MeasurementResultSummary summary;
 
   @SuppressFBWarnings(
-      value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
+      value = {"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD", "UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD"},
       justification = "This POJO class is used for easy serialization to JSON using Jackson.")
   public static class MeasurementResultSummary {
     public String description;
+
     public BasicStatistics statistics;
 
     public MeasurementResultSummary() {}
