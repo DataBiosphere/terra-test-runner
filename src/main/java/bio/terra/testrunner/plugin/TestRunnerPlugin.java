@@ -26,14 +26,31 @@ public class TestRunnerPlugin implements Plugin<Project> {
   private static final String PROPERTY_NAME_SOURCE_SETS = "sourceSets";
   private static final String SOURCE_SET_NAME_MAIN = "main";
 
+  /**
+   * This class defines a set of properties that are relevant to >1 task. These values can be set in
+   * the calling Gradle file and supplied to each task when it's called. This class is not a good
+   * place to put task-specific variables (e.g. the config file for the runTest task).
+   */
+  public static class TestRunnerPluginExtension {
+    // specifies the directory in which to look for service account credential files
+    // this value overrides the default one specified in the service account specification file
+    String SaKeyDirectoryPath;
+
+    public String getSaKeyDirectoryPath() {
+      return SaKeyDirectoryPath;
+    }
+
+    public void setSaKeyDirectoryPath(String SaKeyDirectoryPath) {
+      this.SaKeyDirectoryPath = SaKeyDirectoryPath;
+    }
+  }
+
   @Override
   public void apply(Project project) {
     // create a default version of the extension = properties relevant to >1 task
     // these values can be overridden by defining them in the build.gradle file
     logger.debug("Adding the TestRunner plugin extension to {}", project.getName());
-    project
-        .getExtensions()
-        .create(TestRunnerPluginExtension.EXTENSION_NAME, TestRunnerPluginExtension.class);
+    project.getExtensions().create("testRunner", TestRunnerPluginExtension.class);
 
     // apply the Java plugin, so that the JavaExec task will work
     logger.debug("Applying the Java plugin to {}", project.getName());
@@ -51,14 +68,20 @@ public class TestRunnerPlugin implements Plugin<Project> {
       UploadResults.class
     };
     TaskContainer taskContainer = project.getTasks();
-    for (int ctr = 0; ctr < commandClasses.length; ctr++) {
-      Class commandClass = commandClasses[ctr];
+    for (Class commandClass : commandClasses) {
       taskContainer
           .create(commandClass.getSimpleName(), TestRunnerTask.class)
           .setMain(commandClass.getCanonicalName());
     }
 
     // set the classpath of all tasks to sourceSets.main.runtimeClasspath
+    // Note: This next part took me a long time to figure out. My current
+    // understanding is that there are 3 phases of the Gradle build from the
+    // plugin's perspective:
+    //   1. plugin adds tasks to the Gradle project definition
+    //   2. Gradle "evaluates" the project, which includes populating the runtime classpath
+    //   3. plugin can access any property of the project (e.g. runtime classpath) to pass to its
+    // own tasks/code
     logger.debug(
         "Setting the classpath of all TestRunner tasks to sourceSets.main.runtimeClasspath");
     project.afterEvaluate(
@@ -72,6 +95,12 @@ public class TestRunnerPlugin implements Plugin<Project> {
                   testRunnerTask ->
                       testRunnerTask.setClasspath(
                           sourceSets.findByName(SOURCE_SET_NAME_MAIN).getRuntimeClasspath()));
+
+          // The commented out lines below show how to access properties set in the extension
+          // definition in the calling build.gradle file
+          /*TestRunnerPluginExtension testRunnerPluginExtension =
+              (TestRunnerPluginExtension) project.getExtensions().findByName("testRunner");
+          System.out.println("SaKeyDirectoryPath: " + testRunnerPluginExtension.getSaKeyDirectoryPath());*/
         });
   }
 }
