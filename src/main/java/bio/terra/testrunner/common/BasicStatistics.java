@@ -1,7 +1,11 @@
 package bio.terra.testrunner.common;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
+@SuppressFBWarnings(
+    value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
+    justification = "This POJO class is used for easy serialization to JSON using Jackson.")
 public class BasicStatistics {
 
   public double min;

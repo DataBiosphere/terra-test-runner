@@ -3,6 +3,7 @@ package bio.terra.testrunner.collector;
 import bio.terra.testrunner.common.BasicStatistics;
 import bio.terra.testrunner.runner.config.ServerSpecification;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,11 +21,12 @@ public abstract class MeasurementCollectionScript<T> {
   protected boolean saveRawDataPoints;
   protected MeasurementResultSummary summary;
 
-  // @SuppressFBWarnings(
-  //        value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
-  //        justification = "This POJO class is used for easy serialization to JSON using Jackson.")
+  @SuppressFBWarnings(
+      value = {"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD", "UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD"},
+      justification = "This POJO class is used for easy serialization to JSON using Jackson.")
   public static class MeasurementResultSummary {
     public String description;
+
     public BasicStatistics statistics;
 
     public MeasurementResultSummary() {}

@@ -2,8 +2,13 @@ package bio.terra.testrunner.runner;
 
 import bio.terra.testrunner.runner.config.ServerSpecification;
 import bio.terra.testrunner.runner.config.TestUserSpecification;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 
+@SuppressFBWarnings(
+    value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
+    justification =
+        "billingAccount: There are no disruptive scripts that currently need a billing account, but a disruptive script should have all the information that a test script has.")
 public abstract class DisruptiveScript {
 
   /** Public constructor so that this class can be instantiated via reflection. */

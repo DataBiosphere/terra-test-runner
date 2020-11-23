@@ -2,8 +2,12 @@ package bio.terra.testrunner.collector.config;
 
 import bio.terra.testrunner.collector.MeasurementCollectionScript;
 import bio.terra.testrunner.runner.config.SpecificationInterface;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 
+@SuppressFBWarnings(
+    value = "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD",
+    justification = "This POJO class is used for easy serialization to JSON using Jackson.")
 public class MeasurementCollectionScriptSpecification implements SpecificationInterface {
   public String name;
   public String description;

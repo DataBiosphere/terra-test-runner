@@ -37,5 +37,8 @@ jobs:
       - name: Lint
         run: ./gradlew spotlessCheck
 
+      - name: Static analysis
+        run: ./gradlew spotbugsMain
+
       - name: Test with Gradle
         run: ./gradlew test

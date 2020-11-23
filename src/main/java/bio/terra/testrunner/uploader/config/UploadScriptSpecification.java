@@ -2,8 +2,12 @@ package bio.terra.testrunner.uploader.config;
 
 import bio.terra.testrunner.runner.config.SpecificationInterface;
 import bio.terra.testrunner.uploader.UploadScript;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 
+@SuppressFBWarnings(
+    value = "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD",
+    justification = "This POJO class is used for easy serialization to JSON using Jackson.")
 public class UploadScriptSpecification implements SpecificationInterface {
   public String name;
   public String description;
