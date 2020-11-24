@@ -89,23 +89,23 @@ public class LogsUtils {
     logger.info("startTimestamp: {}, endTimestamp: {}", startTimestamp, endTimestamp);
 
     return "logName="
-        + ProjectName.of(server.project).toString()
+        + ProjectName.of(server.cluster.project).toString()
         + "/logs/stdout"
         + " AND resource.type=\"k8s_container\""
         + " AND resource.labels.project_id=\""
-        + server.project
+        + server.cluster.project
         + "\""
         + " AND resource.labels.location=\""
-        + server.region
+        + server.cluster.region
         + "\""
         + " AND resource.labels.cluster_name=\""
-        + server.clusterShortName
+        + server.cluster.clusterShortName
         + "\""
         + " AND resource.labels.namespace_name=\""
-        + server.namespace
+        + server.cluster.namespace
         + "\""
         + " AND labels.k8s-pod/component=\""
-        + server.containerName
+        + server.cluster.containerName
         + "\""
         + " AND timestamp>=\""
         + startTimestamp

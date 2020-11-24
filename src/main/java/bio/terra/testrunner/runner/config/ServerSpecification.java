@@ -7,25 +7,41 @@ import java.io.InputStream;
 public class ServerSpecification implements SpecificationInterface {
   public String name;
   public String description = "";
-  public String datarepoUri;
+
+  // =============================================
+  // Terra services: information required to hit service endpoints
+  // SAM-related fields
   public String samUri;
+
+  // Data Repo-related fields
+  public String datarepoUri;
   public String samResourceIdForDatarepo;
 
-  // note: the below information specifies the Kubernetes cluster that the Test Runner may
-  // manipulate (e.g. kill pods, scale up/down) so in the future, if we want to manipulate the
-  // cluster/namespace where SAM or WorkspaceManager is running, that would be the cluster specified
-  // by the below fields
-  public String clusterName;
-  public String clusterShortName;
-  public String region;
-  public String project;
-  public String namespace;
-  public String containerName;
+  // Buffer Service-related fields
+  public String bufferUri;
+  public String bufferClientServiceAccountFile;
+  public ServiceAccountSpecification bufferClientServiceAccount;
 
-  public DeploymentScriptSpecification deploymentScript;
+  // Workspace Manager-related fields
+  public String workspaceManagerUri;
+
+  // =============================================
+  // Cluster & deployment: information required to manipulate Kubernetes and deploy
+  // Kubernetes cluster specification
+  public ClusterSpecification cluster;
+
+  // this service account has permissions to deploy, manipulate Kubernetes, and query the metrics
+  // and logs servers
   public String testRunnerServiceAccountFile;
   public ServiceAccountSpecification testRunnerServiceAccount;
+
+  // how to (optionally) deploy before each test run
+  public DeploymentScriptSpecification deploymentScript;
+
+  // when set to true, all manipulations of Kubernetes are skipped
   public boolean skipKubernetes = false;
+
+  // when set to true, there is no deploy before each test run
   public boolean skipDeployment = false;
 
   public static final String resourceDirectory = "servers";
@@ -48,9 +64,16 @@ public class ServerSpecification implements SpecificationInterface {
         FileUtils.getResourceFileHandle(resourceDirectory + "/" + resourceFileName);
     ServerSpecification server = objectMapper.readValue(inputStream, ServerSpecification.class);
 
-    // read in the service account file
+    // read in the test runner service account file
     server.testRunnerServiceAccount =
         ServiceAccountSpecification.fromJSONFile(server.testRunnerServiceAccountFile);
+
+    // read in the buffer service client service account file, if specified
+    if (server.bufferClientServiceAccountFile != null
+        && !server.bufferClientServiceAccountFile.isEmpty()) {
+      server.bufferClientServiceAccount =
+          ServiceAccountSpecification.fromJSONFile(server.bufferClientServiceAccountFile);
+    }
 
     return server;
   }
@@ -60,28 +83,8 @@ public class ServerSpecification implements SpecificationInterface {
    * null.
    */
   public void validate() {
-    if (datarepoUri == null || datarepoUri.equals("")) {
-      throw new IllegalArgumentException("Data Repo server URI cannot be empty");
-    }
-    if (samUri == null || samUri.equals("")) {
-      throw new IllegalArgumentException("SAM server URI cannot be empty");
-    }
-    if (samResourceIdForDatarepo == null || samResourceIdForDatarepo.equals("")) {
-      throw new IllegalArgumentException("SAM resource id for Data Repo cannot be empty");
-    }
-
     if (!skipKubernetes) {
-      if (clusterName == null || clusterName.equals("")) {
-        throw new IllegalArgumentException("Server cluster name cannot be empty");
-      } else if (clusterShortName == null || clusterShortName.equals("")) {
-        throw new IllegalArgumentException("Server cluster short name cannot be empty");
-      } else if (region == null || region.equals("")) {
-        throw new IllegalArgumentException("Server cluster region cannot be empty");
-      } else if (project == null || project.equals("")) {
-        throw new IllegalArgumentException("Server cluster project cannot be empty");
-      } else if (containerName == null || containerName.equals("")) {
-        throw new IllegalArgumentException("Server cluster container name cannot be empty");
-      }
+      cluster.validate();
     }
     if (!skipDeployment) {
       if (deploymentScript == null) {
@@ -91,5 +94,9 @@ public class ServerSpecification implements SpecificationInterface {
     }
 
     testRunnerServiceAccount.validate();
+
+    if (bufferClientServiceAccount != null) {
+      bufferClientServiceAccount.validate();
+    }
   }
 }

@@ -101,9 +101,9 @@ public class MetricsUtils {
   /** Build a metrics filter on the container name and namespace */
   public static String buildContainerAndNamespaceFilter(ServerSpecification server) {
     return "resource.labels.container_name=\""
-        + server.containerName
+        + server.cluster.containerName
         + "\" AND resource.labels.namespace_name=\""
-        + server.namespace
+        + server.cluster.namespace
         + "\"";
   }
 }

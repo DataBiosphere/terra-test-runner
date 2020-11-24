@@ -15,7 +15,7 @@ public class LockNamespace {
   }
 
   public static void lockNamespace() throws Exception {
-    String namespace = LockAndRunTest.getServer().namespace;
+    String namespace = LockAndRunTest.getServer().cluster.namespace;
     logger.info("Lock namespace by creating secret named " + namespace + "-inuse");
     List<String> scriptArgs = new ArrayList<>();
     scriptArgs.add("tools/namespaceLock.sh");
