@@ -33,6 +33,21 @@ public final class AuthenticationUtils {
           "https://www.googleapis.com/auth/bigquery",
           "https://www.googleapis.com/auth/devstorage.full_control");
 
+  // cloud platform scope
+  private static final String cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform";
+
+  /**
+   * Build a domain-wide delegated user credential with ("openid", "email", "profile") scopes.
+   *
+   * <p>This requires the email of the user, and a service account that has permissions to get
+   * domain-wide delegated user credentials. My understanding is that domain-wide delegation is
+   * GSuite-related, not GCP-related, and also not currently Terraform-able.
+   *
+   * <p>This credential is used, for example, with the Harry Potter users.
+   *
+   * @param testUserSpecification
+   * @return a domain-wide delegated user credential
+   */
   public static GoogleCredentials getDelegatedUserCredential(
       TestUserSpecification testUserSpecification) throws IOException {
     GoogleCredentials delegatedUserCredential =
@@ -55,22 +70,50 @@ public final class AuthenticationUtils {
     return delegatedUserCredential;
   }
 
+  /**
+   * Build a service account credential with "cloud-platform" scope. This requires a service account
+   * client secret file. This credential is used, for example, to manipulate the Kubernetes cluster
+   * and run deploy scripts.
+   *
+   * @param serviceAccount
+   * @return a service account credential
+   */
   public static GoogleCredentials getServiceAccountCredential(
       ServiceAccountSpecification serviceAccount) throws IOException {
+    return getServiceAccountCredential(serviceAccount, false);
+  }
+
+  /**
+   * Build a service account credential with: ("openid", "email", "profile") scopes when
+   * withUserLoginScopes is true "cloud-platform" scope when withUserLoginScopes is false This
+   * requires a service account client secret file. This credential with user login scopes is used,
+   * for example, to call the Buffer Service with its single designated client service account.
+   *
+   * @param serviceAccount
+   * @return a service account credential
+   */
+  public static GoogleCredentials getServiceAccountCredential(
+      ServiceAccountSpecification serviceAccount, boolean withUserLoginScopes) throws IOException {
     if (serviceAccountCredential != null) {
       return serviceAccountCredential;
     }
 
+    List<String> scopes =
+        withUserLoginScopes ? userLoginScopes : Collections.singletonList(cloudPlatformScope);
+
     synchronized (lockServiceAccountCredential) {
       File jsonKey = serviceAccount.jsonKeyFile;
       serviceAccountCredential =
-          ServiceAccountCredentials.fromStream(new FileInputStream(jsonKey))
-              .createScoped(
-                  Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"));
+          ServiceAccountCredentials.fromStream(new FileInputStream(jsonKey)).createScoped(scopes);
     }
     return serviceAccountCredential;
   }
 
+  /**
+   * Build an application default credential with "cloud-platform" scope.
+   *
+   * @return an application default credential
+   */
   public static GoogleCredentials getApplicationDefaultCredential() throws IOException {
     if (applicationDefaultCredential != null) {
       return applicationDefaultCredential;
@@ -79,12 +122,17 @@ public final class AuthenticationUtils {
     synchronized (lockApplicationDefaultCredential) {
       applicationDefaultCredential =
           GoogleCredentials.getApplicationDefault()
-              .createScoped(
-                  Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"));
+              .createScoped(Collections.singletonList(cloudPlatformScope));
     }
     return applicationDefaultCredential;
   }
 
+  /**
+   * Refresh the credential if expired and then return its access token.
+   *
+   * @param credential
+   * @return access token
+   */
   public static AccessToken getAccessToken(GoogleCredentials credential) {
     try {
       credential.refreshIfExpired();

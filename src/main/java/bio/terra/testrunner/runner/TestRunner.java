@@ -234,7 +234,10 @@ public class TestRunner {
       for (int ujCtr = 0;
           ujCtr < testScriptSpecification.numberOfUserJourneyThreadsToRun;
           ujCtr++) {
-        TestUserSpecification testUser = config.testUsers.get(ujCtr % config.testUsers.size());
+        TestUserSpecification testUser =
+            config.testUsers.isEmpty()
+                ? null
+                : config.testUsers.get(ujCtr % config.testUsers.size());
         // add a description to the user journey threads/results that includes any test script
         // parameters
         Future<UserJourneyResult> userJourneyFuture =

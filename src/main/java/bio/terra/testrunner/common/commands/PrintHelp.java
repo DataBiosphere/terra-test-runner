@@ -150,6 +150,10 @@ public class PrintHelp {
       parentDirectoryFile = parentDirectory.resolve(subDirectoryName).toFile();
     }
 
+    if (!parentDirectoryFile.exists()) {
+      return;
+    }
+
     List<String> availableTestConfigs = FileUtils.getFilesInDirectory(parentDirectoryFile);
     for (String testConfigFilePath : availableTestConfigs) {
       System.out.println("    " + testConfigFilePath);
