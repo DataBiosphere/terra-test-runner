@@ -6,6 +6,7 @@ import bio.terra.testrunner.runner.config.TestConfiguration;
 import bio.terra.testrunner.runner.config.TestSuite;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -144,13 +145,14 @@ public class PrintHelp {
     // use the resources directory as the default parent directory
     File parentDirectoryFile;
     if (parentDirectory == null) {
+      URL parentDirectoryURL = PrintHelp.class.getClassLoader().getResource(subDirectoryName);
       parentDirectoryFile =
-          new File(PrintHelp.class.getClassLoader().getResource(subDirectoryName).getFile());
+          parentDirectoryURL == null ? null : new File(parentDirectoryURL.getFile());
     } else {
       parentDirectoryFile = parentDirectory.resolve(subDirectoryName).toFile();
     }
 
-    if (!parentDirectoryFile.exists()) {
+    if (parentDirectoryFile == null || !parentDirectoryFile.exists()) {
       return;
     }
 
