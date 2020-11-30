@@ -14,7 +14,7 @@ public class UnlockNamespace {
   }
 
   public static void unlockNamespace() throws Exception {
-    String namespace = LockAndRunTest.getServer().namespace;
+    String namespace = LockAndRunTest.getServer().cluster.namespace;
     logger.info("Unlock namespace by deleting secret named " + namespace + "-inuse");
     List<String> scriptArgs = new ArrayList<>();
     scriptArgs.add("tools/deleteNamespaceLock.sh");

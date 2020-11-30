@@ -10,13 +10,19 @@ import com.google.logging.v2.ListLogEntriesRequest;
 import com.google.logging.v2.ProjectName;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LogsUtils {
   private static final Logger logger = LoggerFactory.getLogger(LogsUtils.class);
+
+  public static final List<String> loggingReadScope =
+      Collections.unmodifiableList(Arrays.asList("https://www.googleapis.com/auth/logging.read"));
 
   // The log/metric timestamps are not exact and so trying to limit results to too small a window
   // might be misleading. This parameter sets the minimum time interval size. If the interval
@@ -32,7 +38,7 @@ public class LogsUtils {
   public static LoggingClient getClientForServiceAccount(ServiceAccountSpecification serviceAccount)
       throws Exception {
     GoogleCredentials serviceAccountCredentials =
-        AuthenticationUtils.getServiceAccountCredential(serviceAccount);
+        AuthenticationUtils.getServiceAccountCredential(serviceAccount, loggingReadScope);
     LoggingSettings loggingServiceSettings =
         LoggingSettings.newBuilder()
             .setCredentialsProvider(FixedCredentialsProvider.create(serviceAccountCredentials))
@@ -89,23 +95,23 @@ public class LogsUtils {
     logger.info("startTimestamp: {}, endTimestamp: {}", startTimestamp, endTimestamp);
 
     return "logName="
-        + ProjectName.of(server.project).toString()
+        + ProjectName.of(server.cluster.project).toString()
         + "/logs/stdout"
         + " AND resource.type=\"k8s_container\""
         + " AND resource.labels.project_id=\""
-        + server.project
+        + server.cluster.project
         + "\""
         + " AND resource.labels.location=\""
-        + server.region
+        + server.cluster.region
         + "\""
         + " AND resource.labels.cluster_name=\""
-        + server.clusterShortName
+        + server.cluster.clusterShortName
         + "\""
         + " AND resource.labels.namespace_name=\""
-        + server.namespace
+        + server.cluster.namespace
         + "\""
         + " AND labels.k8s-pod/component=\""
-        + server.containerName
+        + server.cluster.containerName
         + "\""
         + " AND timestamp>=\""
         + startTimestamp

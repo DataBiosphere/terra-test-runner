@@ -73,9 +73,9 @@ public final class KubernetesClientUtils {
         "Calling the fetchGKECredentials script that uses gcloud to generate the kubeconfig file");
     List<String> scriptArgs = new ArrayList<>();
     scriptArgs.add("tools/fetchGKECredentials.sh");
-    scriptArgs.add(server.clusterShortName);
-    scriptArgs.add(server.region);
-    scriptArgs.add(server.project);
+    scriptArgs.add(server.cluster.clusterShortName);
+    scriptArgs.add(server.cluster.region);
+    scriptArgs.add(server.cluster.project);
     Process fetchCredentialsProc = ProcessUtils.executeCommand("sh", scriptArgs);
     List<String> cmdOutputLines = ProcessUtils.waitForTerminateAndReadStdout(fetchCredentialsProc);
     for (String cmdOutputLine : cmdOutputLines) {
@@ -86,7 +86,7 @@ public final class KubernetesClientUtils {
     String kubeConfigPath = System.getenv("HOME") + "/.kube/config";
     logger.debug("Kube config path: {}", kubeConfigPath);
 
-    namespace = server.namespace;
+    namespace = server.cluster.namespace;
     // load the kubeconfig object from the file
     InputStreamReader filereader =
         new InputStreamReader(new FileInputStream(kubeConfigPath), StandardCharsets.UTF_8);
@@ -95,7 +95,8 @@ public final class KubernetesClientUtils {
     // get a refreshed SA access token and its expiration time
     logger.debug("Getting a refreshed service account access token and its expiration time");
     GoogleCredentials applicationDefaultCredentials =
-        AuthenticationUtils.getServiceAccountCredential(server.testRunnerServiceAccount);
+        AuthenticationUtils.getServiceAccountCredential(
+            server.testRunnerServiceAccount, AuthenticationUtils.cloudPlatformScope);
     AccessToken accessToken = AuthenticationUtils.getAccessToken(applicationDefaultCredentials);
     Instant tokenExpiration = accessToken.getExpirationTime().toInstant();
     String expiryUTC = tokenExpiration.atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT);
@@ -113,7 +114,7 @@ public final class KubernetesClientUtils {
     userSA.put("auth-provider", authProviderSA);
 
     LinkedHashMap<String, Object> userWrapperSA = new LinkedHashMap<>();
-    userWrapperSA.put("name", server.clusterName);
+    userWrapperSA.put("name", server.cluster.clusterName);
     userWrapperSA.put("user", userSA);
 
     ArrayList<Object> usersList = new ArrayList<>();
@@ -121,12 +122,13 @@ public final class KubernetesClientUtils {
 
     // CONTEXTS: build list of one context, the specified cluster
     LinkedHashMap<String, Object> context = new LinkedHashMap<>();
-    context.put("cluster", server.clusterName);
+    context.put("cluster", server.cluster.clusterName);
     context.put(
-        "user", server.clusterName); // when is the user ever different from the cluster name?
+        "user",
+        server.cluster.clusterName); // when is the user ever different from the cluster name?
 
     LinkedHashMap<String, Object> contextWrapper = new LinkedHashMap<>();
-    contextWrapper.put("name", server.clusterName);
+    contextWrapper.put("name", server.cluster.clusterName);
     contextWrapper.put("context", context);
 
     ArrayList<Object> contextsList = new ArrayList<>();
@@ -140,7 +142,7 @@ public final class KubernetesClientUtils {
     // build the config object, replacing the contexts and users lists from the kubeconfig file with
     // the ones constructed programmatically above
     kubeConfig = new KubeConfig(contextsList, clusters, usersList);
-    kubeConfig.setContext(server.clusterName);
+    kubeConfig.setContext(server.cluster.clusterName);
 
     // build the client object from the config
     logger.debug("Building the client objects from the config");

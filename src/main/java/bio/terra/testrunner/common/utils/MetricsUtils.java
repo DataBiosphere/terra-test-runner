@@ -11,11 +11,18 @@ import com.google.monitoring.v3.ListTimeSeriesRequest;
 import com.google.monitoring.v3.ProjectName;
 import com.google.monitoring.v3.TimeInterval;
 import com.google.protobuf.util.Timestamps;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MetricsUtils {
   private static final Logger logger = LoggerFactory.getLogger(MetricsUtils.class);
+
+  public static final List<String> monitoringReadScope =
+      Collections.unmodifiableList(
+          Arrays.asList("https://www.googleapis.com/auth/monitoring.read"));
 
   // The log/metric timestamps are not exact and so trying to limit results to too small a window
   // might be misleading This parameter sets the minimum time interval size. If the interval
@@ -31,7 +38,7 @@ public class MetricsUtils {
   public static MetricServiceClient getClientForServiceAccount(
       ServiceAccountSpecification serviceAccount) throws Exception {
     GoogleCredentials serviceAccountCredentials =
-        AuthenticationUtils.getServiceAccountCredential(serviceAccount);
+        AuthenticationUtils.getServiceAccountCredential(serviceAccount, monitoringReadScope);
     MetricServiceSettings metricServiceSettings =
         MetricServiceSettings.newBuilder()
             .setCredentialsProvider(FixedCredentialsProvider.create(serviceAccountCredentials))
@@ -101,9 +108,9 @@ public class MetricsUtils {
   /** Build a metrics filter on the container name and namespace */
   public static String buildContainerAndNamespaceFilter(ServerSpecification server) {
     return "resource.labels.container_name=\""
-        + server.containerName
+        + server.cluster.containerName
         + "\" AND resource.labels.namespace_name=\""
-        + server.namespace
+        + server.cluster.namespace
         + "\"";
   }
 }

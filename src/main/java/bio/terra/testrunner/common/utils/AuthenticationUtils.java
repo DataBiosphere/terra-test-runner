@@ -24,39 +24,57 @@ public final class AuthenticationUtils {
 
   // the list of scopes we request from end users when they log in. this should always match exactly
   // what the UI requests, so our tests represent actual user behavior
-  private static final List<String> userLoginScopes = Arrays.asList("openid", "email", "profile");
+  public static final List<String> userLoginScopes =
+      Collections.unmodifiableList(Arrays.asList("openid", "email", "profile"));
 
-  // the list of "extra" scopes we request for the test users, so that we can access BigQuery and
-  // Cloud Storage directly (e.g. to query the snapshot table, write a file to a scratch bucket)
-  private static final List<String> directAccessScopes =
-      Arrays.asList(
-          "https://www.googleapis.com/auth/bigquery",
-          "https://www.googleapis.com/auth/devstorage.full_control");
+  public static final List<String> cloudPlatformScope =
+      Collections.unmodifiableList(Arrays.asList("https://www.googleapis.com/auth/cloud-platform"));
 
+  /**
+   * Build a domain-wide delegated user credential with the the specified scopes.
+   *
+   * <p>This requires the email of the user, and a service account that has permissions to get
+   * domain-wide delegated user credentials. My understanding is that domain-wide delegation is
+   * GSuite-related, not GCP-related, and also not currently Terraform-able.
+   *
+   * <p>This credential is used, for example, with the Harry Potter users.
+   *
+   * @param testUser
+   * @param scopes
+   * @return a domain-wide delegated user credential
+   */
   public static GoogleCredentials getDelegatedUserCredential(
-      TestUserSpecification testUserSpecification) throws IOException {
-    GoogleCredentials delegatedUserCredential =
-        delegatedUserCredentials.get(testUserSpecification.userEmail);
+      TestUserSpecification testUser, List<String> scopes) throws IOException {
+    GoogleCredentials delegatedUserCredential = delegatedUserCredentials.get(testUser.userEmail);
     if (delegatedUserCredential != null) {
       return delegatedUserCredential;
     }
 
-    List<String> scopes = new ArrayList<>();
-    scopes.addAll(userLoginScopes);
-    scopes.addAll(directAccessScopes);
-
     GoogleCredentials serviceAccountCredential =
-        getServiceAccountCredential(testUserSpecification.delegatorServiceAccount);
+        getServiceAccountCredential(testUser.delegatorServiceAccount, cloudPlatformScope);
     delegatedUserCredential =
-        serviceAccountCredential
-            .createScoped(scopes)
-            .createDelegated(testUserSpecification.userEmail);
-    delegatedUserCredentials.put(testUserSpecification.userEmail, delegatedUserCredential);
+        serviceAccountCredential.createScoped(scopes).createDelegated(testUser.userEmail);
+    delegatedUserCredentials.put(testUser.userEmail, delegatedUserCredential);
     return delegatedUserCredential;
   }
 
+  /**
+   * Build a service account credential with the specified scopes. This requires a service account
+   * client secret file.
+   *
+   * <p>Service account credentials are used, for example:
+   *
+   * <p>- To manipulate the Kubernetes cluster and run deploy scripts (with cloud-platform scope)
+   *
+   * <p>- To call Buffer Service with its single designated client service account (with user login
+   * scopes)
+   *
+   * @param serviceAccount
+   * @param scopes
+   * @return a service account credential
+   */
   public static GoogleCredentials getServiceAccountCredential(
-      ServiceAccountSpecification serviceAccount) throws IOException {
+      ServiceAccountSpecification serviceAccount, List<String> scopes) throws IOException {
     if (serviceAccountCredential != null) {
       return serviceAccountCredential;
     }
@@ -64,27 +82,35 @@ public final class AuthenticationUtils {
     synchronized (lockServiceAccountCredential) {
       File jsonKey = serviceAccount.jsonKeyFile;
       serviceAccountCredential =
-          ServiceAccountCredentials.fromStream(new FileInputStream(jsonKey))
-              .createScoped(
-                  Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"));
+          ServiceAccountCredentials.fromStream(new FileInputStream(jsonKey)).createScoped(scopes);
     }
     return serviceAccountCredential;
   }
 
-  public static GoogleCredentials getApplicationDefaultCredential() throws IOException {
+  /**
+   * Build an application default credential with the specified scopes.
+   *
+   * @param scopes
+   * @return an application default credential
+   */
+  public static GoogleCredentials getApplicationDefaultCredential(List<String> scopes)
+      throws IOException {
     if (applicationDefaultCredential != null) {
       return applicationDefaultCredential;
     }
 
     synchronized (lockApplicationDefaultCredential) {
-      applicationDefaultCredential =
-          GoogleCredentials.getApplicationDefault()
-              .createScoped(
-                  Collections.singletonList("https://www.googleapis.com/auth/cloud-platform"));
+      applicationDefaultCredential = GoogleCredentials.getApplicationDefault().createScoped(scopes);
     }
     return applicationDefaultCredential;
   }
 
+  /**
+   * Refresh the credential if expired and then return its access token.
+   *
+   * @param credential
+   * @return access token
+   */
   public static AccessToken getAccessToken(GoogleCredentials credential) {
     try {
       credential.refreshIfExpired();
