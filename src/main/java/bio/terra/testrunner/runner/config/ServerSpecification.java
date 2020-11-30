@@ -4,6 +4,20 @@ import bio.terra.testrunner.common.utils.FileUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 
+/**
+ * An instance of this class represents a single Terra environment or deployment. It contains all
+ * the information a client would need to talk to the services. This includes the service URIs and
+ * any additional information required to understand the connections between services (e.g.
+ * credentials required to talk to a kernel-level service, resource id that represents the Data Repo
+ * deployment in SAM).
+ *
+ * <p>Note: This class currently includes several properties specific to particular services (i.e.
+ * everything under the "Terra services: ..." comment). I don't like this hard-coding because it
+ * makes the TestRunner library "depend" on the services that it will be used to test. I think the
+ * right way to do this is for all of these properties to be added to the Kubernetes config map and
+ * removed from the ServerSpecification. We should only need the ClusterSpecification (i.e. the
+ * pointer to the appropriate Kubernetes cluster) to get these values.
+ */
 public class ServerSpecification implements SpecificationInterface {
   public String name;
   public String description = "";

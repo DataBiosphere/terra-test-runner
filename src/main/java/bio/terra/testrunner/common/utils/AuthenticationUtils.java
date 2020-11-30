@@ -33,7 +33,6 @@ public final class AuthenticationUtils {
           "https://www.googleapis.com/auth/bigquery",
           "https://www.googleapis.com/auth/devstorage.full_control");
 
-  // cloud platform scope
   private static final String cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform";
 
   /**
@@ -84,12 +83,13 @@ public final class AuthenticationUtils {
   }
 
   /**
-   * Build a service account credential with: ("openid", "email", "profile") scopes when
-   * withUserLoginScopes is true "cloud-platform" scope when withUserLoginScopes is false This
+   * Build a service account credential with the "openid", "email", and "profile" scopes when
+   * withUserLoginScopes is true, "cloud-platform" scope when withUserLoginScopes is false This
    * requires a service account client secret file. This credential with user login scopes is used,
    * for example, to call the Buffer Service with its single designated client service account.
    *
    * @param serviceAccount
+   * @param withUserLoginScopes
    * @return a service account credential
    */
   public static GoogleCredentials getServiceAccountCredential(
