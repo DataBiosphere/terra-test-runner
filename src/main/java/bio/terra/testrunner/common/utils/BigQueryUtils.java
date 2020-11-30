@@ -5,6 +5,8 @@ import bio.terra.testrunner.runner.config.TestUserSpecification;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigquery.*;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -13,6 +15,9 @@ import org.slf4j.LoggerFactory;
 
 public final class BigQueryUtils {
   private static final Logger logger = LoggerFactory.getLogger(BigQueryUtils.class);
+
+  public static final List<String> bigQueryScope =
+      Collections.unmodifiableList(Arrays.asList("https://www.googleapis.com/auth/bigquery"));
 
   private BigQueryUtils() {}
 
@@ -29,7 +34,11 @@ public final class BigQueryUtils {
         "Fetching credentials and building BigQuery client object for test user: {}",
         testUser.name);
 
-    GoogleCredentials userCredential = AuthenticationUtils.getDelegatedUserCredential(testUser);
+    // openid, email, profile + bigquery
+    List<String> scopes = bigQueryScope;
+    scopes.addAll(AuthenticationUtils.userLoginScopes);
+    GoogleCredentials userCredential =
+        AuthenticationUtils.getDelegatedUserCredential(testUser, scopes);
     BigQuery bigQuery =
         BigQueryOptions.newBuilder()
             .setProjectId(googleProjectId)
@@ -55,7 +64,7 @@ public final class BigQueryUtils {
         serviceAccount.name);
 
     GoogleCredentials serviceAccountCredentials =
-        AuthenticationUtils.getServiceAccountCredential(serviceAccount);
+        AuthenticationUtils.getServiceAccountCredential(serviceAccount, bigQueryScope);
     BigQuery bigQuery =
         BigQueryOptions.newBuilder()
             .setProjectId(googleProjectId)

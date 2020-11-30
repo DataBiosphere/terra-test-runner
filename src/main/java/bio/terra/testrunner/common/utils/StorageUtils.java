@@ -3,12 +3,18 @@ package bio.terra.testrunner.common.utils;
 import bio.terra.testrunner.runner.config.ServiceAccountSpecification;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.*;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class StorageUtils {
   private static final Logger logger = LoggerFactory.getLogger(StorageUtils.class);
+
+  public static final List<String> storageScope =
+      Collections.unmodifiableList(
+          Arrays.asList("https://www.googleapis.com/auth/devstorage.full_control"));
 
   private StorageUtils() {}
 
@@ -23,7 +29,7 @@ public class StorageUtils {
         serviceAccount.name);
 
     GoogleCredentials serviceAccountCredentials =
-        AuthenticationUtils.getServiceAccountCredential(serviceAccount);
+        AuthenticationUtils.getServiceAccountCredential(serviceAccount, storageScope);
     StorageOptions storageOptions =
         StorageOptions.newBuilder().setCredentials(serviceAccountCredentials).build();
     Storage storageClient = storageOptions.getService();

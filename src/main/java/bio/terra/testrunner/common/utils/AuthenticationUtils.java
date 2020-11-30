@@ -24,19 +24,14 @@ public final class AuthenticationUtils {
 
   // the list of scopes we request from end users when they log in. this should always match exactly
   // what the UI requests, so our tests represent actual user behavior
-  private static final List<String> userLoginScopes = Arrays.asList("openid", "email", "profile");
+  public static final List<String> userLoginScopes =
+      Collections.unmodifiableList(Arrays.asList("openid", "email", "profile"));
 
-  // the list of "extra" scopes we request for the test users, so that we can access BigQuery and
-  // Cloud Storage directly (e.g. to query the snapshot table, write a file to a scratch bucket)
-  private static final List<String> directAccessScopes =
-      Arrays.asList(
-          "https://www.googleapis.com/auth/bigquery",
-          "https://www.googleapis.com/auth/devstorage.full_control");
-
-  private static final String cloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform";
+  public static final List<String> cloudPlatformScope =
+      Collections.unmodifiableList(Arrays.asList("https://www.googleapis.com/auth/cloud-platform"));
 
   /**
-   * Build a domain-wide delegated user credential with ("openid", "email", "profile") scopes.
+   * Build a domain-wide delegated user credential with the the specified scopes.
    *
    * <p>This requires the email of the user, and a service account that has permissions to get
    * domain-wide delegated user credentials. My understanding is that domain-wide delegation is
@@ -44,62 +39,45 @@ public final class AuthenticationUtils {
    *
    * <p>This credential is used, for example, with the Harry Potter users.
    *
-   * @param testUserSpecification
+   * @param testUser
+   * @param scopes
    * @return a domain-wide delegated user credential
    */
   public static GoogleCredentials getDelegatedUserCredential(
-      TestUserSpecification testUserSpecification) throws IOException {
-    GoogleCredentials delegatedUserCredential =
-        delegatedUserCredentials.get(testUserSpecification.userEmail);
+      TestUserSpecification testUser, List<String> scopes) throws IOException {
+    GoogleCredentials delegatedUserCredential = delegatedUserCredentials.get(testUser.userEmail);
     if (delegatedUserCredential != null) {
       return delegatedUserCredential;
     }
 
-    List<String> scopes = new ArrayList<>();
-    scopes.addAll(userLoginScopes);
-    scopes.addAll(directAccessScopes);
-
     GoogleCredentials serviceAccountCredential =
-        getServiceAccountCredential(testUserSpecification.delegatorServiceAccount);
+        getServiceAccountCredential(testUser.delegatorServiceAccount, cloudPlatformScope);
     delegatedUserCredential =
-        serviceAccountCredential
-            .createScoped(scopes)
-            .createDelegated(testUserSpecification.userEmail);
-    delegatedUserCredentials.put(testUserSpecification.userEmail, delegatedUserCredential);
+        serviceAccountCredential.createScoped(scopes).createDelegated(testUser.userEmail);
+    delegatedUserCredentials.put(testUser.userEmail, delegatedUserCredential);
     return delegatedUserCredential;
   }
 
   /**
-   * Build a service account credential with "cloud-platform" scope. This requires a service account
-   * client secret file. This credential is used, for example, to manipulate the Kubernetes cluster
-   * and run deploy scripts.
+   * Build a service account credential with the specified scopes. This requires a service account
+   * client secret file.
+   *
+   * <p>Service account credentials are used, for example:
+   *
+   * <p>- To manipulate the Kubernetes cluster and run deploy scripts (with cloud-platform scope)
+   *
+   * <p>- To call Buffer Service with its single designated client service account (with user login
+   * scopes)
    *
    * @param serviceAccount
+   * @param scopes
    * @return a service account credential
    */
   public static GoogleCredentials getServiceAccountCredential(
-      ServiceAccountSpecification serviceAccount) throws IOException {
-    return getServiceAccountCredential(serviceAccount, false);
-  }
-
-  /**
-   * Build a service account credential with the "openid", "email", and "profile" scopes when
-   * withUserLoginScopes is true, "cloud-platform" scope when withUserLoginScopes is false This
-   * requires a service account client secret file. This credential with user login scopes is used,
-   * for example, to call the Buffer Service with its single designated client service account.
-   *
-   * @param serviceAccount
-   * @param withUserLoginScopes
-   * @return a service account credential
-   */
-  public static GoogleCredentials getServiceAccountCredential(
-      ServiceAccountSpecification serviceAccount, boolean withUserLoginScopes) throws IOException {
+      ServiceAccountSpecification serviceAccount, List<String> scopes) throws IOException {
     if (serviceAccountCredential != null) {
       return serviceAccountCredential;
     }
-
-    List<String> scopes =
-        withUserLoginScopes ? userLoginScopes : Collections.singletonList(cloudPlatformScope);
 
     synchronized (lockServiceAccountCredential) {
       File jsonKey = serviceAccount.jsonKeyFile;
@@ -110,19 +88,19 @@ public final class AuthenticationUtils {
   }
 
   /**
-   * Build an application default credential with "cloud-platform" scope.
+   * Build an application default credential with the specified scopes.
    *
+   * @param scopes
    * @return an application default credential
    */
-  public static GoogleCredentials getApplicationDefaultCredential() throws IOException {
+  public static GoogleCredentials getApplicationDefaultCredential(List<String> scopes)
+      throws IOException {
     if (applicationDefaultCredential != null) {
       return applicationDefaultCredential;
     }
 
     synchronized (lockApplicationDefaultCredential) {
-      applicationDefaultCredential =
-          GoogleCredentials.getApplicationDefault()
-              .createScoped(Collections.singletonList(cloudPlatformScope));
+      applicationDefaultCredential = GoogleCredentials.getApplicationDefault().createScoped(scopes);
     }
     return applicationDefaultCredential;
   }

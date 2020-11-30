@@ -95,7 +95,8 @@ public final class KubernetesClientUtils {
     // get a refreshed SA access token and its expiration time
     logger.debug("Getting a refreshed service account access token and its expiration time");
     GoogleCredentials applicationDefaultCredentials =
-        AuthenticationUtils.getServiceAccountCredential(server.testRunnerServiceAccount);
+        AuthenticationUtils.getServiceAccountCredential(
+            server.testRunnerServiceAccount, AuthenticationUtils.cloudPlatformScope);
     AccessToken accessToken = AuthenticationUtils.getAccessToken(applicationDefaultCredentials);
     Instant tokenExpiration = accessToken.getExpirationTime().toInstant();
     String expiryUTC = tokenExpiration.atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT);
