@@ -1,6 +1,14 @@
 package bio.terra.testrunner.common.utils;
 
 import bio.terra.testrunner.runner.config.ServerSpecification;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.container.Container;
+import com.google.api.services.container.model.Cluster;
+import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.gson.reflect.TypeToken;
@@ -16,6 +24,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -154,6 +163,106 @@ public final class KubernetesClientUtils {
 
     kubernetesClientCoreObject = new CoreV1Api();
     kubernetesClientAppsObject = new AppsV1Api();
+  }
+
+  /**
+   * An alternative method to build the singleton Kubernetes client objects without .kube/config file.
+   * Please make sure the Test Runner IAM Service Account meets the following minimum standards:
+   *   - Kubernetes Engine Viewer
+   *   - Kubernetes Role Based Access Control (RBAC) restricted to namespaces
+   *
+   * For more details, please refer to https://docs.google.com/document/d/1-fGZqtwEUVRMmfeZfUVrn2V3M2D_eonNLepuX0ve6nM/edit?usp=sharing
+   *
+   * This method should be called once at the
+   * beginning of a test run, and then all subsequent fetches should use the getter methods instead.
+   *
+   * @param server the server specification that points to the relevant Kubernetes cluster
+   */
+  public static void buildK8SClientObject(ServerSpecification server) throws Exception {
+    namespace = server.cluster.namespace;
+    // get a refreshed SA access token and its expiration time
+    logger.debug("Getting a refreshed service account access token and its expiration time");
+    GoogleCredentials applicationDefaultCredentials =
+            AuthenticationUtils.getServiceAccountCredential(
+                    server.testRunnerServiceAccount, AuthenticationUtils.cloudPlatformScope);
+    AccessToken accessToken = AuthenticationUtils.getAccessToken(applicationDefaultCredentials);
+    Instant tokenExpiration = accessToken.getExpirationTime().toInstant();
+    String expiryUTC = tokenExpiration.atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT);
+
+    // USERS: build list of one user, the SA
+    LinkedHashMap<String, Object> authConfigSA = new LinkedHashMap<>();
+    authConfigSA.put("access-token", accessToken.getTokenValue());
+    authConfigSA.put("expiry", expiryUTC);
+
+    LinkedHashMap<String, Object> authProviderSA = new LinkedHashMap<>();
+    authProviderSA.put("name", "gcp");
+    authProviderSA.put("config", authConfigSA);
+
+    LinkedHashMap<String, Object> userSA = new LinkedHashMap<>();
+    userSA.put("auth-provider", authProviderSA);
+
+    LinkedHashMap<String, Object> userWrapperSA = new LinkedHashMap<>();
+    userWrapperSA.put("name", server.cluster.clusterName);
+    userWrapperSA.put("user", userSA);
+
+    ArrayList<Object> usersList = new ArrayList<>();
+    usersList.add(userWrapperSA);
+
+    // CONTEXTS: build list of one context, the specified cluster
+    LinkedHashMap<String, Object> context = new LinkedHashMap<>();
+    context.put("cluster", server.cluster.clusterName);
+    context.put(
+            "user",
+            server.cluster.clusterName); // when is the user ever different from the cluster name?
+
+    LinkedHashMap<String, Object> contextWrapper = new LinkedHashMap<>();
+    contextWrapper.put("name", server.cluster.clusterName);
+    contextWrapper.put("context", context);
+
+    ArrayList<Object> contextsList = new ArrayList<>();
+    contextsList.add(contextWrapper);
+
+    // CLUSTERS: Get the certificate-authority-data and server address for the cluster via the
+    // Google Container Service API with the Test Runner Service Account.
+    Container containerService = createContainerService(applicationDefaultCredentials);
+    // Here we need to add the cluster zone as a configurable parameter.
+    Container.Projects.Zones.Clusters.Get request =
+            containerService.projects().zones().clusters()
+                    .get(server.cluster.project, server.cluster.region + "-a", server.cluster.clusterShortName);
+    Cluster response = request.execute();
+    LinkedHashMap<String, Object> cluster = new LinkedHashMap();
+    cluster.put("certificate-authority-data", response.getMasterAuth().getClusterCaCertificate());
+    cluster.put("server", String.format("https://%s", response.getEndpoint()));
+    LinkedHashMap<String, Object> clusterWrapper = new LinkedHashMap();
+    clusterWrapper.put("cluster", cluster);
+    clusterWrapper.put("name", server.cluster.clusterName);
+    ArrayList<Object> clustersList = new ArrayList();
+    clustersList.add(clusterWrapper);
+
+    // build the config object, replacing the contexts and users lists from the kubeconfig file with
+    // the ones constructed programmatically above
+    KubeConfig kubeConfig = new KubeConfig(contextsList, clustersList, usersList);
+    kubeConfig.setContext(server.cluster.clusterName);
+
+    // build the client object from the config
+    logger.debug("Building the client objects from the config");
+    ApiClient client = ClientBuilder.kubeconfig(kubeConfig).build();
+
+    // set the global default client to the one created above because the CoreV1Api and AppsV1Api
+    // constructors get the client object from the global configuration
+    Configuration.setDefaultApiClient(client);
+
+    kubernetesClientCoreObject = new CoreV1Api();
+    kubernetesClientAppsObject = new AppsV1Api();
+  }
+
+  private static Container createContainerService(GoogleCredentials credentials) throws IOException, GeneralSecurityException {
+    HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+    JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+    HttpRequestInitializer httpRequestInitializer = new HttpCredentialsAdapter(credentials);
+    return new Container.Builder(httpTransport, jsonFactory, httpRequestInitializer)
+            .setApplicationName("Google-ContainerSample/0.1")
+            .build();
   }
 
   /**

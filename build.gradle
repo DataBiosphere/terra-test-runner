@@ -11,7 +11,7 @@ plugins {
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 group 'bio.terra'
-version '0.0.2-SNAPSHOT'
+version '0.0.3-SNAPSHOT'
 
 def artifactory_username = System.getenv('ARTIFACTORY_USERNAME')
 def artifactory_password = System.getenv('ARTIFACTORY_PASSWORD')
@@ -52,6 +52,7 @@ dependencies {
         googleMonitoring = '2.0.7'
         googleOauth2 = '0.22.0'
         googleStorage = '1.113.2'
+        googleContainer = "v1-rev93-1.25.0"
     }
 
     implementation group: 'org.apache.commons', name: 'commons-math3', version: "${apacheMath}"
@@ -66,6 +67,7 @@ dependencies {
     implementation group: 'com.google.cloud', name: 'google-cloud-monitoring', version: "${googleMonitoring}"
     implementation group: 'com.google.auth', name: 'google-auth-library-oauth2-http', version: "${googleOauth2}"
     implementation group: 'com.google.cloud', name: 'google-cloud-storage', version: "${googleStorage}"
+    implementation group: 'com.google.apis', name: 'google-api-services-container', version: "${googleContainer}"
 }
 
 test {
