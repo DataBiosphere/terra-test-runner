@@ -9,6 +9,8 @@ public class ApplicationSpecification implements SpecificationInterface {
   public int loadDriverWaitSeconds = 1;
   public long loadHistoryCopyChunkSize = 1000;
   public long loadHistoryWaitSeconds = 2;
+  public String componentLabel = "app.kubernetes.io/component";
+  public String apiComponentLabel = "api";
 
   ApplicationSpecification() {}
 
@@ -32,6 +34,10 @@ public class ApplicationSpecification implements SpecificationInterface {
     } else if (loadHistoryWaitSeconds <= 0) {
       throw new IllegalArgumentException(
           "Application property loadHistoryWaitSeconds must be >= 0");
+    } else if (componentLabel == null || componentLabel.trim().length() == 0) {
+
+    } else if (apiComponentLabel == null || apiComponentLabel.trim().length() == 0) {
+
     }
   }
 }

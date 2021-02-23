@@ -334,6 +334,25 @@ public final class KubernetesClientUtils {
         .orElse(null);
   }
 
+  public static V1Deployment getApiDeployment(String componentLabel, String apiComponentLabel)
+      throws ApiException {
+    // loop through the deployments in the namespace
+    // find the one that matches the api component label
+    List<V1Deployment> deployments = listDeployments();
+    for (V1Deployment deployment : deployments) {
+      if (deployment.getMetadata().getLabels().containsKey(componentLabel)) {
+        if (deployment
+            .getMetadata()
+            .getLabels()
+            .get(componentLabel)
+            .equalsIgnoreCase(apiComponentLabel)) {
+          return deployment;
+        }
+      }
+    }
+    return null;
+  }
+
   /**
    * Change the size of the replica set. Note that this just sends a request to change the size, it
    * does not wait to make sure the size is actually updated.
@@ -462,7 +481,41 @@ public final class KubernetesClientUtils {
     printApiPods(apiDeployment);
   }
 
+  public static void changeReplicaSetSizeAndWait(
+      int podCount, String componentLabel, String apiComponentLabel) throws Exception {
+    V1Deployment apiDeployment =
+        KubernetesClientUtils.getApiDeployment(componentLabel, apiComponentLabel);
+    if (apiDeployment == null) {
+      throw new RuntimeException("API deployment not found.");
+    }
+
+    long apiPodCount = getApiPodCount(apiDeployment, componentLabel);
+    logger.debug("Pod Count: {}; Message: Before scaling pod count", apiPodCount);
+    apiDeployment = KubernetesClientUtils.changeReplicaSetSize(apiDeployment, podCount);
+    KubernetesClientUtils.waitForReplicaSetSizeChange(apiDeployment, podCount);
+
+    // print out the current pods
+    apiPodCount = getApiPodCount(apiDeployment, componentLabel);
+    logger.debug("Pod Count: {}; Message: After scaling pod count", apiPodCount);
+    printApiPods(apiDeployment);
+  }
+
   private static long getApiPodCount(V1Deployment deployment) throws ApiException {
+    String deploymentComponentLabel = deployment.getMetadata().getLabels().get(componentLabel);
+    // loop through the pods in the namespace
+    // find the ones that match the deployment component label (e.g. find all the API pods)
+    long apiPodCount =
+        listPods().stream()
+            .filter(
+                pod ->
+                    deploymentComponentLabel.equals(
+                        pod.getMetadata().getLabels().get(componentLabel)))
+            .count();
+    return apiPodCount;
+  }
+
+  private static long getApiPodCount(V1Deployment deployment, String componentLabel)
+      throws ApiException {
     String deploymentComponentLabel = deployment.getMetadata().getLabels().get(componentLabel);
     // loop through the pods in the namespace
     // find the ones that match the deployment component label (e.g. find all the API pods)
@@ -490,6 +543,16 @@ public final class KubernetesClientUtils {
   }
 
   public static void printApiPods(V1Deployment deployment) throws ApiException {
+    String deploymentComponentLabel = deployment.getMetadata().getLabels().get(componentLabel);
+    listPods().stream()
+        .filter(
+            pod ->
+                deploymentComponentLabel.equals(pod.getMetadata().getLabels().get(componentLabel)))
+        .forEach(p -> logger.debug("Pod: {}", p.getMetadata().getName()));
+  }
+
+  public static void printApiPods(V1Deployment deployment, String componentLabel)
+      throws ApiException {
     String deploymentComponentLabel = deployment.getMetadata().getLabels().get(componentLabel);
     listPods().stream()
         .filter(
