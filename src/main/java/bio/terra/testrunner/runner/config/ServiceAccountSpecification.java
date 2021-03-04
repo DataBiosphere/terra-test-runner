@@ -4,13 +4,20 @@ import bio.terra.testrunner.common.utils.FileUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.InputStream;
+import org.apache.commons.lang3.StringUtils;
 
 public class ServiceAccountSpecification implements SpecificationInterface {
   public String name;
   public String jsonKeyDirectoryPath;
   public String jsonKeyFilename;
+  // Used by In-Cluster Service Account
+  public String clientKeyDirectoryPath;
+  public String clientKeyFilename;
+  public String tokenFilename;
 
   public File jsonKeyFile;
+  public File clientKeyFile;
+  public File tokenFile;
 
   public static final String resourceDirectory = "serviceaccounts";
   public static final String keyDirectoryPathEnvironmentVarName =
@@ -57,19 +64,30 @@ public class ServiceAccountSpecification implements SpecificationInterface {
   public void validate() {
     if (name == null || name.equals("")) {
       throw new IllegalArgumentException("Service account name cannot be empty");
-    } else if (jsonKeyFilename == null || jsonKeyFilename.equals("")) {
-      throw new IllegalArgumentException("JSON key file name cannot be empty");
-    } else if (jsonKeyDirectoryPath == null || jsonKeyDirectoryPath.equals("")) {
-      throw new IllegalArgumentException("JSON key directory path cannot be empty");
+    } else if (StringUtils.isBlank(jsonKeyFilename)
+        && (StringUtils.isBlank(clientKeyFilename) || StringUtils.isBlank(tokenFilename))) {
+      throw new IllegalArgumentException("JSON or Client key file name cannot be empty");
+    } else if (StringUtils.isBlank(jsonKeyDirectoryPath)
+        && StringUtils.isBlank(clientKeyDirectoryPath)) {
+      throw new IllegalArgumentException("JSON or Client key directory path cannot be empty");
     }
 
     jsonKeyFile = new File(jsonKeyDirectoryPath, jsonKeyFilename);
-    if (!jsonKeyFile.exists()) {
+    clientKeyFile = new File(clientKeyDirectoryPath, clientKeyFilename);
+    tokenFile = new File(clientKeyDirectoryPath, tokenFilename);
+
+    if (!jsonKeyFile.exists() || !(clientKeyFile.exists() && tokenFile.exists())) {
       throw new IllegalArgumentException(
           "JSON key file does not exist: (directory)"
               + jsonKeyDirectoryPath
               + ", (filename)"
-              + jsonKeyFilename);
+              + jsonKeyFilename
+              + ". Client key or token file does not exist: (directory)"
+              + clientKeyDirectoryPath
+              + ", (filename)"
+              + clientKeyFilename
+              + ", (filename)"
+              + tokenFilename);
     }
   }
 }

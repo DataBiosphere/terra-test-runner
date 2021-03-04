@@ -160,7 +160,7 @@ public class TestRunner {
 
     // update any Kubernetes properties specified by the test configuration
     if (!config.server.skipKubernetes) {
-      KubernetesClientUtils.buildK8SClientObject(config.server);
+      KubernetesClientUtils.buildKubernetesClientObjectWithClientKey(config.server);
       modifyKubernetesPostDeployment();
     } else {
       logger.info("Kubernetes: Skipping Kubernetes configuration post-deployment");

@@ -20,9 +20,7 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.KubeConfig;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
@@ -166,10 +164,13 @@ public final class KubernetesClientUtils {
   }
 
   /**
-   * An alternative method to build the singleton Kubernetes client objects without .kube/config
-   * file. Please make sure the Test Runner IAM Service Account meets the following minimum
-   * standards: - Kubernetes Engine Viewer - Kubernetes Role Based Access Control (RBAC) restricted
-   * to namespaces
+   * An alternative method to build the singleton Kubernetes client objects without .kube/config.
+   *
+   * <p>Requires Test Runner IAM Service Account that meets the following standards - Kubernetes
+   * Engine Viewer
+   *
+   * <p>For control of namespaces, a Kubernetes Service Account granted with appropriate RBAC
+   * priviledges is required.
    *
    * <p>For more details, please refer to
    * https://docs.google.com/document/d/1-fGZqtwEUVRMmfeZfUVrn2V3M2D_eonNLepuX0ve6nM/edit?usp=sharing
@@ -179,72 +180,80 @@ public final class KubernetesClientUtils {
    *
    * @param server the server specification that points to the relevant Kubernetes cluster
    */
-  public static void buildK8SClientObject(ServerSpecification server) throws Exception {
+  public static void buildKubernetesClientObjectWithClientKey(ServerSpecification server)
+      throws Exception {
     namespace = server.cluster.namespace;
     // get a refreshed SA access token and its expiration time
     logger.debug("Getting a refreshed service account access token and its expiration time");
     GoogleCredentials applicationDefaultCredentials =
         AuthenticationUtils.getServiceAccountCredential(
             server.testRunnerServiceAccount, AuthenticationUtils.cloudPlatformScope);
-    AccessToken accessToken = AuthenticationUtils.getAccessToken(applicationDefaultCredentials);
-    Instant tokenExpiration = accessToken.getExpirationTime().toInstant();
-    String expiryUTC = tokenExpiration.atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT);
 
-    // USERS: build list of one user, the SA
-    LinkedHashMap<String, Object> authConfigSA = new LinkedHashMap<>();
-    authConfigSA.put("access-token", accessToken.getTokenValue());
-    authConfigSA.put("expiry", expiryUTC);
+    // Kubernetes Service Account credentials. Currently these credentials are rendered from vault.
+    String clientKey =
+        FileUtils.readFileToString(
+            server.testRunnerServiceAccount.clientKeyFile.getParentFile().toPath(),
+            server.testRunnerServiceAccount.clientKeyFile.getName());
 
-    LinkedHashMap<String, Object> authProviderSA = new LinkedHashMap<>();
-    authProviderSA.put("name", "gcp");
-    authProviderSA.put("config", authConfigSA);
+    String token =
+        FileUtils.readFileToString(
+            server.testRunnerServiceAccount.tokenFile.getParentFile().toPath(),
+            server.testRunnerServiceAccount.tokenFile.getName());
 
     LinkedHashMap<String, Object> userSA = new LinkedHashMap<>();
-    userSA.put("auth-provider", authProviderSA);
+    userSA.put("client-key-data", clientKey);
+    userSA.put("token", token);
 
+    // Build the User object to be bind to k8s context.
     LinkedHashMap<String, Object> userWrapperSA = new LinkedHashMap<>();
-    userWrapperSA.put("name", server.cluster.clusterName);
+    // The "name" key is simply used by the Kubernetes Context to identify
+    // which user to fetch the credentials from. As long as it is referenced
+    // correctly, its value can be set to anything. Here we adopt the following
+    // descriptive naming convention:
+    //
+    // <clusterShortName>-<namespace>-testrunner-user
+    String userCtxName =
+        String.format(
+            "%s-%s-testrunner-user", server.cluster.clusterShortName, server.cluster.namespace);
+    userWrapperSA.put("name", userCtxName);
     userWrapperSA.put("user", userSA);
-
     ArrayList<Object> usersList = new ArrayList<>();
     usersList.add(userWrapperSA);
 
-    // CONTEXTS: build list of one context, the specified cluster
-    LinkedHashMap<String, Object> context = new LinkedHashMap<>();
-    context.put("cluster", server.cluster.clusterName);
-    context.put(
-        "user",
-        server.cluster.clusterName); // when is the user ever different from the cluster name?
+    // Build the Cluster object to be bind to k8s context.
+    Cluster clusterSpec = getClusterSpecification(applicationDefaultCredentials, server);
+    LinkedHashMap<String, Object> cluster = new LinkedHashMap();
+    cluster.put("certificate-authority-data", clientKey);
+    cluster.put("server", String.format("https://%s", clusterSpec.getEndpoint()));
+    LinkedHashMap<String, Object> clusterWrapper = new LinkedHashMap();
+    // The "name" key is simply used by k8s context to identify
+    // which cluster to fetch the cluster spec. As long as it is referenced
+    // correctly in the context, its value can be set to anything.
+    // Here we adopt the following descriptive naming convention:
+    //
+    // <clusterShortName>-<namespace>
+    String clusterCtxName =
+        String.format("%s-%s", server.cluster.clusterShortName, server.cluster.namespace);
+    clusterWrapper.put("name", clusterCtxName);
+    clusterWrapper.put("cluster", cluster);
+    ArrayList<Object> clustersList = new ArrayList();
+    clustersList.add(clusterWrapper);
 
+    // CONTEXTS: build list of one context, the specified user and cluster
+    LinkedHashMap<String, Object> context = new LinkedHashMap<>();
+    context.put("cluster", clusterCtxName);
+    context.put("user", userCtxName);
+    context.put("namespace", namespace);
+
+    // Assign a name for the context object. Here we use the following naming convention
+    //
+    // clusterName
     LinkedHashMap<String, Object> contextWrapper = new LinkedHashMap<>();
     contextWrapper.put("name", server.cluster.clusterName);
     contextWrapper.put("context", context);
 
     ArrayList<Object> contextsList = new ArrayList<>();
     contextsList.add(contextWrapper);
-
-    // CLUSTERS: Get the certificate-authority-data and server address for the cluster via the
-    // Google Container Service API with the Test Runner Service Account.
-    Container containerService = createContainerService(applicationDefaultCredentials);
-    // Here we need to add the cluster zone as a configurable parameter.
-    Container.Projects.Zones.Clusters.Get request =
-        containerService
-            .projects()
-            .zones()
-            .clusters()
-            .get(
-                server.cluster.project,
-                server.cluster.region + "-a",
-                server.cluster.clusterShortName);
-    Cluster response = request.execute();
-    LinkedHashMap<String, Object> cluster = new LinkedHashMap();
-    cluster.put("certificate-authority-data", response.getMasterAuth().getClusterCaCertificate());
-    cluster.put("server", String.format("https://%s", response.getEndpoint()));
-    LinkedHashMap<String, Object> clusterWrapper = new LinkedHashMap();
-    clusterWrapper.put("cluster", cluster);
-    clusterWrapper.put("name", server.cluster.clusterName);
-    ArrayList<Object> clustersList = new ArrayList();
-    clustersList.add(clusterWrapper);
 
     // build the config object, replacing the contexts and users lists from the kubeconfig file with
     // the ones constructed programmatically above
@@ -261,6 +270,21 @@ public final class KubernetesClientUtils {
 
     kubernetesClientCoreObject = new CoreV1Api();
     kubernetesClientAppsObject = new AppsV1Api();
+  }
+
+  private static Cluster getClusterSpecification(
+      GoogleCredentials credentials, ServerSpecification server)
+      throws IOException, GeneralSecurityException {
+    // Obtain Cluster Spec using Google Container Service API
+    Container containerService = createContainerService(credentials);
+    Container.Projects.Zones.Clusters.Get request =
+        containerService
+            .projects()
+            .zones()
+            .clusters()
+            .get(server.cluster.project, server.cluster.zone, server.cluster.clusterShortName);
+    Cluster cluster = request.execute();
+    return cluster;
   }
 
   private static Container createContainerService(GoogleCredentials credentials)
