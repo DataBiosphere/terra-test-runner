@@ -194,13 +194,13 @@ public final class KubernetesClientUtils {
     // Kubernetes Service Account credentials. Currently these credentials are rendered from vault.
     String clientKey =
         FileUtils.readFileToString(
-            server.testRunnerServiceAccount.clientKeyFile.getParentFile().toPath(),
-            server.testRunnerServiceAccount.clientKeyFile.getName());
+            server.testRunnerK8SServiceAccount.clientKeyFile.getParentFile().toPath(),
+            server.testRunnerK8SServiceAccount.clientKeyFile.getName());
 
     String token =
         FileUtils.readFileToString(
-            server.testRunnerServiceAccount.tokenFile.getParentFile().toPath(),
-            server.testRunnerServiceAccount.tokenFile.getName());
+            server.testRunnerK8SServiceAccount.tokenFile.getParentFile().toPath(),
+            server.testRunnerK8SServiceAccount.tokenFile.getName());
 
     LinkedHashMap<String, Object> userSA = new LinkedHashMap<>();
     userSA.put("client-key-data", clientKey);
