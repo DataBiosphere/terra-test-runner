@@ -34,10 +34,6 @@ public class ApplicationSpecification implements SpecificationInterface {
     } else if (loadHistoryWaitSeconds <= 0) {
       throw new IllegalArgumentException(
           "Application property loadHistoryWaitSeconds must be >= 0");
-    } else if (componentLabel == null || componentLabel.trim().length() == 0) {
-
-    } else if (apiComponentLabel == null || apiComponentLabel.trim().length() == 0) {
-
     }
   }
 }

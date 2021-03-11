@@ -42,8 +42,8 @@ public final class KubernetesClientUtils {
   private static int maximumSecondsToWaitForReplicaSetSizeChange = 500;
   private static int secondsIntervalToPollReplicaSetSizeChange = 5;
 
-  public static final String componentLabel = "app.kubernetes.io/component";
-  public static final String apiComponentLabel = "api";
+  public static final String COMPONENT_LABEL = "app.kubernetes.io/component";
+  public static final String API_COMPONENT_LABEL = "api";
 
   private static String namespace;
 
@@ -73,7 +73,9 @@ public final class KubernetesClientUtils {
    * beginning of a test run, and then all subsequent fetches should use the getter methods instead.
    *
    * @param server the server specification that points to the relevant Kubernetes cluster
+   * @deprecated use {@link #buildKubernetesClientObjectWithClientKey(ServerSpecification)} instead.
    */
+  @Deprecated
   public static void buildKubernetesClientObject(ServerSpecification server) throws Exception {
     // call the fetchGKECredentials script that uses gcloud to generate the kubeconfig file
     logger.debug(
@@ -221,6 +223,8 @@ public final class KubernetesClientUtils {
     usersList.add(userWrapperSA);
 
     // Build the Cluster object to be bind to k8s context.
+    // Please refer to the sample Java code on the Google GKE API reference page:
+    // https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.zones.clusters/get
     Cluster clusterSpec = getClusterSpecification(applicationDefaultCredentials, server);
     LinkedHashMap<String, Object> cluster = new LinkedHashMap();
     cluster.put("certificate-authority-data", clientKey);
@@ -255,8 +259,8 @@ public final class KubernetesClientUtils {
     ArrayList<Object> contextsList = new ArrayList<>();
     contextsList.add(contextWrapper);
 
-    // build the config object, replacing the contexts and users lists from the kubeconfig file with
-    // the ones constructed programmatically above
+    // build the config object, replacing the contexts and users lists in the kubeconfig object
+    // with the ones constructed programmatically above.
     KubeConfig kubeConfig = new KubeConfig(contextsList, clustersList, usersList);
     kubeConfig.setContext(server.cluster.clusterName);
 
@@ -350,31 +354,33 @@ public final class KubernetesClientUtils {
   public static V1Deployment getApiDeployment() throws ApiException {
     // loop through the deployments in the namespace
     // find the one that matches the api component label
-    return listDeployments().stream()
-        .filter(
-            deployment ->
-                deployment.getMetadata().getLabels().get(componentLabel).equals(apiComponentLabel))
-        .findFirst()
-        .orElse(null);
+    return getApiDeployment(COMPONENT_LABEL, API_COMPONENT_LABEL);
   }
 
+  /**
+   * Get the API deployment in the in the namespace defined in buildKubernetesClientObject by the
+   * server specification, or in the whole cluster if the namespace is not specified (i.e. null or
+   * empty string). This method expects that there is a single API deployment in the namespace.
+   *
+   * @param componentLabel metadata label key for identifying a k8s deployment
+   * @param apiComponentLabel the value associated with the metadata label key
+   * @return the API deployment, null if not found
+   */
   public static V1Deployment getApiDeployment(String componentLabel, String apiComponentLabel)
       throws ApiException {
     // loop through the deployments in the namespace
     // find the one that matches the api component label
-    List<V1Deployment> deployments = listDeployments();
-    for (V1Deployment deployment : deployments) {
-      if (deployment.getMetadata().getLabels().containsKey(componentLabel)) {
-        if (deployment
-            .getMetadata()
-            .getLabels()
-            .get(componentLabel)
-            .equalsIgnoreCase(apiComponentLabel)) {
-          return deployment;
-        }
-      }
-    }
-    return null;
+    return listDeployments().stream()
+        .filter(
+            deployment ->
+                deployment.getMetadata().getLabels().containsKey(componentLabel)
+                    && deployment
+                        .getMetadata()
+                        .getLabels()
+                        .get(componentLabel)
+                        .equals(apiComponentLabel))
+        .findFirst()
+        .orElse(null);
   }
 
   /**
@@ -407,7 +413,7 @@ public final class KubernetesClientUtils {
     long podCount = getApiPodCount(apiDeployment);
     logger.debug("Pod Count: {}; Message: Before deleting pods", podCount);
     printApiPods(apiDeployment);
-    String deploymentComponentLabel = apiDeployment.getMetadata().getLabels().get(componentLabel);
+    String deploymentComponentLabel = apiDeployment.getMetadata().getLabels().get(COMPONENT_LABEL);
 
     // select a random pod from list of apis
     String randomPodName;
@@ -416,7 +422,7 @@ public final class KubernetesClientUtils {
             .filter(
                 pod ->
                     deploymentComponentLabel.equals(
-                        pod.getMetadata().getLabels().get(componentLabel)))
+                        pod.getMetadata().getLabels().get(COMPONENT_LABEL)))
             .skip(new Random().nextInt((int) podCount))
             .findFirst()
             .get()
@@ -507,16 +513,15 @@ public final class KubernetesClientUtils {
 
   public static void changeReplicaSetSizeAndWait(
       int podCount, String componentLabel, String apiComponentLabel) throws Exception {
-    V1Deployment apiDeployment =
-        KubernetesClientUtils.getApiDeployment(componentLabel, apiComponentLabel);
+    V1Deployment apiDeployment = getApiDeployment(componentLabel, apiComponentLabel);
     if (apiDeployment == null) {
       throw new RuntimeException("API deployment not found.");
     }
 
     long apiPodCount = getApiPodCount(apiDeployment, componentLabel);
     logger.debug("Pod Count: {}; Message: Before scaling pod count", apiPodCount);
-    apiDeployment = KubernetesClientUtils.changeReplicaSetSize(apiDeployment, podCount);
-    KubernetesClientUtils.waitForReplicaSetSizeChange(apiDeployment, podCount);
+    apiDeployment = changeReplicaSetSize(apiDeployment, podCount);
+    waitForReplicaSetSizeChange(apiDeployment, podCount);
 
     // print out the current pods
     apiPodCount = getApiPodCount(apiDeployment, componentLabel);
@@ -525,53 +530,49 @@ public final class KubernetesClientUtils {
   }
 
   private static long getApiPodCount(V1Deployment deployment) throws ApiException {
-    String deploymentComponentLabel = deployment.getMetadata().getLabels().get(componentLabel);
     // loop through the pods in the namespace
     // find the ones that match the deployment component label (e.g. find all the API pods)
-    long apiPodCount =
-        listPods().stream()
-            .filter(
-                pod ->
-                    deploymentComponentLabel.equals(
-                        pod.getMetadata().getLabels().get(componentLabel)))
-            .count();
-    return apiPodCount;
+    return getApiPodCount(deployment, COMPONENT_LABEL);
   }
 
   private static long getApiPodCount(V1Deployment deployment, String componentLabel)
       throws ApiException {
-    String deploymentComponentLabel = deployment.getMetadata().getLabels().get(componentLabel);
     // loop through the pods in the namespace
     // find the ones that match the deployment component label (e.g. find all the API pods)
     long apiPodCount =
         listPods().stream()
             .filter(
                 pod ->
-                    deploymentComponentLabel.equals(
-                        pod.getMetadata().getLabels().get(componentLabel)))
+                    deployment.getMetadata().getLabels().containsKey(componentLabel)
+                        && pod.getMetadata().getLabels().containsKey(componentLabel)
+                        && deployment
+                            .getMetadata()
+                            .getLabels()
+                            .get(componentLabel)
+                            .equals(pod.getMetadata().getLabels().get(componentLabel)))
             .count();
     return apiPodCount;
   }
 
   private static long getApiReadyPods(V1Deployment deployment) throws ApiException {
-    String deploymentComponentLabel = deployment.getMetadata().getLabels().get(componentLabel);
+    String deploymentComponentLabel = deployment.getMetadata().getLabels().get(COMPONENT_LABEL);
     long apiPodCount =
         listPods().stream()
             .filter(
                 pod ->
                     deploymentComponentLabel.equals(
-                            pod.getMetadata().getLabels().get(componentLabel))
+                            pod.getMetadata().getLabels().get(COMPONENT_LABEL))
                         && pod.getStatus().getContainerStatuses().get(0).getReady())
             .count();
     return apiPodCount;
   }
 
   public static void printApiPods(V1Deployment deployment) throws ApiException {
-    String deploymentComponentLabel = deployment.getMetadata().getLabels().get(componentLabel);
+    String deploymentComponentLabel = deployment.getMetadata().getLabels().get(COMPONENT_LABEL);
     listPods().stream()
         .filter(
             pod ->
-                deploymentComponentLabel.equals(pod.getMetadata().getLabels().get(componentLabel)))
+                deploymentComponentLabel.equals(pod.getMetadata().getLabels().get(COMPONENT_LABEL)))
         .forEach(p -> logger.debug("Pod: {}", p.getMetadata().getName()));
   }
 

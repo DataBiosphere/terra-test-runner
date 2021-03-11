@@ -436,13 +436,14 @@ public class TestRunner {
         "Kubernetes: Setting the initial number of pods in the API deployment replica set to {}",
         config.kubernetes.numberOfInitialPods);
     if (config.application.apiComponentLabel == null
-        || config.application.apiComponentLabel.trim().length() == 0)
+        || config.application.apiComponentLabel.trim().length() == 0) {
       KubernetesClientUtils.changeReplicaSetSizeAndWait(config.kubernetes.numberOfInitialPods);
-    else
+    } else {
       KubernetesClientUtils.changeReplicaSetSizeAndWait(
           config.kubernetes.numberOfInitialPods,
           config.application.componentLabel,
           config.application.apiComponentLabel);
+    }
   }
 
   private static final String renderedConfigFileName = "RENDERED_testConfiguration.json";
