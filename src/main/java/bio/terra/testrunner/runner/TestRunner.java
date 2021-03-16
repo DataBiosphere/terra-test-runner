@@ -435,6 +435,10 @@ public class TestRunner {
     logger.info(
         "Kubernetes: Setting the initial number of pods in the API deployment replica set to {}",
         config.kubernetes.numberOfInitialPods);
+    // If component labels are not specified in the Application Specification,
+    // the KubernetesClientUtils will use the default component label
+    // { "app.kubernetes.io/component": "api" } to locate the target deployment
+    // for modification.
     if (config.application.apiComponentLabel == null
         || config.application.apiComponentLabel.trim().length() == 0) {
       KubernetesClientUtils.changeReplicaSetSizeAndWait(config.kubernetes.numberOfInitialPods);
