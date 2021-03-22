@@ -505,20 +505,7 @@ public final class KubernetesClientUtils {
    * @param podCount count of pods to scale the kubernetes deployment to
    */
   public static void changeReplicaSetSizeAndWait(int podCount) throws Exception {
-    V1Deployment apiDeployment = KubernetesClientUtils.getApiDeployment();
-    if (apiDeployment == null) {
-      throw new RuntimeException("API deployment not found.");
-    }
-
-    long apiPodCount = getApiPodCount(apiDeployment);
-    logger.debug("Pod Count: {}; Message: Before scaling pod count", apiPodCount);
-    apiDeployment = KubernetesClientUtils.changeReplicaSetSize(apiDeployment, podCount);
-    KubernetesClientUtils.waitForReplicaSetSizeChange(apiDeployment, podCount);
-
-    // print out the current pods
-    apiPodCount = getApiPodCount(apiDeployment);
-    logger.debug("Pod Count: {}; Message: After scaling pod count", apiPodCount);
-    printApiPods(apiDeployment);
+    changeReplicaSetSizeAndWait(podCount, COMPONENT_LABEL, API_COMPONENT_LABEL);
   }
 
   public static void changeReplicaSetSizeAndWait(
