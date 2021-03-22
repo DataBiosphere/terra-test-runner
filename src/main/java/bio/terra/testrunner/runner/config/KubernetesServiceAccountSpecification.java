@@ -58,8 +58,10 @@ public class KubernetesServiceAccountSpecification implements SpecificationInter
   public void validate() {
     if (name == null || name.equals("")) {
       throw new IllegalArgumentException("Service account name cannot be empty");
-    } else if (StringUtils.isBlank(clientKeyFilename) || StringUtils.isBlank(tokenFilename)) {
-      throw new IllegalArgumentException("Client key and token file names cannot be empty");
+    } else if (StringUtils.isBlank(clientKeyFilename)) {
+      throw new IllegalArgumentException("Client key file name cannot be empty");
+    } else if (StringUtils.isBlank(tokenFilename)) {
+      throw new IllegalArgumentException("Client token file name cannot be empty");
     } else if (StringUtils.isBlank(clientKeyDirectoryPath)) {
       throw new IllegalArgumentException("Client key directory path cannot be empty");
     }
