@@ -1,5 +1,6 @@
 package bio.terra.testrunner.common.utils;
 
+import bio.terra.testrunner.runner.config.ApplicationSpecification;
 import bio.terra.testrunner.runner.config.ServerSpecification;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -45,8 +46,8 @@ public final class KubernetesClientUtils {
   private static int maximumSecondsToWaitForReplicaSetSizeChange = 500;
   private static int secondsIntervalToPollReplicaSetSizeChange = 5;
 
-  public static final String COMPONENT_LABEL = "app.kubernetes.io/component";
-  public static final String API_COMPONENT_LABEL = "api";
+  private static String componentLabel;
+  private static String apiComponentLabel;
 
   private static String namespace;
 
@@ -76,7 +77,7 @@ public final class KubernetesClientUtils {
    * beginning of a test run, and then all subsequent fetches should use the getter methods instead.
    *
    * @param server the server specification that points to the relevant Kubernetes cluster
-   * @deprecated use {@link #buildKubernetesClientObjectWithClientKey(ServerSpecification)} instead.
+   * @deprecated use {@link #buildKubernetesClientObjectWithClientKey(ServerSpecification, ApplicationSpecification)} instead.
    */
   @Deprecated
   public static void buildKubernetesClientObject(ServerSpecification server) throws Exception {
@@ -185,9 +186,11 @@ public final class KubernetesClientUtils {
    *
    * @param server the server specification that points to the relevant Kubernetes cluster
    */
-  public static void buildKubernetesClientObjectWithClientKey(ServerSpecification server)
+  public static void buildKubernetesClientObjectWithClientKey(ServerSpecification server, ApplicationSpecification application)
       throws Exception {
     namespace = server.cluster.namespace;
+    componentLabel = application.componentLabel;
+    apiComponentLabel = application.apiComponentLabel;
     // get a refreshed SA access token and its expiration time
     logger.debug("Getting a refreshed service account access token and its expiration time");
     GoogleCredentials testRunnerServiceAccountCredentials =
@@ -372,7 +375,7 @@ public final class KubernetesClientUtils {
   public static V1Deployment getApiDeployment() throws ApiException {
     // loop through the deployments in the namespace
     // find the one that matches the api component label
-    return getApiDeployment(COMPONENT_LABEL, API_COMPONENT_LABEL);
+    return getApiDeployment(componentLabel, apiComponentLabel);
   }
 
   /**
@@ -431,7 +434,7 @@ public final class KubernetesClientUtils {
     long podCount = getApiPodCount(apiDeployment);
     logger.debug("Pod Count: {}; Message: Before deleting pods", podCount);
     printApiPods(apiDeployment);
-    String deploymentComponentLabel = apiDeployment.getMetadata().getLabels().get(COMPONENT_LABEL);
+    String deploymentComponentLabel = apiDeployment.getMetadata().getLabels().get(componentLabel);
 
     // select a random pod from list of apis
     String randomPodName;
@@ -440,7 +443,7 @@ public final class KubernetesClientUtils {
             .filter(
                 pod ->
                     deploymentComponentLabel.equals(
-                        pod.getMetadata().getLabels().get(COMPONENT_LABEL)))
+                        pod.getMetadata().getLabels().get(componentLabel)))
             .skip(new Random().nextInt((int) podCount))
             .findFirst()
             .get()
@@ -513,7 +516,7 @@ public final class KubernetesClientUtils {
    * @param podCount count of pods to scale the kubernetes deployment to
    */
   public static void changeReplicaSetSizeAndWait(int podCount) throws Exception {
-    changeReplicaSetSizeAndWait(podCount, COMPONENT_LABEL, API_COMPONENT_LABEL);
+    changeReplicaSetSizeAndWait(podCount, componentLabel, apiComponentLabel);
   }
 
   public static void changeReplicaSetSizeAndWait(
@@ -537,7 +540,7 @@ public final class KubernetesClientUtils {
   private static long getApiPodCount(V1Deployment deployment) throws ApiException {
     // loop through the pods in the namespace
     // find the ones that match the deployment component label (e.g. find all the API pods)
-    return getApiPodCount(deployment, COMPONENT_LABEL);
+    return getApiPodCount(deployment, componentLabel);
   }
 
   private static long getApiPodCount(V1Deployment deployment, String componentLabel)
@@ -560,20 +563,20 @@ public final class KubernetesClientUtils {
   }
 
   private static long getApiReadyPods(V1Deployment deployment) throws ApiException {
-    String deploymentComponentLabel = deployment.getMetadata().getLabels().get(COMPONENT_LABEL);
+    String deploymentComponentLabel = deployment.getMetadata().getLabels().get(componentLabel);
     long apiPodCount =
         listPods().stream()
             .filter(
                 pod ->
                     deploymentComponentLabel.equals(
-                            pod.getMetadata().getLabels().get(COMPONENT_LABEL))
+                            pod.getMetadata().getLabels().get(componentLabel))
                         && pod.getStatus().getContainerStatuses().get(0).getReady())
             .count();
     return apiPodCount;
   }
 
   public static void printApiPods(V1Deployment deployment) throws ApiException {
-    printApiPods(deployment, COMPONENT_LABEL);
+    printApiPods(deployment, componentLabel);
   }
 
   public static void printApiPods(V1Deployment deployment, String componentLabel)
