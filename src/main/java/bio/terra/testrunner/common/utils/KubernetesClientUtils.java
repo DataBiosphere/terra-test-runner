@@ -279,6 +279,13 @@ public final class KubernetesClientUtils {
     kubernetesClientAppsObject = new AppsV1Api();
   }
 
+  /**
+   *
+   * <p>This method fetches cluster metadata using the project Id, zone, and cluster name
+   *
+   * @param credentials contains the Bearer token of the Test Runner SA (Kubernetes View role must be granted to this SA)
+   * @param server ServerSpecification object that contains project Id, name, and zone of the cluster
+   */
   private static Cluster getClusterSpecification(
       GoogleCredentials credentials, ServerSpecification server)
       throws IOException, GeneralSecurityException {
