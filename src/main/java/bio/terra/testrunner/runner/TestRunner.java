@@ -435,19 +435,20 @@ public class TestRunner {
     logger.info(
         "Kubernetes: Setting the initial number of pods in the API deployment replica set to {}",
         config.kubernetes.numberOfInitialPods);
-    // If component labels are not specified in the Application Specification,
-    // the KubernetesClientUtils will use the default component label
-    // { "app.kubernetes.io/component": "api" } to locate the target deployment
-    // for modification.
-    if (config.application.apiComponentLabel == null
-        || config.application.apiComponentLabel.trim().length() == 0) {
-      KubernetesClientUtils.changeReplicaSetSizeAndWait(config.kubernetes.numberOfInitialPods);
-    } else {
-      KubernetesClientUtils.changeReplicaSetSizeAndWait(
-          config.kubernetes.numberOfInitialPods,
-          config.application.componentLabel,
-          config.application.apiComponentLabel);
-    }
+    // The default values of component label key-value pair for locating a Terra application are defined in ApplicationSpecification.
+    //
+    // The default values are:
+    //
+    // { "app.kubernetes.io/component": "api" }
+    //
+    // To override the default values, configure the following fields:
+    //   componentLabel
+    //   apiComponentLabel
+    //
+    KubernetesClientUtils.changeReplicaSetSizeAndWait(
+            config.kubernetes.numberOfInitialPods,
+            config.application.componentLabel,
+            config.application.apiComponentLabel);
   }
 
   private static final String renderedConfigFileName = "RENDERED_testConfiguration.json";
