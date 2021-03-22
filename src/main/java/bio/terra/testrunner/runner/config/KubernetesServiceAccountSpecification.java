@@ -15,7 +15,7 @@ public class KubernetesServiceAccountSpecification implements SpecificationInter
   public File clientKeyFile;
   public File tokenFile;
 
-  public static final String resourceDirectory = "serviceaccounts";
+  public static final String resourceDirectory = "kubernetesserviceaccounts";
   public static final String keyDirectoryPathEnvironmentVarName =
       "TEST_RUNNER_K8S_SA_KEY_DIRECTORY_PATH";
 
