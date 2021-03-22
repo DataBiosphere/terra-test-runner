@@ -301,6 +301,14 @@ public final class KubernetesClientUtils {
     return cluster;
   }
 
+  /**
+   *
+   * <p>This method obtains a Google Container Service object that can be used to request GKE cluster information.
+   * Please refer to the sample Java code on the Google GKE API reference page:
+   * https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.zones.clusters/get
+   *
+   * @param credentials contains the Bearer token of the Test Runner SA (Kubernetes View role must be granted to this SA)
+   */
   private static Container createContainerService(GoogleCredentials credentials)
       throws IOException, GeneralSecurityException {
     HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
