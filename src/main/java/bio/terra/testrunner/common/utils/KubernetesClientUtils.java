@@ -187,7 +187,7 @@ public final class KubernetesClientUtils {
     namespace = server.cluster.namespace;
     // get a refreshed SA access token and its expiration time
     logger.debug("Getting a refreshed service account access token and its expiration time");
-    GoogleCredentials applicationDefaultCredentials =
+    GoogleCredentials testRunnerServiceAccountCredentials =
         AuthenticationUtils.getServiceAccountCredential(
             server.testRunnerServiceAccount, AuthenticationUtils.cloudPlatformScope);
 
@@ -225,7 +225,7 @@ public final class KubernetesClientUtils {
     // Build the Cluster object to be bind to k8s context.
     // Please refer to the sample Java code on the Google GKE API reference page:
     // https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.zones.clusters/get
-    Cluster clusterSpec = getClusterSpecification(applicationDefaultCredentials, server);
+    Cluster clusterSpec = getClusterSpecification(testRunnerServiceAccountCredentials, server);
     LinkedHashMap<String, Object> cluster = new LinkedHashMap();
     cluster.put("certificate-authority-data", clientKey);
     cluster.put("server", String.format("https://%s", clusterSpec.getEndpoint()));
