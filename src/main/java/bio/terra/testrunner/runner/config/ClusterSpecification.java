@@ -37,8 +37,6 @@ public class ClusterSpecification implements SpecificationInterface {
       throw new IllegalArgumentException("Server cluster project cannot be empty");
     } else if (containerName == null || containerName.equals("")) {
       throw new IllegalArgumentException("Server cluster container name cannot be empty");
-    } else if (StringUtils.isBlank(zone)) {
-      logger.debug("Zone is required to obtain cluster spec for resiliency tests");
     }
   }
 }
