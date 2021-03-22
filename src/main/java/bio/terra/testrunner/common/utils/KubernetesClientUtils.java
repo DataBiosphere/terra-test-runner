@@ -578,12 +578,7 @@ public final class KubernetesClientUtils {
   }
 
   public static void printApiPods(V1Deployment deployment) throws ApiException {
-    String deploymentComponentLabel = deployment.getMetadata().getLabels().get(COMPONENT_LABEL);
-    listPods().stream()
-        .filter(
-            pod ->
-                deploymentComponentLabel.equals(pod.getMetadata().getLabels().get(COMPONENT_LABEL)))
-        .forEach(p -> logger.debug("Pod: {}", p.getMetadata().getName()));
+    printApiPods(deployment, COMPONENT_LABEL);
   }
 
   public static void printApiPods(V1Deployment deployment, String componentLabel)
