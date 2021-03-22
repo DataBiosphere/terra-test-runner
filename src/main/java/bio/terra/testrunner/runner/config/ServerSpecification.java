@@ -84,7 +84,7 @@ public class ServerSpecification implements SpecificationInterface {
         FileUtils.getResourceFileHandle(resourceDirectory + "/" + resourceFileName);
     ServerSpecification server = objectMapper.readValue(inputStream, ServerSpecification.class);
 
-    // read in the test runner IAM service account file
+    // read in the test runner service account file
     server.testRunnerServiceAccount =
         ServiceAccountSpecification.fromJSONFile(server.testRunnerServiceAccountFile);
 
