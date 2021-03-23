@@ -5,6 +5,7 @@ import java.io.*;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -180,6 +181,25 @@ public final class FileUtils {
     ObjectMapper objectMapper = new ObjectMapper();
     try (FileInputStream inputStream = new FileInputStream(outputFile)) {
       return objectMapper.readValue(inputStream, javaObjectClass);
+    }
+  }
+
+  /**
+   * Read a text file into a Java String. Not recommended for large files.
+   *
+   * @param directory the directory where the file is
+   * @param fileName the file name
+   * @return a Java String representing the file
+   */
+  public static String readFileToString(Path directory, String fileName) throws Exception {
+    // get a reference to the file
+    File outputFile = directory.resolve(fileName).toFile();
+    if (!outputFile.exists()) {
+      return null;
+    }
+
+    try (FileInputStream inputStream = new FileInputStream(outputFile)) {
+      return new String(IOUtils.toByteArray(inputStream), StandardCharsets.UTF_8);
     }
   }
 }

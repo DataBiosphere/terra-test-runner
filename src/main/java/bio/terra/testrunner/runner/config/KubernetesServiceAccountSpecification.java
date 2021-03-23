@@ -6,18 +6,20 @@ import java.io.File;
 import java.io.InputStream;
 import org.apache.commons.lang3.StringUtils;
 
-public class ServiceAccountSpecification implements SpecificationInterface {
+public class KubernetesServiceAccountSpecification implements SpecificationInterface {
+  // Used for In-Cluster Service Account
   public String name;
-  public String jsonKeyDirectoryPath;
-  public String jsonKeyFilename;
+  public String clientKeyDirectoryPath;
+  public String clientKeyFilename;
+  public String tokenFilename;
+  public File clientKeyFile;
+  public File tokenFile;
 
-  public File jsonKeyFile;
-
-  public static final String resourceDirectory = "serviceaccounts";
+  public static final String resourceDirectory = "kubernetesserviceaccounts";
   public static final String keyDirectoryPathEnvironmentVarName =
-      "TEST_RUNNER_SA_KEY_DIRECTORY_PATH";
+      "TEST_RUNNER_K8S_SA_KEY_DIRECTORY_PATH";
 
-  ServiceAccountSpecification() {}
+  public KubernetesServiceAccountSpecification() {}
 
   /**
    * Read an instance of this class in from a JSON-formatted file. This method expects that the file
@@ -26,18 +28,19 @@ public class ServiceAccountSpecification implements SpecificationInterface {
    * @param resourceFileName file name
    * @return an instance of this class
    */
-  public static ServiceAccountSpecification fromJSONFile(String resourceFileName) throws Exception {
+  public static KubernetesServiceAccountSpecification fromJSONFile(String resourceFileName)
+      throws Exception {
     // use Jackson to map the stream contents to a TestConfiguration object
     ObjectMapper objectMapper = new ObjectMapper();
 
     InputStream inputStream =
         FileUtils.getResourceFileHandle(resourceDirectory + "/" + resourceFileName);
-    ServiceAccountSpecification serviceAccount =
-        objectMapper.readValue(inputStream, ServiceAccountSpecification.class);
+    KubernetesServiceAccountSpecification serviceAccount =
+        objectMapper.readValue(inputStream, KubernetesServiceAccountSpecification.class);
 
     String keyDirectoryPathEnvVarOverride = readKeyDirectoryPathEnvironmentVariable();
     if (keyDirectoryPathEnvVarOverride != null) {
-      serviceAccount.jsonKeyDirectoryPath = keyDirectoryPathEnvVarOverride;
+      serviceAccount.clientKeyDirectoryPath = keyDirectoryPathEnvVarOverride;
     }
 
     return serviceAccount;
@@ -51,27 +54,29 @@ public class ServiceAccountSpecification implements SpecificationInterface {
     return keyDirectoryPathEnvironmentVarValue;
   }
 
-  /**
-   * Validate the service account specification read in from the JSON file. None of the properties
-   * should be null.
-   */
+  @Override
   public void validate() {
     if (name == null || name.equals("")) {
       throw new IllegalArgumentException("Service account name cannot be empty");
-    } else if (StringUtils.isBlank(jsonKeyFilename)) {
-      throw new IllegalArgumentException("JSON key file name cannot be empty");
-    } else if (StringUtils.isBlank(jsonKeyDirectoryPath)) {
-      throw new IllegalArgumentException("JSON key directory path cannot be empty");
+    } else if (StringUtils.isBlank(clientKeyFilename)) {
+      throw new IllegalArgumentException("Client key file name cannot be empty");
+    } else if (StringUtils.isBlank(tokenFilename)) {
+      throw new IllegalArgumentException("Client token file name cannot be empty");
+    } else if (StringUtils.isBlank(clientKeyDirectoryPath)) {
+      throw new IllegalArgumentException("Client key directory path cannot be empty");
     }
 
-    jsonKeyFile = new File(jsonKeyDirectoryPath, jsonKeyFilename);
+    clientKeyFile = new File(clientKeyDirectoryPath, clientKeyFilename);
+    tokenFile = new File(clientKeyDirectoryPath, tokenFilename);
 
-    if (!jsonKeyFile.exists()) {
+    if (!clientKeyFile.exists() || !tokenFile.exists()) {
       throw new IllegalArgumentException(
-          "JSON key file does not exist: (directory)"
-              + jsonKeyDirectoryPath
+          "Kubernetes SA Client key or token file does not exist: (directory)"
+              + clientKeyDirectoryPath
               + ", (filename)"
-              + jsonKeyFilename);
+              + clientKeyFilename
+              + ", (filename)"
+              + tokenFilename);
     }
   }
 }

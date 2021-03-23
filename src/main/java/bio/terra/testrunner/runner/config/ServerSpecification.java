@@ -3,6 +3,7 @@ package bio.terra.testrunner.runner.config;
 import bio.terra.testrunner.common.utils.FileUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * An instance of this class represents a single Terra environment or deployment. It contains all
@@ -44,10 +45,15 @@ public class ServerSpecification implements SpecificationInterface {
   // Kubernetes cluster specification
   public ClusterSpecification cluster;
 
-  // this service account has permissions to deploy, manipulate Kubernetes, and query the metrics
+  // this service account has permissions to deploy, view Kubernetes, and query the metrics
   // and logs servers
   public String testRunnerServiceAccountFile;
   public ServiceAccountSpecification testRunnerServiceAccount;
+
+  // This is an in-cluster service account with namespaced RBAC permissions to manipulate Kubernetes
+  // With this, we no longer need Kubernetes admin role for the testRunnerServiceAccount.
+  public String testRunnerK8SServiceAccountFile;
+  public KubernetesServiceAccountSpecification testRunnerK8SServiceAccount;
 
   // how to (optionally) deploy before each test run
   public DeploymentScriptSpecification deploymentScript;
@@ -82,6 +88,13 @@ public class ServerSpecification implements SpecificationInterface {
     server.testRunnerServiceAccount =
         ServiceAccountSpecification.fromJSONFile(server.testRunnerServiceAccountFile);
 
+    // read in the test runner in-cluster service account file if configured
+    if (StringUtils.isNotBlank(server.testRunnerK8SServiceAccountFile)) {
+      server.testRunnerK8SServiceAccount =
+          KubernetesServiceAccountSpecification.fromJSONFile(
+              server.testRunnerK8SServiceAccountFile);
+    }
+
     // read in the buffer service client service account file, if specified
     if (server.bufferClientServiceAccountFile != null
         && !server.bufferClientServiceAccountFile.isEmpty()) {
@@ -99,6 +112,11 @@ public class ServerSpecification implements SpecificationInterface {
   public void validate() {
     if (!skipKubernetes) {
       cluster.validate();
+      if (testRunnerK8SServiceAccount == null) {
+        throw new IllegalArgumentException(
+            "Test Runner Kubernetes Service Account must be defined");
+      }
+      testRunnerK8SServiceAccount.validate();
     }
     if (!skipDeployment) {
       if (deploymentScript == null) {

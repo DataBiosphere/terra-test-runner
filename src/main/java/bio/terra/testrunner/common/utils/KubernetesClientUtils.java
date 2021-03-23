@@ -1,6 +1,15 @@
 package bio.terra.testrunner.common.utils;
 
+import bio.terra.testrunner.runner.config.ApplicationSpecification;
 import bio.terra.testrunner.runner.config.ServerSpecification;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.services.container.Container;
+import com.google.api.services.container.model.Cluster;
+import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.gson.reflect.TypeToken;
@@ -9,13 +18,18 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.*;
+import io.kubernetes.client.openapi.models.V1Deployment;
+import io.kubernetes.client.openapi.models.V1DeploymentList;
+import io.kubernetes.client.openapi.models.V1DeploymentSpec;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.KubeConfig;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -35,8 +49,9 @@ public final class KubernetesClientUtils {
   private static int maximumSecondsToWaitForReplicaSetSizeChange = 500;
   private static int secondsIntervalToPollReplicaSetSizeChange = 5;
 
-  public static final String componentLabel = "app.kubernetes.io/component";
-  public static final String apiComponentLabel = "api";
+  private static String componentLabel;
+
+  private static String apiComponentLabel;
 
   private static String namespace;
 
@@ -66,7 +81,10 @@ public final class KubernetesClientUtils {
    * beginning of a test run, and then all subsequent fetches should use the getter methods instead.
    *
    * @param server the server specification that points to the relevant Kubernetes cluster
+   * @deprecated use {@link #buildKubernetesClientObjectWithClientKey(ServerSpecification,
+   *     ApplicationSpecification)} instead.
    */
+  @Deprecated
   public static void buildKubernetesClientObject(ServerSpecification server) throws Exception {
     // call the fetchGKECredentials script that uses gcloud to generate the kubeconfig file
     logger.debug(
@@ -157,6 +175,160 @@ public final class KubernetesClientUtils {
   }
 
   /**
+   * An alternative method to build the singleton Kubernetes client objects without .kube/config.
+   *
+   * <p>Requires Test Runner Service Account that meets the following standards - Kubernetes Engine
+   * Viewer
+   *
+   * <p>For control of namespaces, a Kubernetes Service Account granted with appropriate RBAC
+   * priviledges is required.
+   *
+   * <p>For more details, please refer to
+   * https://docs.google.com/document/d/1-fGZqtwEUVRMmfeZfUVrn2V3M2D_eonNLepuX0ve6nM/edit?usp=sharing
+   *
+   * <p>This method should be called once at the beginning of a test run, and then all subsequent
+   * fetches should use the getter methods instead.
+   *
+   * @param server the server specification that points to the relevant Kubernetes cluster
+   */
+  public static void buildKubernetesClientObjectWithClientKey(
+      ServerSpecification server, ApplicationSpecification application) throws Exception {
+    namespace = server.cluster.namespace;
+    componentLabel = application.componentLabel;
+    apiComponentLabel = application.apiComponentLabel;
+    // get a refreshed SA access token and its expiration time
+    logger.debug("Getting a refreshed service account access token and its expiration time");
+    GoogleCredentials testRunnerServiceAccountCredentials =
+        AuthenticationUtils.getServiceAccountCredential(
+            server.testRunnerServiceAccount, AuthenticationUtils.cloudPlatformScope);
+
+    // Kubernetes Service Account credentials. Currently these credentials are rendered from vault.
+    String clientKey =
+        FileUtils.readFileToString(
+            server.testRunnerK8SServiceAccount.clientKeyFile.getParentFile().toPath(),
+            server.testRunnerK8SServiceAccount.clientKeyFile.getName());
+
+    String token =
+        FileUtils.readFileToString(
+            server.testRunnerK8SServiceAccount.tokenFile.getParentFile().toPath(),
+            server.testRunnerK8SServiceAccount.tokenFile.getName());
+
+    LinkedHashMap<String, Object> userSA = new LinkedHashMap<>();
+    userSA.put("client-key-data", clientKey);
+    userSA.put("token", token);
+
+    // Build the User object to be bind to k8s context.
+    LinkedHashMap<String, Object> userWrapperSA = new LinkedHashMap<>();
+    // The "name" key is simply used by the Kubernetes Context to identify
+    // which user to fetch the credentials from. As long as it is referenced
+    // correctly, its value can be set to anything. Here we adopt the following
+    // descriptive naming convention:
+    //
+    // <clusterShortName>-<namespace>-testrunner-user
+    String userCtxName =
+        String.format(
+            "%s-%s-testrunner-user", server.cluster.clusterShortName, server.cluster.namespace);
+    userWrapperSA.put("name", userCtxName);
+    userWrapperSA.put("user", userSA);
+    ArrayList<Object> usersList = new ArrayList<>();
+    usersList.add(userWrapperSA);
+
+    // Build the Cluster object to be bind to k8s context.
+    // Please refer to the sample Java code on the Google GKE API reference page:
+    // https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.zones.clusters/get
+    Cluster clusterSpec = getClusterSpecification(testRunnerServiceAccountCredentials, server);
+    LinkedHashMap<String, Object> cluster = new LinkedHashMap();
+    cluster.put("certificate-authority-data", clientKey);
+    cluster.put("server", String.format("https://%s", clusterSpec.getEndpoint()));
+    LinkedHashMap<String, Object> clusterWrapper = new LinkedHashMap();
+    // The "name" key is simply used by k8s context to identify
+    // which cluster to fetch the cluster spec. As long as it is referenced
+    // correctly in the context, its value can be set to anything.
+    // Here we adopt the following descriptive naming convention:
+    //
+    // <clusterShortName>-<namespace>
+    String clusterCtxName =
+        String.format("%s-%s", server.cluster.clusterShortName, server.cluster.namespace);
+    clusterWrapper.put("name", clusterCtxName);
+    clusterWrapper.put("cluster", cluster);
+    ArrayList<Object> clustersList = new ArrayList();
+    clustersList.add(clusterWrapper);
+
+    // CONTEXTS: build list of one context, the specified user and cluster
+    LinkedHashMap<String, Object> context = new LinkedHashMap<>();
+    context.put("cluster", clusterCtxName);
+    context.put("user", userCtxName);
+    context.put("namespace", namespace);
+
+    // Assign a name for the context object. Here we use the following naming convention
+    //
+    // clusterName
+    LinkedHashMap<String, Object> contextWrapper = new LinkedHashMap<>();
+    contextWrapper.put("name", server.cluster.clusterName);
+    contextWrapper.put("context", context);
+
+    ArrayList<Object> contextsList = new ArrayList<>();
+    contextsList.add(contextWrapper);
+
+    // build the config object, replacing the contexts and users lists in the kubeconfig object
+    // with the ones constructed programmatically above.
+    KubeConfig kubeConfig = new KubeConfig(contextsList, clustersList, usersList);
+    kubeConfig.setContext(server.cluster.clusterName);
+
+    // build the client object from the config
+    logger.debug("Building the client objects from the config");
+    ApiClient client = ClientBuilder.kubeconfig(kubeConfig).build();
+
+    // set the global default client to the one created above because the CoreV1Api and AppsV1Api
+    // constructors get the client object from the global configuration
+    Configuration.setDefaultApiClient(client);
+
+    kubernetesClientCoreObject = new CoreV1Api();
+    kubernetesClientAppsObject = new AppsV1Api();
+  }
+
+  /**
+   * This method fetches cluster metadata using the project Id, zone, and cluster name
+   *
+   * @param credentials contains the Bearer token of the Test Runner SA (Kubernetes View role must
+   *     be granted to this SA)
+   * @param server ServerSpecification object that contains project Id, name, and zone of the
+   *     cluster
+   */
+  private static Cluster getClusterSpecification(
+      GoogleCredentials credentials, ServerSpecification server)
+      throws IOException, GeneralSecurityException {
+    // Obtain Cluster Spec using Google Container Service API
+    Container containerService = createContainerService(credentials);
+    Container.Projects.Zones.Clusters.Get request =
+        containerService
+            .projects()
+            .zones()
+            .clusters()
+            .get(server.cluster.project, server.cluster.zone, server.cluster.clusterShortName);
+    Cluster cluster = request.execute();
+    return cluster;
+  }
+
+  /**
+   * This method obtains a Google Container Service object that can be used to request GKE cluster
+   * information. Please refer to the sample Java code on the Google GKE API reference page:
+   * https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.zones.clusters/get
+   *
+   * @param credentials contains the Bearer token of the Test Runner SA (Kubernetes View role must
+   *     be granted to this SA)
+   */
+  private static Container createContainerService(GoogleCredentials credentials)
+      throws IOException, GeneralSecurityException {
+    HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+    JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+    HttpRequestInitializer httpRequestInitializer = new HttpCredentialsAdapter(credentials);
+    return new Container.Builder(httpTransport, jsonFactory, httpRequestInitializer)
+        .setApplicationName("Google-ContainerSample/0.1")
+        .build();
+  }
+
+  /**
    * List all the pods in namespace defined in buildKubernetesClientObject by the server
    * specification, or in the whole cluster if the namespace is not specified (i.e. null or empty
    * string).
@@ -209,10 +381,31 @@ public final class KubernetesClientUtils {
   public static V1Deployment getApiDeployment() throws ApiException {
     // loop through the deployments in the namespace
     // find the one that matches the api component label
+    return getApiDeployment(componentLabel, apiComponentLabel);
+  }
+
+  /**
+   * Get the API deployment in the in the namespace defined in buildKubernetesClientObject by the
+   * server specification, or in the whole cluster if the namespace is not specified (i.e. null or
+   * empty string). This method expects that there is a single API deployment in the namespace.
+   *
+   * @param componentLabel metadata label key for identifying a k8s deployment
+   * @param apiComponentLabel the value associated with the metadata label key
+   * @return the API deployment, null if not found
+   */
+  public static V1Deployment getApiDeployment(String componentLabel, String apiComponentLabel)
+      throws ApiException {
+    // loop through the deployments in the namespace
+    // find the one that matches the api component label
     return listDeployments().stream()
         .filter(
             deployment ->
-                deployment.getMetadata().getLabels().get(componentLabel).equals(apiComponentLabel))
+                deployment.getMetadata().getLabels().containsKey(componentLabel)
+                    && deployment
+                        .getMetadata()
+                        .getLabels()
+                        .get(componentLabel)
+                        .equals(apiComponentLabel))
         .findFirst()
         .orElse(null);
   }
@@ -329,32 +522,57 @@ public final class KubernetesClientUtils {
    * @param podCount count of pods to scale the kubernetes deployment to
    */
   public static void changeReplicaSetSizeAndWait(int podCount) throws Exception {
-    V1Deployment apiDeployment = KubernetesClientUtils.getApiDeployment();
+    changeReplicaSetSizeAndWait(podCount, componentLabel, apiComponentLabel);
+  }
+
+  /**
+   * Utilizing the other util functions to (1) fresh fetch of the api deployment, (2) scale the
+   * replica count, (3) wait for replica count to update, and (4) print the results
+   *
+   * @param podCount count of pods to scale the kubernetes deployment to
+   * @param componentLabel component label key for locating the kubernetes application component
+   *     associated with the deployment
+   * @param apiComponentLabel the corresponding value of the component label key
+   */
+  public static void changeReplicaSetSizeAndWait(
+      int podCount, String componentLabel, String apiComponentLabel) throws Exception {
+    V1Deployment apiDeployment = getApiDeployment(componentLabel, apiComponentLabel);
     if (apiDeployment == null) {
       throw new RuntimeException("API deployment not found.");
     }
 
-    long apiPodCount = getApiPodCount(apiDeployment);
+    long apiPodCount = getApiPodCount(apiDeployment, componentLabel);
     logger.debug("Pod Count: {}; Message: Before scaling pod count", apiPodCount);
-    apiDeployment = KubernetesClientUtils.changeReplicaSetSize(apiDeployment, podCount);
-    KubernetesClientUtils.waitForReplicaSetSizeChange(apiDeployment, podCount);
+    apiDeployment = changeReplicaSetSize(apiDeployment, podCount);
+    waitForReplicaSetSizeChange(apiDeployment, podCount);
 
     // print out the current pods
-    apiPodCount = getApiPodCount(apiDeployment);
+    apiPodCount = getApiPodCount(apiDeployment, componentLabel);
     logger.debug("Pod Count: {}; Message: After scaling pod count", apiPodCount);
     printApiPods(apiDeployment);
   }
 
   private static long getApiPodCount(V1Deployment deployment) throws ApiException {
-    String deploymentComponentLabel = deployment.getMetadata().getLabels().get(componentLabel);
+    // loop through the pods in the namespace
+    // find the ones that match the deployment component label (e.g. find all the API pods)
+    return getApiPodCount(deployment, componentLabel);
+  }
+
+  private static long getApiPodCount(V1Deployment deployment, String componentLabel)
+      throws ApiException {
     // loop through the pods in the namespace
     // find the ones that match the deployment component label (e.g. find all the API pods)
     long apiPodCount =
         listPods().stream()
             .filter(
                 pod ->
-                    deploymentComponentLabel.equals(
-                        pod.getMetadata().getLabels().get(componentLabel)))
+                    deployment.getMetadata().getLabels().containsKey(componentLabel)
+                        && pod.getMetadata().getLabels().containsKey(componentLabel)
+                        && deployment
+                            .getMetadata()
+                            .getLabels()
+                            .get(componentLabel)
+                            .equals(pod.getMetadata().getLabels().get(componentLabel)))
             .count();
     return apiPodCount;
   }
@@ -373,11 +591,24 @@ public final class KubernetesClientUtils {
   }
 
   public static void printApiPods(V1Deployment deployment) throws ApiException {
+    printApiPods(deployment, componentLabel);
+  }
+
+  public static void printApiPods(V1Deployment deployment, String componentLabel)
+      throws ApiException {
     String deploymentComponentLabel = deployment.getMetadata().getLabels().get(componentLabel);
     listPods().stream()
         .filter(
             pod ->
                 deploymentComponentLabel.equals(pod.getMetadata().getLabels().get(componentLabel)))
         .forEach(p -> logger.debug("Pod: {}", p.getMetadata().getName()));
+  }
+
+  public static String getComponentLabel() {
+    return componentLabel;
+  }
+
+  public static String getApiComponentLabel() {
+    return apiComponentLabel;
   }
 }

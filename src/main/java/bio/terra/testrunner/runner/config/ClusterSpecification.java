@@ -9,6 +9,7 @@ public class ClusterSpecification implements SpecificationInterface {
   public String clusterName;
   public String clusterShortName;
   public String region;
+  public String zone;
   public String project;
   public String namespace;
   public String containerName;
@@ -30,6 +31,8 @@ public class ClusterSpecification implements SpecificationInterface {
       throw new IllegalArgumentException("Server cluster project cannot be empty");
     } else if (containerName == null || containerName.equals("")) {
       throw new IllegalArgumentException("Server cluster container name cannot be empty");
+    } else if (zone == null || zone.equals("")) {
+      throw new IllegalArgumentException("Server cluster zone cannot be empty");
     }
   }
 }
