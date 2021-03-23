@@ -112,6 +112,9 @@ public class ServerSpecification implements SpecificationInterface {
   public void validate() {
     if (!skipKubernetes) {
       cluster.validate();
+      if (testRunnerK8SServiceAccount == null) {
+        throw new IllegalArgumentException("Test Runner Kubernetes Service Account must be defined");
+      }
       testRunnerK8SServiceAccount.validate();
     }
     if (!skipDeployment) {

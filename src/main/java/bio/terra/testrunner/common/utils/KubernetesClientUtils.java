@@ -18,7 +18,11 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.*;
+import io.kubernetes.client.openapi.models.V1Deployment;
+import io.kubernetes.client.openapi.models.V1DeploymentList;
+import io.kubernetes.client.openapi.models.V1DeploymentSpec;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.KubeConfig;
 import java.io.FileInputStream;
@@ -173,7 +177,7 @@ public final class KubernetesClientUtils {
   /**
    * An alternative method to build the singleton Kubernetes client objects without .kube/config.
    *
-   * <p>Requires Test Runner IAM Service Account that meets the following standards - Kubernetes
+   * <p>Requires Test Runner Service Account that meets the following standards - Kubernetes
    * Engine Viewer
    *
    * <p>For control of namespaces, a Kubernetes Service Account granted with appropriate RBAC

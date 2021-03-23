@@ -76,6 +76,15 @@ The scripts to run specification includes the:
 The scaling specification includes:
   * Number of different users making the User Journey calls.
 
+The application specification includes (this section applies to resiliency test type)
+  * Default values of component label key-value pair for locating a Terra application.
+    * The default component label key-value pair is set to
+      * { "app.kubernetes.io/component": "api" }
+
+  * The default setting may not apply to your application, In that case, you need to configure the following fields in the application specification within the test configuration
+    * componentLabel
+    * apiComponentLabel
+
 **This section will be updated as more pieces of the test configuration are implemented.** See the
 [Performance Testing Infrastructure Proposal](https://docs.google.com/document/d/11PZIXZwOyd394BFOlBsDjOGjZdC-jwTr_n92nTJvFxw)
 for more details on the desired end goal.
