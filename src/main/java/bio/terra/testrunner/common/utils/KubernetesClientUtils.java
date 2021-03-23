@@ -21,7 +21,6 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.*;
 import io.kubernetes.client.util.ClientBuilder;
 import io.kubernetes.client.util.KubeConfig;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -77,7 +76,8 @@ public final class KubernetesClientUtils {
    * beginning of a test run, and then all subsequent fetches should use the getter methods instead.
    *
    * @param server the server specification that points to the relevant Kubernetes cluster
-   * @deprecated use {@link #buildKubernetesClientObjectWithClientKey(ServerSpecification, ApplicationSpecification)} instead.
+   * @deprecated use {@link #buildKubernetesClientObjectWithClientKey(ServerSpecification,
+   *     ApplicationSpecification)} instead.
    */
   @Deprecated
   public static void buildKubernetesClientObject(ServerSpecification server) throws Exception {
@@ -186,8 +186,8 @@ public final class KubernetesClientUtils {
    *
    * @param server the server specification that points to the relevant Kubernetes cluster
    */
-  public static void buildKubernetesClientObjectWithClientKey(ServerSpecification server, ApplicationSpecification application)
-      throws Exception {
+  public static void buildKubernetesClientObjectWithClientKey(
+      ServerSpecification server, ApplicationSpecification application) throws Exception {
     namespace = server.cluster.namespace;
     componentLabel = application.componentLabel;
     apiComponentLabel = application.apiComponentLabel;
@@ -283,11 +283,12 @@ public final class KubernetesClientUtils {
   }
 
   /**
+   * This method fetches cluster metadata using the project Id, zone, and cluster name
    *
-   * <p>This method fetches cluster metadata using the project Id, zone, and cluster name
-   *
-   * @param credentials contains the Bearer token of the Test Runner SA (Kubernetes View role must be granted to this SA)
-   * @param server ServerSpecification object that contains project Id, name, and zone of the cluster
+   * @param credentials contains the Bearer token of the Test Runner SA (Kubernetes View role must
+   *     be granted to this SA)
+   * @param server ServerSpecification object that contains project Id, name, and zone of the
+   *     cluster
    */
   private static Cluster getClusterSpecification(
       GoogleCredentials credentials, ServerSpecification server)
@@ -305,12 +306,12 @@ public final class KubernetesClientUtils {
   }
 
   /**
-   *
-   * <p>This method obtains a Google Container Service object that can be used to request GKE cluster information.
-   * Please refer to the sample Java code on the Google GKE API reference page:
+   * This method obtains a Google Container Service object that can be used to request GKE cluster
+   * information. Please refer to the sample Java code on the Google GKE API reference page:
    * https://cloud.google.com/kubernetes-engine/docs/reference/rest/v1/projects.zones.clusters/get
    *
-   * @param credentials contains the Bearer token of the Test Runner SA (Kubernetes View role must be granted to this SA)
+   * @param credentials contains the Bearer token of the Test Runner SA (Kubernetes View role must
+   *     be granted to this SA)
    */
   private static Container createContainerService(GoogleCredentials credentials)
       throws IOException, GeneralSecurityException {

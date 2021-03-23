@@ -160,7 +160,8 @@ public class TestRunner {
 
     // update any Kubernetes properties specified by the test configuration
     if (!config.server.skipKubernetes) {
-      KubernetesClientUtils.buildKubernetesClientObjectWithClientKey(config.server);
+      KubernetesClientUtils.buildKubernetesClientObjectWithClientKey(
+          config.server, config.application);
       modifyKubernetesPostDeployment();
     } else {
       logger.info("Kubernetes: Skipping Kubernetes configuration post-deployment");
@@ -435,7 +436,8 @@ public class TestRunner {
     logger.info(
         "Kubernetes: Setting the initial number of pods in the API deployment replica set to {}",
         config.kubernetes.numberOfInitialPods);
-    // The default values of component label key-value pair for locating a Terra application are defined in ApplicationSpecification.
+    // The default values of component label key-value pair for locating a Terra application are
+    // defined in ApplicationSpecification.
     //
     // The default values are:
     //
@@ -446,9 +448,9 @@ public class TestRunner {
     //   apiComponentLabel
     //
     KubernetesClientUtils.changeReplicaSetSizeAndWait(
-            config.kubernetes.numberOfInitialPods,
-            config.application.componentLabel,
-            config.application.apiComponentLabel);
+        config.kubernetes.numberOfInitialPods,
+        config.application.componentLabel,
+        config.application.apiComponentLabel);
   }
 
   private static final String renderedConfigFileName = "RENDERED_testConfiguration.json";

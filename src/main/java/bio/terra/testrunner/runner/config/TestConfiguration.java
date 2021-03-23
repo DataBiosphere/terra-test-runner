@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,11 +120,12 @@ public class TestConfiguration implements SpecificationInterface {
                 + " manipulates Kubernetes, but the server specification has disabled Kubernetes manipulations (see server.skipKubernetes flag).");
       }
 
-      if (testScript.scriptClassInstance().manipulatesKubernetes() && StringUtils.isBlank(server.cluster.zone)) {
+      if (testScript.scriptClassInstance().manipulatesKubernetes()
+          && StringUtils.isBlank(server.cluster.zone)) {
         throw new IllegalArgumentException(
-                "The Test Script class "
-                        + name
-                        + " manipulates Kubernetes, it requires server cluster zone information, which is missing from server cluster config.");
+            "The Test Script class "
+                + name
+                + " manipulates Kubernetes, it requires server cluster zone information, which is missing from server cluster config.");
       }
     }
 
