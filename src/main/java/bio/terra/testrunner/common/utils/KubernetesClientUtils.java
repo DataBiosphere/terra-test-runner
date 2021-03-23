@@ -46,6 +46,7 @@ public final class KubernetesClientUtils {
   private static int secondsIntervalToPollReplicaSetSizeChange = 5;
 
   private static String componentLabel;
+
   private static String apiComponentLabel;
 
   private static String namespace;
@@ -588,5 +589,13 @@ public final class KubernetesClientUtils {
             pod ->
                 deploymentComponentLabel.equals(pod.getMetadata().getLabels().get(componentLabel)))
         .forEach(p -> logger.debug("Pod: {}", p.getMetadata().getName()));
+  }
+
+  public static String getComponentLabel() {
+    return componentLabel;
+  }
+
+  public static String getApiComponentLabel() {
+    return apiComponentLabel;
   }
 }
