@@ -530,7 +530,8 @@ public final class KubernetesClientUtils {
    * replica count, (3) wait for replica count to update, and (4) print the results
    *
    * @param podCount count of pods to scale the kubernetes deployment to
-   * @param componentLabel component label key for locating the kubernetes application component associated with the deployment
+   * @param componentLabel component label key for locating the kubernetes application component
+   *     associated with the deployment
    * @param apiComponentLabel the corresponding value of the component label key
    */
   public static void changeReplicaSetSizeAndWait(
