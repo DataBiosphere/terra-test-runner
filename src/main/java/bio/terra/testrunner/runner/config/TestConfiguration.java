@@ -101,10 +101,6 @@ public class TestConfiguration implements SpecificationInterface {
                 + " manipulates Kubernetes, but the server specification has disabled Kubernetes manipulations"
                 + " (see server.skipKubernetes flag).");
       }
-
-      if (disruptiveScript.disruptiveScriptClassInstance().manipulatesKubernetes()) {
-        server.cluster.validate();
-      }
     }
 
     logger.debug("Validating the test script specifications");
