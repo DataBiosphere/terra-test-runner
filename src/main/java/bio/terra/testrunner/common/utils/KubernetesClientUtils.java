@@ -177,8 +177,8 @@ public final class KubernetesClientUtils {
   /**
    * An alternative method to build the singleton Kubernetes client objects without .kube/config.
    *
-   * <p>Requires Test Runner Service Account that meets the following standards - Kubernetes
-   * Engine Viewer
+   * <p>Requires Test Runner Service Account that meets the following standards - Kubernetes Engine
+   * Viewer
    *
    * <p>For control of namespaces, a Kubernetes Service Account granted with appropriate RBAC
    * priviledges is required.
@@ -525,6 +525,14 @@ public final class KubernetesClientUtils {
     changeReplicaSetSizeAndWait(podCount, componentLabel, apiComponentLabel);
   }
 
+  /**
+   * Utilizing the other util functions to (1) fresh fetch of the api deployment, (2) scale the
+   * replica count, (3) wait for replica count to update, and (4) print the results
+   *
+   * @param podCount count of pods to scale the kubernetes deployment to
+   * @param componentLabel component label key for locating the kubernetes application component associated with the deployment
+   * @param apiComponentLabel the corresponding value of the component label key
+   */
   public static void changeReplicaSetSizeAndWait(
       int podCount, String componentLabel, String apiComponentLabel) throws Exception {
     V1Deployment apiDeployment = getApiDeployment(componentLabel, apiComponentLabel);
