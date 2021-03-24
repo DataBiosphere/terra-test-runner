@@ -85,6 +85,128 @@ The application specification includes (this section applies to resiliency test 
     * componentLabel
     * apiComponentLabel
 
+### Running Resiliency Tests Through Test Runner Library
+Test Runner Library provides the underlying framework for running resiliency tests within namespaces. The whole process involves only a few simple setup and configuration steps described below.
+
+At a high level, running resiliency tests within namespaces require a set of permissions to manipulate cluster resources with Kubernetes API.
+These permissions are namespace scoped so that no resiliency tests will have cluster-wide access.
+
+The required namespace permissions are specified in the 3 manifest templates which comes with the Test Runner Library distribution.
+The `setup-k8s-testrunner.sh` script templates the formation of the actual manifests for deploying to a namespace.
+The `setup-k8s-testrunner.sh` script also carries out the following functions:
+
+* Provision the Kubernetes Service Account, RBAC Role and RoleBinding for Test Runner.
+* Export credentials of the Test Runner Kubernetes Service Account to Vault.
+
+To set up a namespace for Test Runner resiliency tests, simply run the command in the following example (`terra-zloery` namespace for example).
+
+The first argument is the `kubectl context` mentioned elsewhere in this document.
+
+The second argument is the Terra namespace (without the `terra-` prefix).
+
+The third argument is just some text to describe the application itself.
+```shell script
+$ ./setup-k8s-testrunner.sh gke_terra-kernel-k8s_us-central1-a_terra-integration zloery workspacemanager
+```
+
+Once the script above ran successfully, the namespace is ready for resiliency testing through the Test Runner Framework.
+
+The Kubernetes credentials stored in Vault needs to be rendered by means of the `./render-k8s-config.sh zloery` script in the test repository before kicking off the resiliency tests.
+```shell script
+$ ./render-k8s-config.sh zloery
+```
+
+<summary>testrunner-k8s-serviceaccount.yml.template</summary>
+
+```text
+# Do not modify this template file.
+
+# This template file is used for setting a Test Runner K8S Service Account
+# for running resiliency tests in a namespace.
+#
+# This template file is to be used in conjunction with the other template files
+#
+#   testrunner-k8s-role.yml.template
+#   testrunner-k8s-rolebinding.yml.template
+#
+# within an automation pipeline and is not meant to be run separately or manually.
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/component: APP
+  name: testrunner-k8s-sa
+  namespace: terra-NAMESPACE
+```
+
+<summary>testrunner-k8s-role.yml.template</summary>
+
+```text
+# Do not modify this template file.
+
+# This template file is used for setting a Test Runner privileged RBAC role
+# for running resiliency tests in a namespace.
+#
+# This template file is to be used in conjunction with the other template files
+#
+#   testrunner-k8s-sa.yml.template
+#   testrunner-k8s-rolebinding.yml.template
+#
+# within an automation pipeline and is not meant to be run separately or manually.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: testrunner-k8s-role
+  # A k8s namespace: e.g. terra-wsmtest, terra-ichang.
+  # Avoid using default or system namespaces such as kube-system.
+  namespace: terra-NAMESPACE
+  labels:
+    app.kubernetes.io/component: APP
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/exec"]
+    verbs: ["get", "list", "watch", "delete", "patch", "create", "update"]
+  - apiGroups: ["extensions", "apps"]
+    resources: ["deployments", "deployments/scale"]
+    verbs: ["get", "list", "watch", "delete", "patch", "create", "update"]
+```
+<summary>testrunner-k8s-rolebinding.yml.template</summary>
+
+```text
+# Do not modify this template file.
+
+# This template file is used for binding a Test Runner K8S Service Account
+# to a privileged RBAC role for running resiliency tests in a namespace.
+#
+# This template file is to be used in conjunction with the other template files
+#
+#   testrunner-k8s-sa.yml.template
+#   testrunner-k8s-role.yml.template
+#
+# within an automation pipeline and is not meant to be run separately or manually.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: testrunner-k8s-sa-rolebinding
+  # A k8s namespace: e.g. terra-wsmtest, terra-ichang.
+  # Avoid using default or system namespaces such as kube-system.
+  namespace: terra-NAMESPACE
+  labels:
+    app.kubernetes.io/component: APP
+subjects:
+  # Authorize In-Cluster Service Account
+  - kind: ServiceAccount
+    name: testrunner-k8s-sa
+    namespace: terra-NAMESPACE
+roleRef:
+  kind: Role
+  name: testrunner-k8s-role
+  apiGroup: rbac.authorization.k8s.io
+```
+
 **This section will be updated as more pieces of the test configuration are implemented.** See the
 [Performance Testing Infrastructure Proposal](https://docs.google.com/document/d/11PZIXZwOyd394BFOlBsDjOGjZdC-jwTr_n92nTJvFxw)
 for more details on the desired end goal.
