@@ -86,10 +86,30 @@ The application specification includes (this section applies to resiliency test 
     * apiComponentLabel
 
 ### Running Resiliency Tests Through Test Runner Library
-Test Runner Library provides the underlying framework for running resiliency tests within namespaces. The whole process involves only a few simple setup and configuration steps described below.
+Test Runner Framework supports resiliency tests in addition to Integration, Performance, and Connected tests.
+As a premier genomic platform for biomedical research, the [*Terra.Bio*](https://terra.bio) migration to *PaaS* or Cloud infrastructures (GCP, AWS, Azure) to create the new *MCTerra* platform, is a key step to advance the field of genomic science.
+Without the migration and data crunching capability that comes with the migration, it would be difficult for researchers to develop, experiment with and evaluate next generation *SOTA* algorithms for genomic computing at scale.
+Our goal is to ensure that the *MCTerra* platform continues to function and scale properly as demand continues to increase. 
+
+Given the above context, *Containerization* has become the *defacto* go to paradigm for managing shared cloud resources the *MCTerra* platform requires during its lifecycles.
+Although autoscaling and dynamic load balancing are some of the key techniques for managing shared cloud resources, policies on how these techniques should apply are often set by *development*, *devOps*, *QA* managers iteratively over the course of the software lifecycle.
+Without the proper tool to analyze a containerized application, stakeholders will be forced to set these policies in *adhoc* manners, risking either insufficient resources to meet demand or too many idling resources.
+Resiliency test fills the gap by generating metrics that stakeholders can use to understand the performance of containerized applications and make comparisons across cloud vendors.
+Resiliency tests can trigger additional logging in targeted *MCTerra* service components for further analysis.
+
+***What is a resiliency test?***
+
+Test Runner provides the framework to target containerized applications with specific loads while at the same time control the cloud resources given to the containerized applications.
+During a resiliency test flight, the framework spawns concurrent threads to scale cloud resources up and down while delivering load to the target *MCTerra* service components at scale according to user specifications.
+Resiliency tests can be integrated with a CI/CD pipeline such as GitHub Action Workflows, or they can be run locally for debugging purpose.
+
+Test Runner Framework supports resiliency tests on a ***namespaced*** test environment. The following discussion assumes a valid namespace already exists in a Kubernetes cluster.
+Please refer to [Creating the namespace](https://github.com/DataBiosphere/terra/blob/iv-1331/docs/dev-guides/personal-environments.md#step-3-creating-the-namespace) for more details about namespace creation in *MCTerra*.
+
+***Requirements on running resiliency test***
 
 At a high level, running resiliency tests within namespaces require a set of permissions to manipulate cluster resources with Kubernetes API.
-These permissions are namespace scoped so that no resiliency tests will have cluster-wide access.
+These permissions are namespace scoped, no resiliency tests will have cluster-wide access.
 
 The required namespace permissions are specified in the 3 manifest templates which comes with the Test Runner Library distribution.
 The `setup-k8s-testrunner.sh` script templates the formation of the actual manifests for deploying to a namespace.
@@ -98,27 +118,115 @@ The `setup-k8s-testrunner.sh` script also carries out the following functions:
 * Provision the Kubernetes Service Account, RBAC Role and RoleBinding for Test Runner.
 * Export credentials of the Test Runner Kubernetes Service Account to Vault.
 
-To set up a namespace for Test Runner resiliency tests, simply run the command in the following example (`terra-zloery` namespace for example).
+***Setting up existing namespaces for resiliency tests***
+
+To set up a namespace for Test Runner resiliency tests, simply run the command as provided in the following example (`terra-zloery` namespace for example).
 
 The first argument is the `kubectl context` mentioned elsewhere in this document.
 
-The second argument is the Terra namespace (without the `terra-` prefix).
+The second argument is the Terra namespace (without the `terra-` prefix).Without 
 
 The third argument is just some text to describe the application itself.
 ```shell script
 $ ./setup-k8s-testrunner.sh gke_terra-kernel-k8s_us-central1-a_terra-integration zloery workspacemanager
 ```
 
-Once the script above ran successfully, the namespace is ready for resiliency testing through the Test Runner Framework.
+In summary, the script automatically templates in the variables `__KUBECONTEXT__, __NAMESPACE__, __APP__` based on the 3 arguments presented above and create the necessary namespace objects in Kubernetes that enables Test Runner to control the namespace.
 
-The Kubernetes credentials stored in Vault needs to be rendered by means of the `./render-k8s-config.sh zloery` script in the test repository before kicking off the resiliency tests.
+Below is the definition of the script `setup-k8s-testrunner.sh`
 ```shell script
-$ ./render-k8s-config.sh zloery
-```
+#!/bin/bash
+set -e
+
+# This script sets up the necessary Kubernetes objects and grant them the
+# necessary permissions to run resiliency tests in a nameapce. These objects are:
+#
+# Test Runner K8S Service Account
+# Test Runner RBAC Role
+# Test Runner RBAC RoleBinding
+
+# USAGE: ./setup-k8s-testrunner.sh <kubeconfig-context-name> wsmtest workspacemanager
+# WARNING: Please make sure the Kubernetes context and namespace arguments are the intended k8s environment to create the Test Runner Service Account.
+
+# After running this script with proper input arguments, you can run the following command
+# to render the Test Runner K8S credentials to run resiliency tests in the namespace:
+#
+# ./render-k8s-config.sh <__NAMESPACE__>
+#
+# Example: ./render-k8s-config.sh wsmtest
+
+# Required input
+__KUBECONTEXT__=$1
+if [ -z "$1" ]
+  then
+    echo "Please specify the ~/.kube/config context that defines the cluster where the Kubernetes objects will be created."
+    echo "Your application default credentials must have priviledged access to the cluster."
+    echo "Usage: ./setup-k8s-testrunner.sh <kubeconfig-context-name> wsmtest workspacemanager"
+    exit 1;
+fi
+kubectl config use-context "${__KUBECONTEXT__}"
+__NAMESPACE__=$2
+if [ -z "$2" ]
+  then
+    echo "Please specify a valid namespace (without the terra- prefix) as the second argument (e.g. wsmtest)."
+    echo "Usage: ./setup-k8s-testrunner.sh <kubeconfig-context-name> wsmtest workspacemanager"
+    exit 1;
+fi
+__APP__=$3
+if [ -z "$3" ]
+  then
+    echo "Please provide a component label as the third argument."
+    echo "This typically is a short string that describes the application."
+    echo "Usage: ./setup-k8s-testrunner.sh wsmtest workspacemanager"
+    exit 1;
+fi
+VAULT_TOKEN=${4:-$(cat "$HOME"/.vault-token)}
+
+# Template in __NAMESPACE__ and __APP__
+cat testrunner-k8s-serviceaccount.yml.template | \
+    sed "s|__NAMESPACE__|${__NAMESPACE__}|g" | \
+    sed "s|__APP__|${__APP__}|g" > testrunner-k8s-serviceaccount.yml
+
+cat testrunner-k8s-role.yml.template | \
+    sed "s|__NAMESPACE__|${__NAMESPACE__}|g" | \
+    sed "s|__APP__|${__APP__}|g" > testrunner-k8s-role.yml
+
+cat testrunner-k8s-rolebinding.yml.template | \
+    sed "s|__NAMESPACE__|${__NAMESPACE__}|g" | \
+    sed "s|__APP__|${__APP__}|g" > testrunner-k8s-rolebinding.yml
+
+echo "Provisioning the necessary Kubernetes objects in namespace terra-${__NAMESPACE__}."
+kubectl apply -f testrunner-k8s-serviceaccount.yml -n "terra-${__NAMESPACE__}"
+kubectl apply -f testrunner-k8s-role.yml -n "terra-${__NAMESPACE__}"
+kubectl apply -f testrunner-k8s-rolebinding.yml -n "terra-${__NAMESPACE__}"
+
+echo "Store Test Runner K8S Secrets in Vault."
+SECRET_NAME=$(kubectl get sa "testrunner-k8s-sa" -n "terra-${__NAMESPACE__}" -ojson | jq ".secrets[0].name" -r)
+kubectl get secret "${SECRET_NAME}" -n "terra-${__NAMESPACE__}" -ojson | base64 > "${HOME}/testrunner-k8s-sa.crt"
+
+DSDE_TOOLBOX_DOCKER_IMAGE=broadinstitute/dsde-toolbox:consul-0.20.0
+
+TESTRUNNER_K8S_SERVICE_ACCOUNT_VAULT_PATH=secret/dsde/terra/kernel/integration/${__NAMESPACE__}/testrunner-k8s-sa
+
+docker run --rm -v "${HOME}:/working" -e VAULT_TOKEN="${VAULT_TOKEN}" \
+    $DSDE_TOOLBOX_DOCKER_IMAGE \
+    vault write "${TESTRUNNER_K8S_SERVICE_ACCOUNT_VAULT_PATH}" key=@testrunner-k8s-sa.crt
+
+# Clean up generated files
+rm testrunner-k8s-serviceaccount.yml
+rm testrunner-k8s-role.yml
+rm testrunner-k8s-rolebinding.yml
+rm "${HOME}/testrunner-k8s-sa.crt"
+````
+
+The above script consumes the following template manifest files representing objects in Kubernetes namespace.
+There is no need to apply these template files manually.
+
+<details>
 
 <summary>testrunner-k8s-serviceaccount.yml.template</summary>
 
-```text
+```yaml
 # Do not modify this template file.
 
 # This template file is used for setting a Test Runner K8S Service Account
@@ -135,14 +243,14 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    app.kubernetes.io/component: APP
+    app.kubernetes.io/component: __APP__
   name: testrunner-k8s-sa
-  namespace: terra-NAMESPACE
+  namespace: terra-__NAMESPACE__
 ```
 
 <summary>testrunner-k8s-role.yml.template</summary>
 
-```text
+```yaml
 # Do not modify this template file.
 
 # This template file is used for setting a Test Runner privileged RBAC role
@@ -161,9 +269,9 @@ metadata:
   name: testrunner-k8s-role
   # A k8s namespace: e.g. terra-wsmtest, terra-ichang.
   # Avoid using default or system namespaces such as kube-system.
-  namespace: terra-NAMESPACE
+  namespace: terra-__NAMESPACE__
   labels:
-    app.kubernetes.io/component: APP
+    app.kubernetes.io/component: __APP__
 rules:
   - apiGroups: [""]
     resources: ["pods", "pods/exec"]
@@ -174,7 +282,7 @@ rules:
 ```
 <summary>testrunner-k8s-rolebinding.yml.template</summary>
 
-```text
+```yaml
 # Do not modify this template file.
 
 # This template file is used for binding a Test Runner K8S Service Account
@@ -193,19 +301,33 @@ metadata:
   name: testrunner-k8s-sa-rolebinding
   # A k8s namespace: e.g. terra-wsmtest, terra-ichang.
   # Avoid using default or system namespaces such as kube-system.
-  namespace: terra-NAMESPACE
+  namespace: terra-__NAMESPACE__
   labels:
-    app.kubernetes.io/component: APP
+    app.kubernetes.io/component: __APP__
 subjects:
   # Authorize In-Cluster Service Account
   - kind: ServiceAccount
     name: testrunner-k8s-sa
-    namespace: terra-NAMESPACE
+    namespace: terra-__NAMESPACE__
 roleRef:
   kind: Role
   name: testrunner-k8s-role
   apiGroup: rbac.authorization.k8s.io
 ```
+
+</details>
+
+***Rendering credentials for resiliency tests***
+
+The Kubernetes credentials stored in Vault needs to be rendered by means of the `./render-k8s-config.sh` script in the application repository before kicking off resiliency tests.
+
+Using namespace `terra-zloery` as example:
+
+```shell script
+$ ./render-k8s-config.sh zloery
+```
+
+Now the namespace (`terra-zloery` in above example) is ready for resiliency testing through Test Runner Framework.
 
 **This section will be updated as more pieces of the test configuration are implemented.** See the
 [Performance Testing Infrastructure Proposal](https://docs.google.com/document/d/11PZIXZwOyd394BFOlBsDjOGjZdC-jwTr_n92nTJvFxw)
