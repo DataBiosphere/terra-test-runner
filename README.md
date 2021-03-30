@@ -8,6 +8,7 @@ Jump to sections below:
 * [Terminology](#Terminology)
   * [Test Script](#Test-Script)
   * [Test Configuration](#Test-Configuration)
+  * [Running Resiliency Tests](#running-resiliency-tests)
   * [Test Run](#Test-Run)
   * [Test Runner](#Test-Runner)
   * [Test Suite](#Test-Suite)
@@ -85,7 +86,7 @@ The application specification includes (this section applies to resiliency test 
     * componentLabel
     * apiComponentLabel
 
-### Running Resiliency Tests Through Test Runner Library
+#### Running Resiliency Tests
 Test Runner Framework supports resiliency tests in addition to Integration, Performance, and Connected tests.
 As a premier genomic platform for biomedical research, the [*Terra.Bio*](https://terra.bio) migration to *PaaS* or Cloud infrastructures (GCP, AWS, Azure) to create the new *MCTerra* platform, is a key step to advance the field of genomic science.
 Without the migration and data crunching capability that comes with the migration, it would be difficult for researchers to develop, experiment with and evaluate next generation *SOTA* algorithms for genomic computing at scale.
