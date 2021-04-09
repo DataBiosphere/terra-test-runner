@@ -4,5 +4,57 @@ metadata:
   name: terra-component-version
   namespace: _TERRA_NAMESPACE_
 data:
+  agora.properties: |
+    appVersion=_TERRA_agora_appVersion_
+  buffer.properties: |
+    appVersion=_TERRA_buffer_appVersion_
+  consent.properties: |
+    appVersion=_TERRA_consent_appVersion_
+  duos.properties: |
+    appVersion=_TERRA_duos_appVersion_
+  crljanitor.properties: |
+    appVersion=_TERRA_crljanitor_appVersion_
+  cromiam.properties: |
+    appVersion=_TERRA_cromiam_appVersion_
+  cromwell.properties: |
+    appVersion=_TERRA_cromwell_appVersion_
+  datarepo.properties: |
+    appVersion=_TERRA_datarepo_appVersion_
+  datarepomonitoring.properties: |
+    appVersion=_TERRA_datarepomonitoring_appVersion_
+  elasticsearch.properties: |
+    appVersion=_TERRA_elasticsearch_appVersion_
+  firecloudorch.properties: |
+    appVersion=_TERRA_firecloudorch_appVersion_
+  firecloudui.properties: |
+    appVersion=_TERRA_firecloudui_appVersion_
+  hydra.properties: |
+    appVersion=_TERRA_hydra_appVersion_
+  icdemo.properties: |
+    appVersion=_TERRA_icdemo_appVersion_
+  identityconcentrator.properties: |
+    appVersion=_TERRA_identityconcentrator_appVersion_
+  istioconfig.properties: |
+    appVersion=_TERRA_istioconfig_appVersion_
+  jobmanager.properties: |
+    appVersion=_TERRA_jobmanager_appVersion_
+  leonardo.properties: |
+    appVersion=_TERRA_leonardo_appVersion_
+  ontology.properties: |
+    appVersion=_TERRA_ontology_appVersion_
+  opendj.properties: |
+    appVersion=_TERRA_opendj_appVersion_
+  poc.properties: |
+    appVersion=_TERRA_poc_appVersion_
+  mongodb.properties: |
+    appVersion=_TERRA_mongodb_appVersion_
+  ncbiaccess.properties: |
+    appVersion=_TERRA_ncbiaccess_appVersion_
+  rawls.properties: |
+    appVersion=_TERRA_rawls_appVersion_
+  sam.properties: |
+    appVersion=_TERRA_sam_appVersion_
+  thurloe.properties: |
+    appVersion=_TERRA_thurloe_appVersion_
   workspacemanager.properties: |
     appVersion=_TERRA_workspacemanager_appVersion_
