@@ -30,13 +30,14 @@ else
 fi
 
 # Clone Helm chart and helmfile repos
-rm -rf terra-helm
-rm -rf terra-helmfile
-git clone -b "$TERRA_HELM_BRANCH" --single-branch ${helmgit}
-git clone -b "$TERRA_HELMFILE_BRANCH" --single-branch ${helmfilegit}
+#rm -rf terra-helm
+#rm -rf terra-helmfile
+#git clone -b "$TERRA_HELM_BRANCH" --single-branch ${helmgit}
+#git clone -b "$TERRA_HELMFILE_BRANCH" --single-branch ${helmfilegit}
 
 declare -a TERRA_COMPONENTS
 declare -a TERRA_COMPONENT_VERSIONS
+declare -a TERRA_COMPONENT_CHART_VERSIONS
 
 getIndex () {
   val=$1
@@ -60,12 +61,15 @@ getIndex () {
 while read TERRA_COMPONENT
 do
   VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions.yaml)
-  TERRA_COMPONENTS+=($TERRA_COMPONENT)
-  TERRA_COMPONENT_VERSIONS+=($VERSION)
+  CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions.yaml)
+  TERRA_COMPONENTS+=(${TERRA_COMPONENT})
+  TERRA_COMPONENT_VERSIONS+=(${VERSION})
+  TERRA_COMPONENT_CHART_VERSIONS+=(${CHART_VERSION})
 done < <(yq e '.releases | keys' terra-helmfile/versions.yaml -j | jq -r -c '.[]')
 
 # Test: Before override
 echo "${TERRA_COMPONENT_VERSIONS[$(getIndex 'ontology')]}"
+echo "${TERRA_COMPONENT_CHART_VERSIONS[$(getIndex 'ontology')]}"
 
 # Override default values with env specific values
 case ${TERRA_ENV} in
@@ -77,8 +81,10 @@ case ${TERRA_ENV} in
       while read TERRA_COMPONENT
       do
         VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" "${YAML}")
+        CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" "${YAML}")
         COMPONENT_IDX=$(getIndex "${TERRA_COMPONENT}")
-        TERRA_COMPONENT_VERSIONS[$COMPONENT_IDX]=$VERSION
+        TERRA_COMPONENT_VERSIONS[$COMPONENT_IDX]=${VERSION}
+        TERRA_COMPONENT_CHART_VERSIONS[$COMPONENT_IDX]=${CHART_VERSION}
       done < <(yq e '.releases | keys' "${YAML}" -j | jq -r -c '.[]')
     fi
     YAML_LIVE="terra-helmfile/environments/live/${TERRA_ENV}.yaml"
@@ -90,8 +96,10 @@ case ${TERRA_ENV} in
         if [ "${VERSION_EXIST}" = "true"  ]
         then
           VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" "${YAML_LIVE}")
+          CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" "${YAML_LIVE}")
           COMPONENT_IDX=$(getIndex "${TERRA_COMPONENT}")
-          TERRA_COMPONENT_VERSIONS[$COMPONENT_IDX]=$VERSION
+          TERRA_COMPONENT_VERSIONS[$COMPONENT_IDX]=${VERSION}
+          TERRA_COMPONENT_CHART_VERSIONS[$COMPONENT_IDX]=${CHART_VERSION}
         fi
       done < <(yq e '.releases | keys' "${YAML_LIVE}" -j | jq -r -c '.[]')
     fi
@@ -107,8 +115,10 @@ case ${TERRA_ENV} in
         if [ "${VERSION_EXIST}" = "true"  ]
         then
           VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" "${YAML}")
+          CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" "${YAML}")
           COMPONENT_IDX=$(getIndex "${TERRA_COMPONENT}")
           TERRA_COMPONENT_VERSIONS[$COMPONENT_IDX]=$VERSION
+          TERRA_COMPONENT_CHART_VERSIONS[$COMPONENT_IDX]=${CHART_VERSION}
         fi
       done < <(yq e '.releases | keys' "${YAML}" -j | jq -r -c '.[]')
     fi
@@ -117,28 +127,36 @@ esac
 
 # Test: After override
 echo "${TERRA_COMPONENT_VERSIONS[$(getIndex 'ontology')]}"
+echo "${TERRA_COMPONENT_CHART_VERSIONS[$(getIndex 'ontology')]}"
 
 # Template in overridden version values
 SUB=""
+CHART_SUB=""
 index=0
 while ((index<${#TERRA_COMPONENTS[@]}))
 do
   VERSION="${TERRA_COMPONENT_VERSIONS[$index]}"
+  CHART_VERSION="${TERRA_COMPONENT_CHART_VERSIONS[$index]}"
   SUBVAR='_TERRA_'"${TERRA_COMPONENTS[$index]}"'_appVersion_'
+  CHART_SUBVAR='_TERRA_'"${TERRA_COMPONENTS[$index]}"'_chartVersion_'
   if [ $index == 0 ]
   then
     SUB+="s|${SUBVAR}|${VERSION}|g"
+    CHART_SUB+="s|${CHART_SUBVAR}|${CHART_VERSION}|g"
   else
     SUB+="; s|${SUBVAR}|${VERSION}|g"
+    CHART_SUB+="; s|${CHART_SUBVAR}|${CHART_VERSION}|g"
   fi
   ((index++))
 done
 
 echo $SUB
+echo $CHART_SUB
 
 cat component-version-configmap.yml.template | \
     sed "s|_TERRA_NAMESPACE_|${_TERRA_NAMESPACE_}|g" | \
-    sed "${SUB}" > "${TERRA_ENV}-component-version-configmap.yml"
+    sed "${SUB}" | \
+    sed "${CHART_SUB}" > "${TERRA_ENV}-component-version-configmap.yml"
 
 # Uncomment this when ready to apply ConfigMap to Kubernetes namespace
 # kubectl apply -f "${TERRA_ENV}-component-version-configmap.yml" -n ${_TERRA_NAMESPACE_}

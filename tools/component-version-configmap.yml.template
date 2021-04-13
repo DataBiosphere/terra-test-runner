@@ -6,55 +6,82 @@ metadata:
 data:
   agora.properties: |
     appVersion=_TERRA_agora_appVersion_
+    chartVersion=_TERRA_agora_chartVersion_
   buffer.properties: |
     appVersion=_TERRA_buffer_appVersion_
+    chartVersion=_TERRA_buffer_chartVersion_
   consent.properties: |
     appVersion=_TERRA_consent_appVersion_
+    chartVersion=_TERRA_consent_chartVersion_
   duos.properties: |
     appVersion=_TERRA_duos_appVersion_
+    chartVersion=_TERRA_duos_chartVersion_
   crljanitor.properties: |
     appVersion=_TERRA_crljanitor_appVersion_
+    chartVersion=_TERRA_crljanitor_chartVersion_
   cromiam.properties: |
     appVersion=_TERRA_cromiam_appVersion_
+    chartVersion=_TERRA_cromiam_chartVersion_
   cromwell.properties: |
     appVersion=_TERRA_cromwell_appVersion_
+    chartVersion=_TERRA_cromwell_chartVersion_
   datarepo.properties: |
     appVersion=_TERRA_datarepo_appVersion_
+    chartVersion=_TERRA_datarepo_chartVersion_
   datarepomonitoring.properties: |
     appVersion=_TERRA_datarepomonitoring_appVersion_
+    chartVersion=_TERRA_datarepomonitoring_chartVersion_
   elasticsearch.properties: |
     appVersion=_TERRA_elasticsearch_appVersion_
+    chartVersion=_TERRA_elasticsearch_chartVersion_
   firecloudorch.properties: |
     appVersion=_TERRA_firecloudorch_appVersion_
+    chartVersion=_TERRA_firecloudorch_chartVersion_
   firecloudui.properties: |
     appVersion=_TERRA_firecloudui_appVersion_
+    chartVersion=_TERRA_firecloudui_chartVersion_
   hydra.properties: |
     appVersion=_TERRA_hydra_appVersion_
+    chartVersion=_TERRA_hydra_chartVersion_
   icdemo.properties: |
     appVersion=_TERRA_icdemo_appVersion_
+    chartVersion=_TERRA_icdemo_chartVersion_
   identityconcentrator.properties: |
     appVersion=_TERRA_identityconcentrator_appVersion_
+    chartVersion=_TERRA_identityconcentrator_chartVersion_
   istioconfig.properties: |
     appVersion=_TERRA_istioconfig_appVersion_
+    chartVersion=_TERRA_istioconfig_chartVersion_
   jobmanager.properties: |
     appVersion=_TERRA_jobmanager_appVersion_
+    chartVersion=_TERRA_jobmanager_chartVersion_
   leonardo.properties: |
     appVersion=_TERRA_leonardo_appVersion_
+    chartVersion=_TERRA_leonardo_chartVersion_
   ontology.properties: |
     appVersion=_TERRA_ontology_appVersion_
+    chartVersion=_TERRA_ontology_chartVersion_
   opendj.properties: |
     appVersion=_TERRA_opendj_appVersion_
+    chartVersion=_TERRA_opendj_chartVersion_
   poc.properties: |
     appVersion=_TERRA_poc_appVersion_
+    chartVersion=_TERRA_poc_chartVersion_
   mongodb.properties: |
     appVersion=_TERRA_mongodb_appVersion_
+    chartVersion=_TERRA_mongodb_chartVersion_
   ncbiaccess.properties: |
     appVersion=_TERRA_ncbiaccess_appVersion_
+    chartVersion=_TERRA_ncbiaccess_chartVersion_
   rawls.properties: |
     appVersion=_TERRA_rawls_appVersion_
+    chartVersion=_TERRA_rawls_chartVersion_
   sam.properties: |
     appVersion=_TERRA_sam_appVersion_
+    chartVersion=_TERRA_sam_chartVersion_
   thurloe.properties: |
     appVersion=_TERRA_thurloe_appVersion_
+    chartVersion=_TERRA_thurloe_chartVersion_
   workspacemanager.properties: |
     appVersion=_TERRA_workspacemanager_appVersion_
+    chartVersion=_TERRA_workspacemanager_chartVersion_
