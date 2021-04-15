@@ -30,10 +30,10 @@ else
 fi
 
 # Clone Helm chart and helmfile repos
-#rm -rf terra-helm
-#rm -rf terra-helmfile
-#git clone -b "$TERRA_HELM_BRANCH" --single-branch ${helmgit}
-#git clone -b "$TERRA_HELMFILE_BRANCH" --single-branch ${helmfilegit}
+rm -rf terra-helm
+rm -rf terra-helmfile
+git clone -b "$TERRA_HELM_BRANCH" --single-branch ${helmgit}
+git clone -b "$TERRA_HELMFILE_BRANCH" --single-branch ${helmfilegit}
 
 declare -a TERRA_COMPONENTS
 declare -a TERRA_COMPONENT_VERSIONS
@@ -105,7 +105,7 @@ case ${TERRA_ENV} in
     fi
     ;;
   *)
-    _TERRA_NAMESPACE_="${TERRA_ENV}"
+    _TERRA_NAMESPACE_="terra-${TERRA_ENV}"
     YAML="terra-helmfile/environments/personal/${TERRA_ENV}.yaml"
     if [ -e "${YAML}" ]
     then
