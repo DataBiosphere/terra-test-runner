@@ -21,7 +21,7 @@ metadata:
     app.kubernetes.io/component: APP
 rules:
   - apiGroups: [""]
-    resources: [pods", "pods/exec"]
+    resources: ["pods", "pods/exec"]
     verbs: ["get", "list", "watch", "delete", "patch", "create", "update"]
   - apiGroups: [""]
     resources: ["configmaps"]
