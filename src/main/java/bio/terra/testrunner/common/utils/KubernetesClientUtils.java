@@ -18,6 +18,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentList;
 import io.kubernetes.client.openapi.models.V1DeploymentSpec;
@@ -34,8 +35,10 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import okhttp3.Call;
@@ -57,6 +60,9 @@ public final class KubernetesClientUtils {
 
   private static CoreV1Api kubernetesClientCoreObject;
   private static AppsV1Api kubernetesClientAppsObject;
+
+  private static Map<String, Map<String, String>> componentVersions =
+      new HashMap<String, Map<String, String>>();
 
   private KubernetesClientUtils() {}
 
@@ -285,6 +291,50 @@ public final class KubernetesClientUtils {
 
     kubernetesClientCoreObject = new CoreV1Api();
     kubernetesClientAppsObject = new AppsV1Api();
+
+    // Import MCTerra Component versions from ConfigMap and outputs JSON-ready format
+    importComponentVersions();
+  }
+
+  /**
+   * This method imports MCTerra Component versions deployed to the target Kubernetes namespace.
+   *
+   * <p>A ConfigMap is used to store the terra-helmfile versions manifest which serve as the ground
+   * truth of MCTerra Component versions for all environments.
+   *
+   * <p>In order to import MCTerra Component versions from the Config Map, the Test Runner
+   * Kubernetes SA must be granted the following RBAC Role.
+   *
+   * <p>- apiGroups: [""] resources: ["configmaps"] resourceNames: ["terra-component-version"]
+   * verbs: ["get", "patch", "update"] . * For more information of RBAC Roles, please refer to the
+   * following documentation https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+   *
+   * <p>Note: The name of the Component Version Identification ConfigMap: terra-component-version is
+   * built in to this process.
+   */
+  private static void importComponentVersions() {
+    try {
+      V1ConfigMap config =
+          getKubernetesClientCoreObject()
+              .readNamespacedConfigMap("terra-component-version", namespace, null, null, null);
+      Map<String, String> configMap = config.getData();
+      for (Map.Entry<String, String> entry : configMap.entrySet()) {
+        String componentKey = entry.getKey();
+        String multilineConfig = entry.getValue();
+        String[] configSplit = multilineConfig.split("\\R");
+        Map<String, String> versionMap = new HashMap<String, String>();
+        for (String versionConfig : configSplit) {
+          String[] versionKeyVal = versionConfig.split("=");
+          String versionKey = versionKeyVal[0];
+          String versionVal = versionKeyVal[1];
+          versionMap.put(versionKey, versionVal);
+        }
+        String shortComponentKey = componentKey.replace(".properties", "");
+        componentVersions.put(shortComponentKey, versionMap);
+      }
+    } catch (ApiException e) {
+      logger.debug(e.getResponseBody());
+    }
   }
 
   /**
@@ -369,6 +419,17 @@ public final class KubernetesClientUtils {
                   namespace, null, null, null, null, null, null, null, null, null);
     }
     return list.getItems();
+  }
+
+  /**
+   * Get the Kubernetes ConfigMap identified by the name argument.
+   *
+   * @param name the name of the Kubernetes ConfigMap
+   * @return a V1ConfigMap object
+   */
+  public static V1ConfigMap getComponentVersionConfigMap(String name) throws ApiException {
+    return getKubernetesClientCoreObject()
+        .readNamespacedConfigMap(name, namespace, null, null, null);
   }
 
   /**
