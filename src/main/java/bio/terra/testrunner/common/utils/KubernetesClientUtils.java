@@ -82,6 +82,10 @@ public final class KubernetesClientUtils {
     return kubernetesClientAppsObject;
   }
 
+  public static Map<String, Map<String, String>> getComponentVersions() {
+    return componentVersions;
+  }
+
   /**
    * Build the singleton Kubernetes client objects. This method should be called once at the
    * beginning of a test run, and then all subsequent fetches should use the getter methods instead.
