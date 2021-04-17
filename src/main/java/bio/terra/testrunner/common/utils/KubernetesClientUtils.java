@@ -35,12 +35,14 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import okhttp3.Call;
 import okhttp3.Response;
 import org.slf4j.Logger;
@@ -322,20 +324,20 @@ public final class KubernetesClientUtils {
           getKubernetesClientCoreObject()
               .readNamespacedConfigMap("terra-component-version", namespace, null, null, null);
       Map<String, String> configMap = config.getData();
-      for (Map.Entry<String, String> entry : configMap.entrySet()) {
-        String componentKey = entry.getKey();
-        String multilineConfig = entry.getValue();
-        String[] configSplit = multilineConfig.split("\\R");
-        Map<String, String> versionMap = new HashMap<String, String>();
-        for (String versionConfig : configSplit) {
-          String[] versionKeyVal = versionConfig.split("=");
-          String versionKey = versionKeyVal[0];
-          String versionVal = versionKeyVal[1];
-          versionMap.put(versionKey, versionVal);
-        }
-        String shortComponentKey = componentKey.replace(".properties", "");
-        componentVersions.put(shortComponentKey, versionMap);
-      }
+      componentVersions =
+          configMap.entrySet().stream()
+              .collect(
+                  Collectors.toMap(
+                      entry -> entry.getKey().replace(".properties", ""),
+                      entry -> // A unique state of MCTerra deployment can employ multiline
+                          // key=value properties.
+                          // The purpose of this code is to collect all these properties as a map
+                          // for each and every MCTerra Component and return a map of map structure.
+                          Arrays.stream(entry.getValue().split("\\R"))
+                              .collect(
+                                  Collectors.toMap(
+                                      versionCfg -> versionCfg.split("=")[0],
+                                      versionCfg -> versionCfg.split("=")[1]))));
     } catch (ApiException e) {
       logger.debug(e.getResponseBody());
     }
