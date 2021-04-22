@@ -159,7 +159,7 @@ public class TestRunner {
     }
 
     // update any Kubernetes properties specified by the test configuration
-    if (!config.server.skipKubernetes && config.disruptiveScript != null) {
+    if (!config.server.skipKubernetes) {
       KubernetesClientUtils.buildKubernetesClientObjectWithClientKey(
           config.server, config.application);
       modifyKubernetesPostDeployment();
