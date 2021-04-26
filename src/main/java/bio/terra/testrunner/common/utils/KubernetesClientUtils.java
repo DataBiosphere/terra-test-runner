@@ -84,6 +84,14 @@ public final class KubernetesClientUtils {
     return kubernetesClientAppsObject;
   }
 
+  /**
+   * This method returns the component versions of all MCTerra Services as a map of maps.
+   * The Component Version ConfigMap for the target namespace is the source of truth.
+   *
+   * The state of a deployed MCTerra Service can be uniquely identified by the set
+   * of component version keys present in the map nested inside the top-level map.
+   *
+   */
   public static Map<String, Map<String, String>> getComponentVersions() {
     return componentVersions;
   }
