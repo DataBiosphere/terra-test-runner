@@ -85,14 +85,15 @@ public final class KubernetesClientUtils {
   }
 
   /**
-   * This method returns the component versions of all MCTerra Services as a map of maps.
-   * The Component Version ConfigMap for the target namespace is the source of truth.
+   * This method returns the component versions of all MCTerra Services as a map of maps. The
+   * Component Version ConfigMap for the target namespace is the source of truth.
    *
-   * The state of a deployed MCTerra Service can be uniquely identified by the set
-   * of component version keys present in the map nested inside the top-level map.
-   *
+   * <p>The state of a deployed MCTerra Service can be uniquely identified by the set of component
+   * version keys present in the map nested inside the top-level map.
    */
   public static Map<String, Map<String, String>> getComponentVersions() {
+    // Import MCTerra Component versions from ConfigMap and outputs JSON-ready format
+    importComponentVersions();
     return componentVersions;
   }
 
@@ -305,9 +306,6 @@ public final class KubernetesClientUtils {
 
     kubernetesClientCoreObject = new CoreV1Api();
     kubernetesClientAppsObject = new AppsV1Api();
-
-    // Import MCTerra Component versions from ConfigMap and outputs JSON-ready format
-    importComponentVersions();
   }
 
   /**

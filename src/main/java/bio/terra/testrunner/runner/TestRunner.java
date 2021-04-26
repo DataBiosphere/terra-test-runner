@@ -162,6 +162,7 @@ public class TestRunner {
     if (!config.server.skipKubernetes) {
       KubernetesClientUtils.buildKubernetesClientObjectWithClientKey(
           config.server, config.application);
+      KubernetesClientUtils.getComponentVersions();
       modifyKubernetesPostDeployment();
     } else {
       logger.info("Kubernetes: Skipping Kubernetes configuration post-deployment");
