@@ -112,8 +112,7 @@ public class ServerSpecification implements SpecificationInterface {
   public void validate() {
     if (!skipKubernetes) {
       if (cluster == null) {
-        throw new IllegalArgumentException(
-                "Cluster Specification must be defined");
+        throw new IllegalArgumentException("Cluster Specification must be defined");
       }
       cluster.validate();
       if (testRunnerK8SServiceAccount == null) {
@@ -129,8 +128,7 @@ public class ServerSpecification implements SpecificationInterface {
       deploymentScript.validate();
     }
     if (testRunnerServiceAccount == null) {
-      throw new IllegalArgumentException(
-              "Test Runner Service Account must be defined");
+      throw new IllegalArgumentException("Test Runner Service Account must be defined");
     }
     testRunnerServiceAccount.validate();
 
