@@ -320,6 +320,7 @@ public final class KubernetesClientUtils {
    */
   private static void importComponentVersions() {
     try {
+      // Get the Terra Component Version ConfigMap for the namespace.
       V1ConfigMap config =
           getKubernetesClientCoreObject()
               .readNamespacedConfigMap("terra-component-version", namespace, null, null, null);
@@ -425,17 +426,6 @@ public final class KubernetesClientUtils {
                   namespace, null, null, null, null, null, null, null, null, null);
     }
     return list.getItems();
-  }
-
-  /**
-   * Get the Kubernetes ConfigMap identified by the name argument.
-   *
-   * @param name the name of the Kubernetes ConfigMap
-   * @return a V1ConfigMap object
-   */
-  public static V1ConfigMap getComponentVersionConfigMap(String name) throws ApiException {
-    return getKubernetesClientCoreObject()
-        .readNamespacedConfigMap(name, namespace, null, null, null);
   }
 
   /**
