@@ -36,7 +36,6 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,9 +62,6 @@ public final class KubernetesClientUtils {
   private static CoreV1Api kubernetesClientCoreObject;
   private static AppsV1Api kubernetesClientAppsObject;
 
-  private static Map<String, Map<String, String>> componentVersions =
-      new HashMap<String, Map<String, String>>();
-
   private KubernetesClientUtils() {}
 
   public static CoreV1Api getKubernetesClientCoreObject() {
@@ -82,19 +78,6 @@ public final class KubernetesClientUtils {
           "Kubernetes client apps object is not setup. Check the server configuration skipKubernetes property.");
     }
     return kubernetesClientAppsObject;
-  }
-
-  /**
-   * This method returns the component versions of all MCTerra Services as a map of maps. The
-   * Component Version ConfigMap for the target namespace is the source of truth.
-   *
-   * <p>The state of a deployed MCTerra Service can be uniquely identified by the set of component
-   * version keys present in the map nested inside the top-level map.
-   */
-  public static Map<String, Map<String, String>> getComponentVersions() {
-    // Import MCTerra Component versions from ConfigMap and outputs JSON-ready format
-    importComponentVersions();
-    return componentVersions;
   }
 
   /**
@@ -314,6 +297,9 @@ public final class KubernetesClientUtils {
    * <p>A ConfigMap is used to store the terra-helmfile versions manifest which serve as the ground
    * truth of MCTerra Component versions for all environments.
    *
+   * <p>>The state of a deployed MCTerra Service can be uniquely identified by the set of component
+   * version keys present in the map nested inside the top-level map.
+   *
    * <p>In order to import MCTerra Component versions from the Config Map, the Test Runner
    * Kubernetes SA must be granted the following RBAC Role.
    *
@@ -324,30 +310,25 @@ public final class KubernetesClientUtils {
    * <p>Note: The name of the Component Version Identification ConfigMap: terra-component-version is
    * built in to this process.
    */
-  private static void importComponentVersions() {
-    try {
-      // Get the Terra Component Version ConfigMap for the namespace.
-      V1ConfigMap config =
-          getKubernetesClientCoreObject()
-              .readNamespacedConfigMap("terra-component-version", namespace, null, null, null);
-      Map<String, String> configMap = config.getData();
-      componentVersions =
-          configMap.entrySet().stream()
-              .collect(
-                  Collectors.toMap(
-                      entry -> entry.getKey().replace(".properties", ""),
-                      entry -> // A unique state of MCTerra deployment can employ multiline
-                          // key=value properties.
-                          // The purpose of this code is to collect all these properties as a map
-                          // for each and every MCTerra Component and return a map of map structure.
-                          Arrays.stream(entry.getValue().split("\\R"))
-                              .collect(
-                                  Collectors.toMap(
-                                      versionCfg -> versionCfg.split("=")[0],
-                                      versionCfg -> versionCfg.split("=")[1]))));
-    } catch (ApiException e) {
-      logger.debug(e.getResponseBody());
-    }
+  public static Map<String, Map<String, String>> importComponentVersions() throws ApiException {
+    // Get the Terra Component Version ConfigMap for the namespace.
+    V1ConfigMap config =
+        getKubernetesClientCoreObject()
+            .readNamespacedConfigMap("terra-component-version", namespace, null, null, null);
+    Map<String, String> configMap = config.getData();
+    return configMap.entrySet().stream()
+        .collect(
+            Collectors.toMap(
+                entry -> entry.getKey().replace(".properties", ""),
+                entry -> // A unique state of MCTerra deployment can employ multiline
+                    // key=value properties.
+                    // The purpose of this code is to collect all these properties as a map
+                    // for each and every MCTerra Component and return a map of map structure.
+                    Arrays.stream(entry.getValue().split("\\R"))
+                        .collect(
+                            Collectors.toMap(
+                                versionCfg -> versionCfg.split("=")[0],
+                                versionCfg -> versionCfg.split("=")[1]))));
   }
 
   /**

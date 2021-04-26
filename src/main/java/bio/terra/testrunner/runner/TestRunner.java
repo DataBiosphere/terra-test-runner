@@ -36,6 +36,9 @@ public class TestRunner {
 
   private static long secondsToWaitForPoolShutdown = 60;
 
+  private static Map<String, Map<String, String>> componentVersions =
+      new HashMap<String, Map<String, String>>();
+
   public static class TestRunSummary {
     public String id;
 
@@ -162,7 +165,7 @@ public class TestRunner {
     if (!config.server.skipKubernetes) {
       KubernetesClientUtils.buildKubernetesClientObjectWithClientKey(
           config.server, config.application);
-      KubernetesClientUtils.getComponentVersions();
+      componentVersions = KubernetesClientUtils.importComponentVersions();
       modifyKubernetesPostDeployment();
     } else {
       logger.info("Kubernetes: Skipping Kubernetes configuration post-deployment");
@@ -502,7 +505,7 @@ public class TestRunner {
     logger.info("Test run summary written to file: {}", runSummaryFile.getName());
 
     // Write the MCTerra Component versions of target environment to a file
-    objectWriter.writeValue(terraVersionFile, KubernetesClientUtils.getComponentVersions());
+    objectWriter.writeValue(terraVersionFile, componentVersions);
     logger.info("MCTerra Component versions written to file: {}", terraVersionFile.getName());
   }
 
