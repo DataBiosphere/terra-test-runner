@@ -36,6 +36,9 @@ public class TestRunner {
 
   private static long secondsToWaitForPoolShutdown = 60;
 
+  private static Map<String, Map<String, String>> componentVersions =
+      new HashMap<String, Map<String, String>>();
+
   public static class TestRunSummary {
     public String id;
 
@@ -162,6 +165,7 @@ public class TestRunner {
     if (!config.server.skipKubernetes) {
       KubernetesClientUtils.buildKubernetesClientObjectWithClientKey(
           config.server, config.application);
+      componentVersions = KubernetesClientUtils.importComponentVersions();
       modifyKubernetesPostDeployment();
     } else {
       logger.info("Kubernetes: Skipping Kubernetes configuration post-deployment");
@@ -456,6 +460,7 @@ public class TestRunner {
   private static final String renderedConfigFileName = "RENDERED_testConfiguration.json";
   private static final String userJourneyResultsFileName = "RAWDATA_userJourneyResults.json";
   private static final String runSummaryFileName = "SUMMARY_testRun.json";
+  private static final String envVersionFileName = "ENV_componentVersion.json";
 
   protected void writeOutResults(String outputParentDirName) throws IOException {
     // use Jackson to map the object to a JSON-formatted text block
@@ -485,6 +490,7 @@ public class TestRunner {
     File userJourneyResultsFile =
         FileUtils.createNewFile(outputDirectory.resolve(userJourneyResultsFileName).toFile());
     File runSummaryFile = outputDirectory.resolve(runSummaryFileName).toFile();
+    File terraVersionFile = outputDirectory.resolve(envVersionFileName).toFile();
 
     // write the rendered test configuration that was run to a file
     objectWriter.writeValue(renderedConfigFile, config);
@@ -497,6 +503,10 @@ public class TestRunner {
     // write the test run summary to a file
     objectWriter.writeValue(runSummaryFile, summary);
     logger.info("Test run summary written to file: {}", runSummaryFile.getName());
+
+    // Write the MCTerra Component versions of target environment to a file
+    objectWriter.writeValue(terraVersionFile, componentVersions);
+    logger.info("MCTerra Component versions written to file: {}", terraVersionFile.getName());
   }
 
   /**

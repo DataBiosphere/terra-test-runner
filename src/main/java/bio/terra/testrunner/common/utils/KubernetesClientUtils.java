@@ -18,6 +18,7 @@ import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentList;
 import io.kubernetes.client.openapi.models.V1DeploymentSpec;
@@ -34,10 +35,13 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import okhttp3.Call;
 import okhttp3.Response;
 import org.slf4j.Logger;
@@ -285,6 +289,46 @@ public final class KubernetesClientUtils {
 
     kubernetesClientCoreObject = new CoreV1Api();
     kubernetesClientAppsObject = new AppsV1Api();
+  }
+
+  /**
+   * This method imports MCTerra Component versions deployed to the target Kubernetes namespace.
+   *
+   * <p>A ConfigMap is used to store the terra-helmfile versions manifest which serve as the ground
+   * truth of MCTerra Component versions for all environments.
+   *
+   * <p>>The state of a deployed MCTerra Service can be uniquely identified by the set of component
+   * version keys present in the map nested inside the top-level map.
+   *
+   * <p>In order to import MCTerra Component versions from the Config Map, the Test Runner
+   * Kubernetes SA must be granted the following RBAC Role.
+   *
+   * <p>- apiGroups: [""] resources: ["configmaps"] resourceNames: ["terra-component-version"]
+   * verbs: ["get", "patch", "update"] . * For more information of RBAC Roles, please refer to the
+   * following documentation https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+   *
+   * <p>Note: The name of the Component Version Identification ConfigMap: terra-component-version is
+   * built in to this process.
+   */
+  public static Map<String, Map<String, String>> importComponentVersions() throws ApiException {
+    // Get the Terra Component Version ConfigMap for the namespace.
+    V1ConfigMap config =
+        getKubernetesClientCoreObject()
+            .readNamespacedConfigMap("terra-component-version", namespace, null, null, null);
+    Map<String, String> configMap = config.getData();
+    return configMap.entrySet().stream()
+        .collect(
+            Collectors.toMap(
+                entry -> entry.getKey().replace(".properties", ""),
+                entry -> // A unique state of MCTerra deployment can employ multiline
+                    // key=value properties.
+                    // The purpose of this code is to collect all these properties as a map
+                    // for each and every MCTerra Component and return a map of map structure.
+                    Arrays.stream(entry.getValue().split("\\R"))
+                        .collect(
+                            Collectors.toMap(
+                                versionCfg -> versionCfg.split("=")[0],
+                                versionCfg -> versionCfg.split("=")[1]))));
   }
 
   /**
