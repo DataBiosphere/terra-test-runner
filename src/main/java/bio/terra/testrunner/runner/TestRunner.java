@@ -460,7 +460,7 @@ public class TestRunner {
   private static final String renderedConfigFileName = "RENDERED_testConfiguration.json";
   private static final String userJourneyResultsFileName = "RAWDATA_userJourneyResults.json";
   private static final String runSummaryFileName = "SUMMARY_testRun.json";
-  private static final String terraVersionFileName = "TERRA_componentVersion.json";
+  private static final String envVersionFileName = "ENV_componentVersion.json";
 
   protected void writeOutResults(String outputParentDirName) throws IOException {
     // use Jackson to map the object to a JSON-formatted text block
@@ -490,7 +490,7 @@ public class TestRunner {
     File userJourneyResultsFile =
         FileUtils.createNewFile(outputDirectory.resolve(userJourneyResultsFileName).toFile());
     File runSummaryFile = outputDirectory.resolve(runSummaryFileName).toFile();
-    File terraVersionFile = outputDirectory.resolve(terraVersionFileName).toFile();
+    File terraVersionFile = outputDirectory.resolve(envVersionFileName).toFile();
 
     // write the rendered test configuration that was run to a file
     objectWriter.writeValue(renderedConfigFile, config);
