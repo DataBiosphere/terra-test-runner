@@ -1,0 +1,52 @@
+[
+  {
+    "mode": "REQUIRED",
+    "name": "testRun_id",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "description",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "statistics_min",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "statistics_max",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "statistics_mean",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "statistics_standardDeviation",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "statistics_median",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "statistics_percentile95",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "statistics_percentile99",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "statistics_sum",
+    "type": "FLOAT"
+  }
+]

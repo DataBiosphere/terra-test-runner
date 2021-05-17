@@ -1,0 +1,75 @@
+[
+  {
+    "mode": "REQUIRED",
+    "name": "id",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "testConfig_name",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "testConfig_description",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "server_name",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "kubernetes_numberOfInitialPods",
+    "type": "NUMERIC"
+  },
+  {
+    "mode": "REPEATED",
+    "name": "testUsers",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "startTime",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "startUserJourneyTime",
+    "type": "TIMESTAMP"
+  },
+  {
+    "name": "endUserJourneyTime",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "endTime",
+    "type": "TIMESTAMP"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "outputDirectory",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "json_testConfiguration",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "json_testRun",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "json_measurementCollection",
+    "type": "STRING"
+  },
+  {
+    "name": "json_componentVersion",
+    "type": "STRING"
+  }
+]

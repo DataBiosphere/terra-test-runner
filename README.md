@@ -563,6 +563,11 @@ All the Java code is in the src/main/java directory.
   * The common package contains code that may be useful for the test runner and measurement collector code, in addition
   to the user-specified code in the scripts package.
 
+## BigQuery Schema.
+The `bq` folder consists of a couple `BigQuery` JSON table schema used for storing test results.
+The `create-testrunner-bq-tables.sh` is used for setting up the `BigQuery` tables to store the test results, it requires a Google Project ID as input. 
+Please refer to `Design Document: Test Runner Cloud Function Reporting Infrastructure`[https://docs.google.com/document/d/1sm5J85K9Ihph4fffICePJAkOiRxvYtzt7Aol7U3M5AE/edit#] for architecture related to streaming test results from `GCS` bucket to `BigQuery`.
+
 #### Debug a test configuration or script
 * The Gradle run task just calls the main method of the TestRunner or MeasurementCollector class. To debug, add a
 Run/Debug Configuration in IntelliJ that calls this method with the same arguments.

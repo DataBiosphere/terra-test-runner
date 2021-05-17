@@ -1,0 +1,102 @@
+[
+  {
+    "mode": "REQUIRED",
+    "name": "testRun_id",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "name",
+    "type": "STRING"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "numberOfUserJourneyThreadsToRun",
+    "type": "NUMERIC"
+  },
+  {
+    "mode": "REQUIRED",
+    "name": "userJourneyThreadPoolSize",
+    "type": "NUMERIC"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "expectedTimeForEach",
+    "type": "NUMERIC"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "expectedTimeForEachUnit",
+    "type": "STRING"
+  },
+  {
+    "mode": "REPEATED",
+    "name": "parameters",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "description",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "elapsedTime_min",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "elapsedTime_max",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "elapsedTime_mean",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "elapsedTime_standardDeviation",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "elapsedTime_median",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "elapsedTime_percentile95",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "elapsedTime_percentile99",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "elapsedTime_sum",
+    "type": "FLOAT"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "totalRun",
+    "type": "NUMERIC"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "numCompleted",
+    "type": "NUMERIC"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "numExceptionsThrown",
+    "type": "NUMERIC"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "isFailure",
+    "type": "BOOLEAN"
+  }
+]
