@@ -405,6 +405,7 @@ public class TestRunner {
         testScript.userJourney(testUser);
       } catch (Exception ex) {
         result.exceptionThrown = ex;
+        ex.printStackTrace(); // print the stack trace to the console
       }
       result.elapsedTimeNS = System.nanoTime() - startTime;
 
