@@ -523,11 +523,11 @@ public class TestRunner {
   }
 
   /** Helper method to print out the PASSED/FAILED tests at the end of a suite run. */
-  protected static void printSuiteResults(Map<String, Boolean> testConfigNameToResult) {
+  protected static void printSuiteResults(Map<String, Boolean> testConfigNameToFailed) {
     System.out.println(ANSI_PURPLE + "PASSED test configurations" + ANSI_RESET);
     List<String> passedTestConfigs =
-        testConfigNameToResult.keySet().stream()
-            .filter(testConfigName -> !testConfigNameToResult.get(testConfigName))
+        testConfigNameToFailed.keySet().stream()
+            .filter(testConfigName -> !testConfigNameToFailed.get(testConfigName))
             .collect(Collectors.toList());
     for (String passingTestConfig : passedTestConfigs) {
       System.out.println(passingTestConfig + System.lineSeparator());
@@ -536,8 +536,8 @@ public class TestRunner {
 
     System.out.println(ANSI_PURPLE + "FAILED test configurations" + ANSI_RESET);
     List<String> failedTestConfigs =
-        testConfigNameToResult.keySet().stream()
-            .filter(testConfigName -> testConfigNameToResult.get(testConfigName))
+        testConfigNameToFailed.keySet().stream()
+            .filter(testConfigName -> testConfigNameToFailed.get(testConfigName))
             .collect(Collectors.toList());
     for (String failedTestConfig : failedTestConfigs) {
       System.out.println(failedTestConfig + System.lineSeparator());
@@ -631,7 +631,7 @@ public class TestRunner {
     testSuite.validate();
 
     boolean isFailure = false;
-    Map<String, Boolean> testConfigNameToResult = new HashMap<>();
+    Map<String, Boolean> testConfigNameToFailed = new HashMap<>();
     for (int ctr = 0; ctr < testSuite.testConfigurations.size(); ctr++) {
       TestConfiguration testConfiguration = testSuite.testConfigurations.get(ctr);
 
@@ -660,7 +660,7 @@ public class TestRunner {
       }
 
       // update the failure flag for this test config and the whole suite
-      testConfigNameToResult.put(testConfiguration.name, testConfigFailed);
+      testConfigNameToFailed.put(testConfiguration.name, testConfigFailed);
       isFailure = isFailure || testConfigFailed;
 
       logger.info("==== TEST RUN RESULTS ({}) {} ====", ctr + 1, testConfiguration.name);
@@ -677,7 +677,7 @@ public class TestRunner {
 
       TimeUnit.SECONDS.sleep(5);
     }
-    printSuiteResults(testConfigNameToResult);
+    printSuiteResults(testConfigNameToFailed);
 
     return isFailure;
   }
