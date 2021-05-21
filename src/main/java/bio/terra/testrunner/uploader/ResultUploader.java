@@ -28,7 +28,7 @@ public class ResultUploader {
       script.setParameters(specification.parameters);
 
       // upload the results somewhere
-      logger.info("Executing measurement collection script: {}", specification.description);
+      logger.info("Executing upload script: {}", specification.description);
       script.uploadResults(outputDirectory, uploadList.uploaderServiceAccount);
     }
   }
