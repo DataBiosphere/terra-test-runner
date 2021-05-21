@@ -19,6 +19,7 @@ public class TestScriptResult {
       value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
       justification = "This POJO class is used for easy serialization to JSON using Jackson.")
   public static class TestScriptResultSummary {
+    public String testScriptName;
     public String testScriptDescription;
 
     public BasicStatistics elapsedTimeStatistics;
@@ -31,7 +32,8 @@ public class TestScriptResult {
 
     public TestScriptResultSummary() {} // default constructor so Jackson can deserialize
 
-    private TestScriptResultSummary(String testScriptDescription) {
+    private TestScriptResultSummary(String testScriptName, String testScriptDescription) {
+      this.testScriptName = testScriptName;
       this.testScriptDescription = testScriptDescription;
     }
   }
@@ -40,7 +42,9 @@ public class TestScriptResult {
       TestScriptSpecification testScriptSpecification, List<UserJourneyResult> userJourneyResults) {
     this.userJourneyResults = userJourneyResults;
 
-    summary = new TestScriptResultSummary(testScriptSpecification.description);
+    summary =
+        new TestScriptResultSummary(
+            testScriptSpecification.name, testScriptSpecification.description);
     calculateStatistics();
   }
 

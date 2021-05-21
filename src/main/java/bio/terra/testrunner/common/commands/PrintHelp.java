@@ -4,6 +4,7 @@ import bio.terra.testrunner.collector.config.MeasurementList;
 import bio.terra.testrunner.common.utils.FileUtils;
 import bio.terra.testrunner.runner.config.TestConfiguration;
 import bio.terra.testrunner.runner.config.TestSuite;
+import bio.terra.testrunner.uploader.config.UploadList;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -98,6 +99,9 @@ public class PrintHelp {
             + System.lineSeparator()
             + "  outputDirectoryName = name of the same directory that contains the Test Runner and measurement results"
             + System.lineSeparator());
+    // print out the available upload lists found in the resources directory
+    System.out.println("  The following upload lists were found:");
+    printAvailableFiles(UploadList.resourceDirectory, null);
 
     // example workflows
     System.out.println(

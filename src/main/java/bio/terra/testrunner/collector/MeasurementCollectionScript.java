@@ -22,7 +22,11 @@ public abstract class MeasurementCollectionScript<T> {
   protected MeasurementResultSummary summary;
 
   @SuppressFBWarnings(
-      value = {"URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD", "UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD"},
+      value = {
+        "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
+        "UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD",
+        "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD",
+      },
       justification = "This POJO class is used for easy serialization to JSON using Jackson.")
   public static class MeasurementResultSummary {
     public String description;
@@ -68,7 +72,8 @@ public abstract class MeasurementCollectionScript<T> {
 
   /**
    * Download the raw data points generated during this test run. Then process them to calculate
-   * reporting statistics of interest.
+   * reporting statistics of interest. Sub-classes must populate the statistics property of this
+   * class.
    */
   public void processDataPoints(long startTimeMS, long endTimeMS) throws Exception {
     throw new UnsupportedOperationException("downloadDataPoints must be overridden by sub-classes");

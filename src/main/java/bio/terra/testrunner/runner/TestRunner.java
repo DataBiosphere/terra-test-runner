@@ -1,5 +1,8 @@
 package bio.terra.testrunner.runner;
 
+import static bio.terra.testrunner.common.commands.PrintHelp.ANSI_PURPLE;
+import static bio.terra.testrunner.common.commands.PrintHelp.ANSI_RESET;
+
 import bio.terra.testrunner.common.utils.FileUtils;
 import bio.terra.testrunner.common.utils.KubernetesClientUtils;
 import bio.terra.testrunner.runner.config.TestConfiguration;
@@ -38,6 +41,8 @@ public class TestRunner {
 
   private static Map<String, Map<String, String>> componentVersions =
       new HashMap<String, Map<String, String>>();
+
+  private boolean exceptionThrownInCleanup = false;
 
   public static class TestRunSummary {
     public String id;
@@ -118,12 +123,17 @@ public class TestRunner {
       }
 
       // cleanup test scripts (i.e. run cleanup methods)
-      logger.info("Test Scripts: Calling the cleanup methods after failure");
-      try {
-        callTestScriptCleanups();
-      } catch (Exception testScriptCleanupEx) {
-        logger.error(
-            "Test Scripts: Exception during forced test script cleanups", testScriptCleanupEx);
+      if (exceptionThrownInCleanup) {
+        logger.info(
+            "Test Script: Exception thrown in cleanup methods, so not re-trying during cleanup");
+      } else {
+        logger.info("Test Scripts: Calling the cleanup methods after failure");
+        try {
+          callTestScriptCleanups();
+        } catch (Exception testScriptCleanupEx) {
+          logger.error(
+              "Test Scripts: Exception during forced test script cleanups", testScriptCleanupEx);
+        }
       }
 
       throw originalEx;
@@ -332,6 +342,7 @@ public class TestRunner {
     logger.info("Test Scripts: Calling the cleanup methods");
     Exception cleanupExceptionThrown = callTestScriptCleanups();
     if (cleanupExceptionThrown != null) {
+      exceptionThrownInCleanup = true;
       logger.error(
           "Test Scripts: Error calling test script cleanup methods", cleanupExceptionThrown);
       throw new RuntimeException(
@@ -410,6 +421,7 @@ public class TestRunner {
         testScript.userJourney(testUser);
       } catch (Exception ex) {
         result.exceptionThrown = ex;
+        ex.printStackTrace(); // print the stack trace to the console
       }
       result.elapsedTimeNS = System.nanoTime() - startTime;
 
@@ -462,6 +474,7 @@ public class TestRunner {
   private static final String runSummaryFileName = "SUMMARY_testRun.json";
   private static final String envVersionFileName = "ENV_componentVersion.json";
 
+  /** Helper method to write out the results to files at the end of a test configuration run. */
   protected void writeOutResults(String outputParentDirName) throws IOException {
     // use Jackson to map the object to a JSON-formatted text block
     ObjectMapper objectMapper = new ObjectMapper();
@@ -507,6 +520,29 @@ public class TestRunner {
     // Write the MCTerra Component versions of target environment to a file
     objectWriter.writeValue(terraVersionFile, componentVersions);
     logger.info("MCTerra Component versions written to file: {}", terraVersionFile.getName());
+  }
+
+  /** Helper method to print out the PASSED/FAILED tests at the end of a suite run. */
+  protected static void printSuiteResults(Map<String, Boolean> testConfigNameToFailed) {
+    System.out.println(ANSI_PURPLE + "PASSED test configurations" + ANSI_RESET);
+    List<String> passedTestConfigs =
+        testConfigNameToFailed.keySet().stream()
+            .filter(testConfigName -> !testConfigNameToFailed.get(testConfigName))
+            .collect(Collectors.toList());
+    for (String passingTestConfig : passedTestConfigs) {
+      System.out.println(passingTestConfig + System.lineSeparator());
+    }
+    System.out.println(System.lineSeparator());
+
+    System.out.println(ANSI_PURPLE + "FAILED test configurations" + ANSI_RESET);
+    List<String> failedTestConfigs =
+        testConfigNameToFailed.keySet().stream()
+            .filter(testConfigName -> testConfigNameToFailed.get(testConfigName))
+            .collect(Collectors.toList());
+    for (String failedTestConfig : failedTestConfigs) {
+      System.out.println(failedTestConfig + System.lineSeparator());
+    }
+    System.out.println(System.lineSeparator());
   }
 
   /**
@@ -595,6 +631,7 @@ public class TestRunner {
     testSuite.validate();
 
     boolean isFailure = false;
+    Map<String, Boolean> testConfigNameToFailed = new HashMap<>();
     for (int ctr = 0; ctr < testSuite.testConfigurations.size(); ctr++) {
       TestConfiguration testConfiguration = testSuite.testConfigurations.get(ctr);
 
@@ -604,23 +641,27 @@ public class TestRunner {
 
       // get an instance of a runner and tell it to execute the configuration
       TestRunner runner = new TestRunner(testConfiguration);
+      boolean testConfigFailed = false;
       try {
         runner.executeTestConfiguration();
 
-        // update the failure flag if it's not already been set
-        if (!isFailure) {
-          for (TestScriptResult.TestScriptResultSummary testScriptResultSummary :
-              runner.summary.testScriptResultSummaries) {
-            if (testScriptResultSummary.isFailure) {
-              isFailure = true;
-              break;
-            }
+        // even if the test configuration didn't throw an exception, it still may have failed due to
+        // a timeout
+        for (TestScriptResult.TestScriptResultSummary testScriptResultSummary :
+            runner.summary.testScriptResultSummaries) {
+          if (testScriptResultSummary.isFailure) {
+            testConfigFailed = true;
+            break;
           }
         }
       } catch (Exception runnerEx) {
         logger.error("Test Runner threw an exception", runnerEx);
-        isFailure = true;
+        testConfigFailed = true;
       }
+
+      // update the failure flag for this test config and the whole suite
+      testConfigNameToFailed.put(testConfiguration.name, testConfigFailed);
+      isFailure = isFailure || testConfigFailed;
 
       logger.info("==== TEST RUN RESULTS ({}) {} ====", ctr + 1, testConfiguration.name);
       String outputDirName =
@@ -636,6 +677,7 @@ public class TestRunner {
 
       TimeUnit.SECONDS.sleep(5);
     }
+    printSuiteResults(testConfigNameToFailed);
 
     return isFailure;
   }
