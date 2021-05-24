@@ -2,6 +2,8 @@ HELP.md
 .gradle
 build/
 tools/*.y*ml
+tools/terra-helm
+tools/terra-helmfile
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**
 !**/src/test/**

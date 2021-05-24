@@ -13,7 +13,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class AuthenticationUtils {
   private static volatile GoogleCredentials applicationDefaultCredential;
-  private static volatile GoogleCredentials serviceAccountCredential;
   private static Map<String, GoogleCredentials> delegatedUserCredentials =
       new ConcurrentHashMap<>();
 
@@ -75,15 +74,9 @@ public final class AuthenticationUtils {
    */
   public static GoogleCredentials getServiceAccountCredential(
       ServiceAccountSpecification serviceAccount, List<String> scopes) throws IOException {
-    if (serviceAccountCredential != null) {
-      return serviceAccountCredential;
-    }
-
-    synchronized (lockServiceAccountCredential) {
-      File jsonKey = serviceAccount.jsonKeyFile;
-      serviceAccountCredential =
-          ServiceAccountCredentials.fromStream(new FileInputStream(jsonKey)).createScoped(scopes);
-    }
+    File jsonKey = serviceAccount.jsonKeyFile;
+    GoogleCredentials serviceAccountCredential =
+        ServiceAccountCredentials.fromStream(new FileInputStream(jsonKey)).createScoped(scopes);
     return serviceAccountCredential;
   }
 
