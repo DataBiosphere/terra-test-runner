@@ -9,15 +9,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class AuthenticationUtils {
-  private static volatile GoogleCredentials applicationDefaultCredential;
-  private static Map<String, GoogleCredentials> delegatedUserCredentials =
-      new ConcurrentHashMap<>();
-
-  private static final Object lockApplicationDefaultCredential = new Object();
-  private static final Object lockServiceAccountCredential = new Object();
 
   private AuthenticationUtils() {}
 
@@ -44,16 +37,10 @@ public final class AuthenticationUtils {
    */
   public static GoogleCredentials getDelegatedUserCredential(
       TestUserSpecification testUser, List<String> scopes) throws IOException {
-    GoogleCredentials delegatedUserCredential = delegatedUserCredentials.get(testUser.userEmail);
-    if (delegatedUserCredential != null) {
-      return delegatedUserCredential;
-    }
-
     GoogleCredentials serviceAccountCredential =
         getServiceAccountCredential(testUser.delegatorServiceAccount, cloudPlatformScope);
-    delegatedUserCredential =
+    GoogleCredentials delegatedUserCredential =
         serviceAccountCredential.createScoped(scopes).createDelegated(testUser.userEmail);
-    delegatedUserCredentials.put(testUser.userEmail, delegatedUserCredential);
     return delegatedUserCredential;
   }
 
@@ -88,13 +75,8 @@ public final class AuthenticationUtils {
    */
   public static GoogleCredentials getApplicationDefaultCredential(List<String> scopes)
       throws IOException {
-    if (applicationDefaultCredential != null) {
-      return applicationDefaultCredential;
-    }
-
-    synchronized (lockApplicationDefaultCredential) {
-      applicationDefaultCredential = GoogleCredentials.getApplicationDefault().createScoped(scopes);
-    }
+    GoogleCredentials applicationDefaultCredential =
+        GoogleCredentials.getApplicationDefault().createScoped(scopes);
     return applicationDefaultCredential;
   }
 
