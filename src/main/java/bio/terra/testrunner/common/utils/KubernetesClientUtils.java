@@ -582,14 +582,7 @@ public final class KubernetesClientUtils {
       int podCount, String componentLabel, String apiComponentLabel) throws Exception {
     V1Deployment apiDeployment = getApiDeployment(componentLabel, apiComponentLabel);
     if (apiDeployment == null) {
-      // If the test configuration does not provide the component label,
-      // this will default to the 'api' value.
-      //
-      // If either the provided component label or default 'api' label
-      // does not exist in the k8s deployment metadata, then issue a
-      // warning and simply exit without doing anything.
-      logger.warn("Application component label '{}' was not found", apiComponentLabel);
-      return;
+      throw new RuntimeException("API deployment not found.");
     }
 
     long apiPodCount = getApiPodCount(apiDeployment, componentLabel);

@@ -162,7 +162,7 @@ public class TestRunner {
 
       // call the deploy and waitForDeployToFinish methods to do the deployment
       logger.info("Deployment: Calling {}.deploy()", deploymentScript.getClass().getName());
-      deploymentScript.deploy(config.server, config.application);
+      deploymentScript.deploy(config.server, config.server.cluster.application);
 
       logger.info(
           "Deployment: Calling {}.waitForDeployToFinish()", deploymentScript.getClass().getName());
@@ -174,7 +174,7 @@ public class TestRunner {
     // update any Kubernetes properties specified by the test configuration
     if (!config.server.skipKubernetes) {
       KubernetesClientUtils.buildKubernetesClientObjectWithClientKey(
-          config.server, config.application);
+          config.server, config.server.cluster.application);
       componentVersions = KubernetesClientUtils.importComponentVersions();
       modifyKubernetesPostDeployment();
     } else {
@@ -465,8 +465,8 @@ public class TestRunner {
     //
     KubernetesClientUtils.changeReplicaSetSizeAndWait(
         config.kubernetes.numberOfInitialPods,
-        config.application.componentLabel,
-        config.application.apiComponentLabel);
+        config.server.cluster.application.componentLabel,
+        config.server.cluster.application.apiComponentLabel);
   }
 
   private static final String renderedConfigFileName = "RENDERED_testConfiguration.json";

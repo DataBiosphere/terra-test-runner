@@ -13,6 +13,7 @@ public class ClusterSpecification implements SpecificationInterface {
   public String project;
   public String namespace;
   public String containerName;
+  public ApplicationSpecification application;
 
   ClusterSpecification() {}
 
@@ -33,6 +34,8 @@ public class ClusterSpecification implements SpecificationInterface {
       throw new IllegalArgumentException("Server cluster container name cannot be empty");
     } else if (zone == null || zone.equals("")) {
       throw new IllegalArgumentException("Server cluster zone cannot be empty");
+    } else if (application == null) {
+      throw new IllegalArgumentException("Server cluster application must be specified");
     }
   }
 }
