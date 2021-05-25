@@ -586,6 +586,22 @@ public final class KubernetesClientUtils {
     }
 
     long apiPodCount = getApiPodCount(apiDeployment, componentLabel);
+    if (podCount == apiPodCount) {
+      logger.info(
+          "Kubernetes: The number of pods ({}) in the {}: {} deployment has already met the requirements. No scaling operation is necessary.",
+          podCount,
+          componentLabel,
+          apiComponentLabel);
+      logger.debug("Current Pod Count: {}", apiPodCount);
+      printApiPods(apiDeployment);
+      return;
+    } else {
+      logger.info(
+          "Kubernetes: Setting the initial number of pods in the {}: {} deployment replica set to {}",
+          componentLabel,
+          apiComponentLabel,
+          podCount);
+    }
     logger.debug("Pod Count: {}; Message: Before scaling pod count", apiPodCount);
     apiDeployment = changeReplicaSetSize(apiDeployment, podCount);
     waitForReplicaSetSizeChange(apiDeployment, podCount);

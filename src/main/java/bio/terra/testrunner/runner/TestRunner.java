@@ -449,9 +449,13 @@ public class TestRunner {
   }
 
   private void modifyKubernetesPostDeployment() throws Exception {
-    logger.info(
-        "Kubernetes: Setting the initial number of pods in the API deployment replica set to {}",
-        config.kubernetes.numberOfInitialPods);
+    if (config.kubernetes.numberOfInitialPods == null) {
+      logger.info(
+          "Kubernetes: Keeping the number of pods in the {}: {} deployment unchanged",
+          config.server.cluster.application.componentLabel,
+          config.server.cluster.application.apiComponentLabel);
+      return;
+    }
     // The default values of component label key-value pair for locating a Terra application are
     // defined in ApplicationSpecification.
     //

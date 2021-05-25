@@ -1,13 +1,16 @@
 package bio.terra.testrunner.runner.config;
 
+import org.graalvm.compiler.core.common.SuppressFBWarnings;
+
 public class KubernetesSpecification implements SpecificationInterface {
-  public int numberOfInitialPods = 1;
+  @SuppressFBWarnings(value = "UWF_NULL_FIELD", justification = "")
+  public Integer numberOfInitialPods = null;
 
   KubernetesSpecification() {}
 
   /** Validate the Kubernetes specification read in from the JSON file. */
   public void validate() {
-    if (numberOfInitialPods <= 0) {
+    if (numberOfInitialPods != null && numberOfInitialPods <= 0) {
       throw new IllegalArgumentException("Number of initial Kubernetes pods must be >= 0");
     }
   }
