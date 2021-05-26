@@ -20,6 +20,7 @@ public class TestConfiguration implements SpecificationInterface {
 
   public ServerSpecification server;
   public KubernetesSpecification kubernetes;
+  public ApplicationSpecification application;
   public List<TestScriptSpecification> testScripts;
   public List<TestUserSpecification> testUsers = new ArrayList<>();
   public DisruptiveScriptSpecification disruptiveScript;
@@ -63,6 +64,10 @@ public class TestConfiguration implements SpecificationInterface {
       logger.debug("Test Configuration: Using default Kubernetes specification");
       testConfig.kubernetes = new KubernetesSpecification();
     }
+    if (testConfig.application == null) {
+      logger.debug("Test Configuration: Using default application specification");
+      testConfig.application = new ApplicationSpecification();
+    }
 
     return testConfig;
   }
@@ -84,6 +89,7 @@ public class TestConfiguration implements SpecificationInterface {
     logger.debug("Validating the server, Kubernetes specification");
     server.validate();
     kubernetes.validate();
+    application.validate();
     if (disruptiveScript != null) {
       disruptiveScript.validate();
 

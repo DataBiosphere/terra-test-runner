@@ -162,7 +162,7 @@ public class TestRunner {
 
       // call the deploy and waitForDeployToFinish methods to do the deployment
       logger.info("Deployment: Calling {}.deploy()", deploymentScript.getClass().getName());
-      deploymentScript.deploy(config.server, config.server.cluster.application);
+      deploymentScript.deploy(config.server, config.application);
 
       logger.info(
           "Deployment: Calling {}.waitForDeployToFinish()", deploymentScript.getClass().getName());
@@ -173,8 +173,7 @@ public class TestRunner {
 
     // update any Kubernetes properties specified by the test configuration
     if (!config.server.skipKubernetes) {
-      KubernetesClientUtils.buildKubernetesClientObjectWithClientKey(
-          config.server, config.server.cluster.application);
+      KubernetesClientUtils.buildKubernetesClientObjectWithClientKey(config.server);
       componentVersions = KubernetesClientUtils.importComponentVersions();
       modifyKubernetesPostDeployment();
     } else {
@@ -452,8 +451,8 @@ public class TestRunner {
     if (config.kubernetes.numberOfInitialPods == null) {
       logger.info(
           "Kubernetes: Keeping the number of pods in the {}: {} deployment unchanged",
-          config.server.cluster.application.componentLabel,
-          config.server.cluster.application.apiComponentLabel);
+          config.server.cluster.componentLabel,
+          config.server.cluster.apiComponentLabel);
       return;
     }
     // The default values of component label key-value pair for locating a Terra application are
@@ -469,8 +468,8 @@ public class TestRunner {
     //
     KubernetesClientUtils.changeReplicaSetSizeAndWait(
         config.kubernetes.numberOfInitialPods,
-        config.server.cluster.application.componentLabel,
-        config.server.cluster.application.apiComponentLabel);
+        config.server.cluster.componentLabel,
+        config.server.cluster.apiComponentLabel);
   }
 
   private static final String renderedConfigFileName = "RENDERED_testConfiguration.json";

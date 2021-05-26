@@ -195,11 +195,11 @@ public final class KubernetesClientUtils {
    *
    * @param server the server specification that points to the relevant Kubernetes cluster
    */
-  public static void buildKubernetesClientObjectWithClientKey(
-      ServerSpecification server, ApplicationSpecification application) throws Exception {
+  public static void buildKubernetesClientObjectWithClientKey(ServerSpecification server)
+      throws Exception {
     namespace = server.cluster.namespace;
-    componentLabel = application.componentLabel;
-    apiComponentLabel = application.apiComponentLabel;
+    componentLabel = server.cluster.componentLabel;
+    apiComponentLabel = server.cluster.apiComponentLabel;
     // get a refreshed SA access token and its expiration time
     logger.debug("Getting a refreshed service account access token and its expiration time");
     GoogleCredentials testRunnerServiceAccountCredentials =

@@ -9,8 +9,6 @@ public class ApplicationSpecification implements SpecificationInterface {
   public int loadDriverWaitSeconds = 1;
   public long loadHistoryCopyChunkSize = 1000;
   public long loadHistoryWaitSeconds = 2;
-  public String componentLabel = "app.kubernetes.io/component";
-  public String apiComponentLabel = "api";
 
   ApplicationSpecification() {}
 
