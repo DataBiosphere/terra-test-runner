@@ -482,7 +482,7 @@ resources/servers directory. Below are the available fields:
   * zone: Zone where the cluster is running
   * project: Google project under which the cluster is running
   * componentLabel: A Kubernetes metadata label key used to identify the service deployment
-  * apiComponentLabel: The value associated with the `componentLabel`
+  * apiComponentLabel: The value associated with the `componentLabel`, defaults to `api` if unspecified.
   * namespace: (optional) Name of the Kubernetes namespace where the Data Repo instance is deployed
   * deploymentScript: Name of the deployment script class to run. Only required if skipDeployment is false
   * skipDeployment: (optional) true to skip the deployment script, default is false
