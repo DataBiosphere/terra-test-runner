@@ -9,16 +9,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public final class AuthenticationUtils {
-  private static volatile GoogleCredentials applicationDefaultCredential;
-  private static volatile GoogleCredentials serviceAccountCredential;
-  private static Map<String, GoogleCredentials> delegatedUserCredentials =
-      new ConcurrentHashMap<>();
-
-  private static final Object lockApplicationDefaultCredential = new Object();
-  private static final Object lockServiceAccountCredential = new Object();
 
   private AuthenticationUtils() {}
 
@@ -45,17 +37,9 @@ public final class AuthenticationUtils {
    */
   public static GoogleCredentials getDelegatedUserCredential(
       TestUserSpecification testUser, List<String> scopes) throws IOException {
-    GoogleCredentials delegatedUserCredential = delegatedUserCredentials.get(testUser.userEmail);
-    if (delegatedUserCredential != null) {
-      return delegatedUserCredential;
-    }
-
     GoogleCredentials serviceAccountCredential =
         getServiceAccountCredential(testUser.delegatorServiceAccount, cloudPlatformScope);
-    delegatedUserCredential =
-        serviceAccountCredential.createScoped(scopes).createDelegated(testUser.userEmail);
-    delegatedUserCredentials.put(testUser.userEmail, delegatedUserCredential);
-    return delegatedUserCredential;
+    return serviceAccountCredential.createScoped(scopes).createDelegated(testUser.userEmail);
   }
 
   /**
@@ -75,16 +59,8 @@ public final class AuthenticationUtils {
    */
   public static GoogleCredentials getServiceAccountCredential(
       ServiceAccountSpecification serviceAccount, List<String> scopes) throws IOException {
-    if (serviceAccountCredential != null) {
-      return serviceAccountCredential;
-    }
-
-    synchronized (lockServiceAccountCredential) {
-      File jsonKey = serviceAccount.jsonKeyFile;
-      serviceAccountCredential =
-          ServiceAccountCredentials.fromStream(new FileInputStream(jsonKey)).createScoped(scopes);
-    }
-    return serviceAccountCredential;
+    File jsonKey = serviceAccount.jsonKeyFile;
+    return ServiceAccountCredentials.fromStream(new FileInputStream(jsonKey)).createScoped(scopes);
   }
 
   /**
@@ -95,14 +71,7 @@ public final class AuthenticationUtils {
    */
   public static GoogleCredentials getApplicationDefaultCredential(List<String> scopes)
       throws IOException {
-    if (applicationDefaultCredential != null) {
-      return applicationDefaultCredential;
-    }
-
-    synchronized (lockApplicationDefaultCredential) {
-      applicationDefaultCredential = GoogleCredentials.getApplicationDefault().createScoped(scopes);
-    }
-    return applicationDefaultCredential;
+    return GoogleCredentials.getApplicationDefault().createScoped(scopes);
   }
 
   /**

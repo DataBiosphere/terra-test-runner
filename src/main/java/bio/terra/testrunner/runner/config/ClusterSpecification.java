@@ -13,6 +13,9 @@ public class ClusterSpecification implements SpecificationInterface {
   public String project;
   public String namespace;
   public String containerName;
+  // Default metadata labels to look up service deployment in k8s.
+  public String componentLabel = "app.kubernetes.io/component";
+  public String apiComponentLabel = "api";
 
   ClusterSpecification() {}
 

@@ -1,6 +1,5 @@
 package bio.terra.testrunner.common.utils;
 
-import bio.terra.testrunner.runner.config.ApplicationSpecification;
 import bio.terra.testrunner.runner.config.ServerSpecification;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -85,8 +84,7 @@ public final class KubernetesClientUtils {
    * beginning of a test run, and then all subsequent fetches should use the getter methods instead.
    *
    * @param server the server specification that points to the relevant Kubernetes cluster
-   * @deprecated use {@link #buildKubernetesClientObjectWithClientKey(ServerSpecification,
-   *     ApplicationSpecification)} instead.
+   * @deprecated use {@link #buildKubernetesClientObjectWithClientKey(ServerSpecification)} instead.
    */
   @Deprecated
   public static void buildKubernetesClientObject(ServerSpecification server) throws Exception {
@@ -195,11 +193,11 @@ public final class KubernetesClientUtils {
    *
    * @param server the server specification that points to the relevant Kubernetes cluster
    */
-  public static void buildKubernetesClientObjectWithClientKey(
-      ServerSpecification server, ApplicationSpecification application) throws Exception {
+  public static void buildKubernetesClientObjectWithClientKey(ServerSpecification server)
+      throws Exception {
     namespace = server.cluster.namespace;
-    componentLabel = application.componentLabel;
-    apiComponentLabel = application.apiComponentLabel;
+    componentLabel = server.cluster.componentLabel;
+    apiComponentLabel = server.cluster.apiComponentLabel;
     // get a refreshed SA access token and its expiration time
     logger.debug("Getting a refreshed service account access token and its expiration time");
     GoogleCredentials testRunnerServiceAccountCredentials =
@@ -510,13 +508,17 @@ public final class KubernetesClientUtils {
     // https://github.com/kubernetes-client/java/issues/252
     // the following few lines were suggested as a workaround
     // https://github.com/kubernetes-client/java/issues/86
+    logger.debug("Building request to delete pod {}", podNameToDelete);
     Call call =
         getKubernetesClientCoreObject()
             .deleteNamespacedPodCall(
                 podNameToDelete, namespace, null, null, null, null, null, null, null);
+    logger.debug("Call delete pod API");
     Response response = call.execute();
+    logger.debug("Response code: {}", response.code());
     Configuration.getDefaultApiClient()
         .handleResponse(response, (new TypeToken<V1Pod>() {}).getType());
+    logger.debug("Delete {} completed", podNameToDelete);
   }
 
   /**
@@ -586,6 +588,22 @@ public final class KubernetesClientUtils {
     }
 
     long apiPodCount = getApiPodCount(apiDeployment, componentLabel);
+    if (podCount == apiPodCount) {
+      logger.info(
+          "Kubernetes: The number of pods ({}) in the {}: {} deployment has already met the requirements. No scaling operation is necessary.",
+          podCount,
+          componentLabel,
+          apiComponentLabel);
+      logger.debug("Current Pod Count: {}", apiPodCount);
+      printApiPods(apiDeployment);
+      return;
+    } else {
+      logger.info(
+          "Kubernetes: Setting the initial number of pods in the {}: {} deployment replica set to {}",
+          componentLabel,
+          apiComponentLabel,
+          podCount);
+    }
     logger.debug("Pod Count: {}; Message: Before scaling pod count", apiPodCount);
     apiDeployment = changeReplicaSetSize(apiDeployment, podCount);
     waitForReplicaSetSizeChange(apiDeployment, podCount);
