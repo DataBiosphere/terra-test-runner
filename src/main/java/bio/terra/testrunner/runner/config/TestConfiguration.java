@@ -86,7 +86,7 @@ public class TestConfiguration implements SpecificationInterface {
    * of the objects, for example by parsing the string values in the JSON object.
    */
   public void validate() {
-    logger.debug("Validating the server, Kubernetes specification");
+    logger.debug("Validating the server, Kubernetes and application specifications");
     server.validate();
     kubernetes.validate();
     application.validate();
