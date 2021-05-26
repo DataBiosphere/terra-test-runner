@@ -39,9 +39,7 @@ public final class AuthenticationUtils {
       TestUserSpecification testUser, List<String> scopes) throws IOException {
     GoogleCredentials serviceAccountCredential =
         getServiceAccountCredential(testUser.delegatorServiceAccount, cloudPlatformScope);
-    GoogleCredentials delegatedUserCredential =
-        serviceAccountCredential.createScoped(scopes).createDelegated(testUser.userEmail);
-    return delegatedUserCredential;
+    return serviceAccountCredential.createScoped(scopes).createDelegated(testUser.userEmail);
   }
 
   /**
@@ -62,9 +60,7 @@ public final class AuthenticationUtils {
   public static GoogleCredentials getServiceAccountCredential(
       ServiceAccountSpecification serviceAccount, List<String> scopes) throws IOException {
     File jsonKey = serviceAccount.jsonKeyFile;
-    GoogleCredentials serviceAccountCredential =
-        ServiceAccountCredentials.fromStream(new FileInputStream(jsonKey)).createScoped(scopes);
-    return serviceAccountCredential;
+    return ServiceAccountCredentials.fromStream(new FileInputStream(jsonKey)).createScoped(scopes);
   }
 
   /**
@@ -75,9 +71,7 @@ public final class AuthenticationUtils {
    */
   public static GoogleCredentials getApplicationDefaultCredential(List<String> scopes)
       throws IOException {
-    GoogleCredentials applicationDefaultCredential =
-        GoogleCredentials.getApplicationDefault().createScoped(scopes);
-    return applicationDefaultCredential;
+    return GoogleCredentials.getApplicationDefault().createScoped(scopes);
   }
 
   /**
