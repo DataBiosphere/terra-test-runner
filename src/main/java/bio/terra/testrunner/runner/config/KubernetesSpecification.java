@@ -3,7 +3,7 @@ package bio.terra.testrunner.runner.config;
 import org.graalvm.compiler.core.common.SuppressFBWarnings;
 
 public class KubernetesSpecification implements SpecificationInterface {
-  @SuppressFBWarnings(value = "UWF_NULL_FIELD", justification = "")
+  @SuppressFBWarnings(value = "UWF_NULL_FIELD", justification = "Forcing numberOfInitialPods to accept null as a valid scenario")
   public Integer numberOfInitialPods = null;
 
   KubernetesSpecification() {}
