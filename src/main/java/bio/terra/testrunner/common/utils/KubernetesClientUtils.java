@@ -1,6 +1,5 @@
 package bio.terra.testrunner.common.utils;
 
-import bio.terra.testrunner.runner.config.ApplicationSpecification;
 import bio.terra.testrunner.runner.config.ServerSpecification;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpRequestInitializer;
@@ -85,8 +84,7 @@ public final class KubernetesClientUtils {
    * beginning of a test run, and then all subsequent fetches should use the getter methods instead.
    *
    * @param server the server specification that points to the relevant Kubernetes cluster
-   * @deprecated use {@link #buildKubernetesClientObjectWithClientKey(ServerSpecification,
-   *     ApplicationSpecification)} instead.
+   * @deprecated use {@link #buildKubernetesClientObjectWithClientKey(ServerSpecification)} instead.
    */
   @Deprecated
   public static void buildKubernetesClientObject(ServerSpecification server) throws Exception {
@@ -510,13 +508,17 @@ public final class KubernetesClientUtils {
     // https://github.com/kubernetes-client/java/issues/252
     // the following few lines were suggested as a workaround
     // https://github.com/kubernetes-client/java/issues/86
+    logger.debug("Building request to delete pod {}", podNameToDelete);
     Call call =
         getKubernetesClientCoreObject()
             .deleteNamespacedPodCall(
                 podNameToDelete, namespace, null, null, null, null, null, null, null);
+    logger.debug("Call delete pod API");
     Response response = call.execute();
+    logger.debug("Response code: {}", response.code());
     Configuration.getDefaultApiClient()
         .handleResponse(response, (new TypeToken<V1Pod>() {}).getType());
+    logger.debug("Delete {} completed", podNameToDelete);
   }
 
   /**
