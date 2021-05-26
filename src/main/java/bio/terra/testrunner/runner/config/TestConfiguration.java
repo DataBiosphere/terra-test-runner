@@ -59,7 +59,7 @@ public class TestConfiguration implements SpecificationInterface {
       testConfig.testUsers.add(testUser);
     }
 
-    // instantiate default kubernetes, if null
+    // instantiate default kubernetes, application specification objects, if null
     if (testConfig.kubernetes == null) {
       logger.debug("Test Configuration: Using default Kubernetes specification");
       testConfig.kubernetes = new KubernetesSpecification();
