@@ -658,7 +658,6 @@ public final class KubernetesClientUtils {
                         && deploymentComponentLabel.equals(
                             pod.getMetadata().getLabels().get(componentLabel))
                         && pod.getStatus().getContainerStatuses() != null
-                        && !pod.getStatus().getContainerStatuses().isEmpty()
                         && pod.getStatus().getContainerStatuses().stream()
                             .allMatch(status -> status.getReady()))
             .count();
