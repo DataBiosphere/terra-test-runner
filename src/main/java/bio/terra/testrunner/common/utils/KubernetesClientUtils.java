@@ -641,15 +641,31 @@ public final class KubernetesClientUtils {
 
   private static long getApiReadyPods(V1Deployment deployment) throws ApiException {
     String deploymentComponentLabel = deployment.getMetadata().getLabels().get(componentLabel);
-    long apiPodCount =
+    int transientPodCounts = listPods().size();
+    logger.debug(
+        String.format(
+            "%s: Found %s pod%s.",
+            deploymentComponentLabel, transientPodCounts, transientPodCounts > 1 ? "s" : ""));
+    // Enhanced the logic of pod readiness by checking readiness of ALL service containers within
+    // the pod. Checking only a partial set of containers for readiness might convey a false sense
+    // of pod readiness when in reality certain containers could take longer time to restart and
+    // become ready compared to others.
+    long readyPodCounts =
         listPods().stream()
             .filter(
                 pod ->
-                    deploymentComponentLabel.equals(
+                    pod.getMetadata().getLabels().containsKey(componentLabel)
+                        && deploymentComponentLabel.equals(
                             pod.getMetadata().getLabels().get(componentLabel))
-                        && pod.getStatus().getContainerStatuses().get(0).getReady())
+                        && pod.getStatus().getContainerStatuses() != null
+                        && pod.getStatus().getContainerStatuses().stream()
+                            .allMatch(status -> status.getReady()))
             .count();
-    return apiPodCount;
+    logger.debug(
+        String.format(
+            "%s: %s/%s pod in ready state.",
+            deploymentComponentLabel, readyPodCounts, transientPodCounts));
+    return readyPodCounts;
   }
 
   public static void printApiPods(V1Deployment deployment) throws ApiException {
