@@ -200,7 +200,7 @@ public class TestRunner {
 
     // call the setup method of each test script
     logger.info("Test Scripts: Calling the setup methods");
-    Exception setupExceptionThrown = callTestScriptSetups();
+    Throwable setupExceptionThrown = callTestScriptSetups();
     if (setupExceptionThrown != null) {
       logger.error("Test Scripts: Error calling test script setup methods", setupExceptionThrown);
       throw new RuntimeException("Error calling test script setup methods.", setupExceptionThrown);
@@ -321,7 +321,7 @@ public class TestRunner {
             // user journey thread threw an exception and didn't populate its own return object
             result = new UserJourneyResult(testScriptSpecification.name, "");
             result.completed = false;
-            result.exceptionThrown = execEx;
+            result.saveExceptionThrown(execEx);
           }
         else {
           // user journey either was never started or got cancelled before it finished
@@ -339,7 +339,7 @@ public class TestRunner {
 
     // call the cleanup method of each test script
     logger.info("Test Scripts: Calling the cleanup methods");
-    Exception cleanupExceptionThrown = callTestScriptCleanups();
+    Throwable cleanupExceptionThrown = callTestScriptCleanups();
     if (cleanupExceptionThrown != null) {
       exceptionThrownInCleanup = true;
       logger.error(
@@ -364,11 +364,11 @@ public class TestRunner {
    *
    * @return the exception thrown, null if none
    */
-  private Exception callTestScriptSetups() {
+  private Throwable callTestScriptSetups() {
     for (TestScript testScript : scripts) {
       try {
         testScript.setup(config.testUsers);
-      } catch (Exception setupEx) {
+      } catch (Throwable setupEx) {
         // return the first exception thrown and stop looping through the setup methods
         return setupEx;
       }
@@ -383,12 +383,12 @@ public class TestRunner {
    *
    * @return the first exception thrown, null if none
    */
-  private Exception callTestScriptCleanups() {
-    Exception exceptionThrown = null;
+  private Throwable callTestScriptCleanups() {
+    Throwable exceptionThrown = null;
     for (TestScript testScript : scripts) {
       try {
         testScript.cleanup(config.testUsers);
-      } catch (Exception cleanupEx) {
+      } catch (Throwable cleanupEx) {
         // save the first exception thrown, keep looping through the remaining cleanup methods
         // before returning
         if (exceptionThrown == null) {
@@ -418,9 +418,8 @@ public class TestRunner {
       long startTime = System.nanoTime();
       try {
         testScript.userJourney(testUser);
-      } catch (Exception ex) {
-        result.exceptionThrown = ex;
-        ex.printStackTrace(); // print the stack trace to the console
+      } catch (Throwable ex) {
+        result.saveExceptionThrown(ex);
       }
       result.elapsedTimeNS = System.nanoTime() - startTime;
 
