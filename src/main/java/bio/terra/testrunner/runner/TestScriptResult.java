@@ -60,7 +60,7 @@ public class TestScriptResult {
 
       // count the number of user journeys that completed and threw exceptions
       summary.numCompleted += (result.completed) ? 1 : 0;
-      summary.numExceptionsThrown += (result.exceptionThrown != null) ? 1 : 0;
+      summary.numExceptionsThrown += result.exceptionWasThrown ? 1 : 0;
 
       // convert elapsed time from nanosecods to milliseconds
       descriptiveStatistics.addValue(result.elapsedTimeNS / (1e6));
