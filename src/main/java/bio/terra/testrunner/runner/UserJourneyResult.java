@@ -29,7 +29,11 @@ public class UserJourneyResult {
     this.completed = false;
   }
 
-  /** Store the exception message and stack trace for the test results. */
+  /**
+   * Store the exception message and stack trace for the test results. Don't store the full {@link
+   * Throwable} object, because that may not always be serializable. This class is serialized to
+   * disk as part of writing out the test results, so it needs to be a POJO.
+   */
   public void saveExceptionThrown(Throwable exceptionThrown) {
     exceptionWasThrown = true;
     exceptionMessage = exceptionThrown.getMessage();
