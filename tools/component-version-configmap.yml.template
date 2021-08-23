@@ -34,6 +34,9 @@ data:
   elasticsearch.properties: |
     appVersion=_TERRA_elasticsearch_appVersion_
     chartVersion=_TERRA_elasticsearch_chartVersion_
+  externalcreds.properties: |
+    appVersion=_TERRA_externalcreds_appVersion_
+    chartVersion=_TERRA_externalcreds_chartVersion_
   firecloudorch.properties: |
     appVersion=_TERRA_firecloudorch_appVersion_
     chartVersion=_TERRA_firecloudorch_chartVersion_

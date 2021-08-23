@@ -40,6 +40,9 @@ public class ServerSpecification implements SpecificationInterface {
   // Workspace Manager-related fields
   public String workspaceManagerUri;
 
+  // Policy Service-related fields
+  public String policyManagerUri;
+
   // =============================================
   // Cluster & deployment: information required to manipulate Kubernetes and deploy
   // Kubernetes cluster specification
