@@ -40,6 +40,10 @@ public class ServerSpecification implements SpecificationInterface {
   // Workspace Manager-related fields
   public String workspaceManagerUri;
 
+  // Policy Service-related fields
+  // Formally, Terraform used the externalcreds module to identify this service.
+  public String policyManagerUri;
+
   // =============================================
   // Cluster & deployment: information required to manipulate Kubernetes and deploy
   // Kubernetes cluster specification
