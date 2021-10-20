@@ -16,6 +16,7 @@ public class TestConfiguration implements SpecificationInterface {
   public String serverSpecificationFile;
   public String billingAccount;
   public boolean isFunctional = false;
+  public String resourceFileName;
   public List<String> testUserFiles;
 
   public ServerSpecification server;
@@ -45,6 +46,7 @@ public class TestConfiguration implements SpecificationInterface {
     InputStream inputStream =
         FileUtils.getResourceFileHandle(resourceDirectory + "/" + resourceFileName);
     TestConfiguration testConfig = objectMapper.readValue(inputStream, TestConfiguration.class);
+    testConfig.resourceFileName = resourceFileName;
 
     // read in the server file
     String serverEnvVarOverride = readServerEnvironmentVariable();
