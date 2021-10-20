@@ -11,7 +11,7 @@ plugins {
 sourceCompatibility = JavaVersion.VERSION_1_8
 
 group 'bio.terra'
-version '0.0.8-SNAPSHOT'
+version '0.0.9-SNAPSHOT'
 
 def artifactory_username = System.getenv('ARTIFACTORY_USERNAME')
 def artifactory_password = System.getenv('ARTIFACTORY_PASSWORD')
