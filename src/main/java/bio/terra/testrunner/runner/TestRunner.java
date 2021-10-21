@@ -64,6 +64,10 @@ public class TestRunner {
     private String endUserJourneyTimestamp;
     private String endTimestamp;
 
+    // Include user-provided TestSuite name in the summary:
+    // This can be used to facilitate grouping of test runner results on the dashboard.
+    private String testSuiteName;
+
     public String getStartTimestamp() {
       return millisecondsToTimestampString(startTime);
     }
@@ -78,6 +82,14 @@ public class TestRunner {
 
     public String getEndTimestamp() {
       return millisecondsToTimestampString(endTime);
+    }
+
+    public String getTestSuiteName() {
+      return testSuiteName;
+    }
+
+    public void setTestSuiteName(String testSuiteName) {
+      this.testSuiteName = testSuiteName;
     }
 
     private static String millisecondsToTimestampString(long milliseconds) {
@@ -643,6 +655,7 @@ public class TestRunner {
 
       // get an instance of a runner and tell it to execute the configuration
       TestRunner runner = new TestRunner(testConfiguration);
+      runner.summary.setTestSuiteName(testSuite.name);
       boolean testConfigFailed = false;
       try {
         runner.executeTestConfiguration();
