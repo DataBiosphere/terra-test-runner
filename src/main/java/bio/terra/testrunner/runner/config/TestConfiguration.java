@@ -46,7 +46,7 @@ public class TestConfiguration implements SpecificationInterface {
     InputStream inputStream =
         FileUtils.getResourceFileHandle(resourceDirectory + "/" + resourceFileName);
     TestConfiguration testConfig = objectMapper.readValue(inputStream, TestConfiguration.class);
-    // Include the resourceFileName of test config in the summary:
+    // Include the user-provided resourceFileName of this test configuration:
     //  perf/**.json, integration/**.json, resiliency/**.json
     // This facilitates grouping of test runner results on the dashboard.
     testConfig.resourceFileName = resourceFileName;
