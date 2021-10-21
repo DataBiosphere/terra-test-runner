@@ -63,10 +63,7 @@ public class TestRunner {
     private String startUserJourneyTimestamp;
     private String endUserJourneyTimestamp;
     private String endTimestamp;
-    // Include the user-provided resourceFileName of test config in the summary:
-    //  perf/**.json, integration/**.json, resiliency/**.json
-    // This can be used to facilitate grouping of test runner results on the dashboard.
-    private String resourceFileName;
+
     // Include user-provided TestSuite name in the summary:
     // This can be used to facilitate grouping of test runner results on the dashboard.
     private String testSuiteName;
@@ -85,14 +82,6 @@ public class TestRunner {
 
     public String getEndTimestamp() {
       return millisecondsToTimestampString(endTime);
-    }
-
-    public String getResourceFileName() {
-      return resourceFileName;
-    }
-
-    public void setResourceFileName(String resourceFileName) {
-      this.resourceFileName = resourceFileName;
     }
 
     public String getTestSuiteName() {
@@ -120,7 +109,6 @@ public class TestRunner {
     this.testScriptResults = new ArrayList<>();
 
     this.summary = new TestRunSummary(UUID.randomUUID().toString());
-    this.summary.setResourceFileName(config.resourceFileName);
   }
 
   protected void executeTestConfiguration() throws Exception {
