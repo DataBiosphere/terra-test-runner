@@ -1,0 +1,34 @@
+name: 'sync-component-version'
+description: 'Sync MC Terra Module versions'
+author: ''
+inputs:
+  env_type:
+    description: 'Environment type: live, personal, preview'
+    required: true
+    default: ''
+  environment:
+    description: 'Environment: live - perf, personal - wsmtest, etc'
+    required: true
+    default: ''
+runs:
+  using: "composite"
+  steps:
+    # Check out terra-helm repo
+    - uses: actions/checkout@v2
+      with:
+        repository: broadinstitute/terra-helm
+
+    # Check out terra-helmfile repo
+    - uses: actions/checkout@v2
+      with:
+        repository: broadinstitute/terra-helmfile
+
+    - name: Sync MC Terra Module versions
+      id: sync-terra-versions
+      run: |
+        echo ${{ inputs.env_type }}
+        echo ${{ inputs.environment }}
+        ls -l terra-helm
+        ls -l terra-helmfile
+        whoami
+      shell: bash

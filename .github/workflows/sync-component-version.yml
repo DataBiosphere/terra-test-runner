@@ -1,0 +1,21 @@
+name: Sync Component Version
+
+on:
+  workflow_call:
+    inputs:
+      env_type:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+
+jobs:
+  sync_component_version:
+    name: Pass env_type and environment to my-action
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ./.github/actions/sync-component-version
+        with:
+          env_type: ${{ inputs.env_type }}
+          environment: ${{ inputs.environment }}
