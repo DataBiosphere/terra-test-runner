@@ -359,6 +359,7 @@ public class TestRunner {
     // pull out the test script summary information into the summary object
     summary.testScriptResultSummaries =
         testScriptResults.stream().map(TestScriptResult::getSummary).collect(Collectors.toList());
+    // store individual user journey results into the summary object
     summary.userJourneyResults = testScriptResults;
 
     // call the cleanup method of each test script
