@@ -20,6 +20,12 @@ runs:
         ref: master
         path: terra-helm
 
+    - uses: actions/checkout@v2
+      with:
+        repository: broadinstitute/terra-helmfile
+        ref: master
+        path: terra-helmfile
+
     - name: Sync MC Terra Module versions
       id: sync-terra-versions
       run: |
