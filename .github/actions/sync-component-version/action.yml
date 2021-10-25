@@ -17,11 +17,13 @@ runs:
     - uses: actions/checkout@v2
       with:
         repository: broadinstitute/terra-helm
+        ref: master
 
     # Check out terra-helmfile repo
     - uses: actions/checkout@v2
       with:
         repository: broadinstitute/terra-helmfile
+        ref: master
 
     - name: Sync MC Terra Module versions
       id: sync-terra-versions
