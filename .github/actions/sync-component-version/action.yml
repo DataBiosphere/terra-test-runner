@@ -10,6 +10,10 @@ inputs:
     description: 'Environment: live - perf, personal - wsmtest, etc'
     required: true
     default: ''
+  token:
+    description: 'Token used to run authenticated git commands'
+    required: true
+    default: ''
 runs:
   using: "composite"
   steps:
@@ -24,6 +28,7 @@ runs:
       with:
         repository: broadinstitute/terra-helmfile
         ref: master
+        token: ${{ inputs.token }}
         path: terra-helmfile
 
     - name: Sync MC Terra Module versions
