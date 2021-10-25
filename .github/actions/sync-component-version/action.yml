@@ -18,6 +18,7 @@ runs:
       with:
         repository: broadinstitute/terra-helm
         ref: master
+        path: terra-helm
 
     - name: Sync MC Terra Module versions
       id: sync-terra-versions
