@@ -36,7 +36,7 @@ runs:
       run: |
         set -e
         ls -l terra-helmfile
-        cat terra-helmfile/versions.yaml
+        cat terra-helmfile/versions/app/dev.yaml
         declare -a TERRA_COMPONENTS
         declare -a TERRA_COMPONENT_VERSIONS
         declare -a TERRA_COMPONENT_CHART_VERSIONS
@@ -58,13 +58,13 @@ runs:
           return 1
         }
 
-        # Load default versions from terra-helmfile/versions.yaml
+        # Load default versions from terra-helmfile/versions/app/dev.yaml
         while read TERRA_COMPONENT
         do
-          VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions.yaml)
-          CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions.yaml)
+          VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions/app/dev.yaml)
+          CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions/app/dev.yaml)
           echo "::set-env name=${TERRA_COMPONENT}-appVersion::${VERSION}"
           echo "::set-env name=${TERRA_COMPONENT}-chartVersion::${CHART_VERSION}"
-        done < <(yq e '.releases | keys' terra-helmfile/versions.yaml -j | jq -r -c '.[]')
+        done < <(yq e '.releases | keys' terra-helmfile/versions/app/dev.yaml -j | jq -r -c '.[]')
 
       shell: bash
