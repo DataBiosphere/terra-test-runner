@@ -72,5 +72,5 @@ runs:
     - name: Echo MC Terra Module versions
       id: echo-terra-versions
       run: |
-        echo "$agora-appVersion"
+        echo "${agora-appVersion}"
       shell: bash
