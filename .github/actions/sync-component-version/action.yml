@@ -35,6 +35,8 @@ runs:
       id: sync-terra-versions
       run: |
         set -e
+        ls -l terra-helmfile
+        cat terra-helmfile/versions.yaml
         declare -a TERRA_COMPONENTS
         declare -a TERRA_COMPONENT_VERSIONS
         declare -a TERRA_COMPONENT_CHART_VERSIONS
