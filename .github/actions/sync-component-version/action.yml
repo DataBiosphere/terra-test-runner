@@ -34,8 +34,6 @@ runs:
     - name: Sync MC Terra Module versions
       id: sync-terra-versions
       run: |
-        echo ${{ inputs.env_type }}
-        echo ${{ inputs.environment }}
-        ls -l
-        ls -l terra-helm
+        set -e
+        yq --version
       shell: bash
