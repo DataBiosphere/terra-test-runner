@@ -35,5 +35,34 @@ runs:
       id: sync-terra-versions
       run: |
         set -e
-        yq --version
+        declare -a TERRA_COMPONENTS
+        declare -a TERRA_COMPONENT_VERSIONS
+        declare -a TERRA_COMPONENT_CHART_VERSIONS
+
+        getIndex () {
+          val=$1
+          index=0
+          while ((index<${#TERRA_COMPONENTS[@]}))
+          do
+            # echo "$index ${TERRA_COMPONENTS[$index]}"
+            if [ "${TERRA_COMPONENTS[$index]}" = "$val" ]
+            then
+              echo $index
+              return 0
+            fi
+            ((index++))
+          done
+          echo 'Not found'
+          return 1
+        }
+
+        # Load default versions from terra-helmfile/versions.yaml
+        while read TERRA_COMPONENT
+        do
+          VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions.yaml)
+          CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions.yaml)
+          echo "::set-env name=${TERRA_COMPONENT}-appVersion::${VERSION}"
+          echo "::set-env name=${TERRA_COMPONENT}-chartVersion::${CHART_VERSION}"
+        done < <(yq e '.releases | keys' terra-helmfile/versions.yaml -j | jq -r -c '.[]')
+
       shell: bash
