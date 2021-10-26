@@ -1,6 +1,7 @@
 package bio.terra.testrunner.runner.config;
 
 import bio.terra.testrunner.common.utils.FileUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.InputStream;
@@ -11,7 +12,7 @@ public class ServiceAccountSpecification implements SpecificationInterface {
   public String jsonKeyDirectoryPath;
   public String jsonKeyFilename;
 
-  public File jsonKeyFile;
+  @JsonIgnore public File jsonKeyFile;
 
   public static final String resourceDirectory = "serviceaccounts";
   public static final String keyDirectoryPathEnvironmentVarName =

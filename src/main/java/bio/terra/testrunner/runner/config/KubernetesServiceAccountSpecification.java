@@ -1,6 +1,7 @@
 package bio.terra.testrunner.runner.config;
 
 import bio.terra.testrunner.common.utils.FileUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.InputStream;
@@ -12,8 +13,9 @@ public class KubernetesServiceAccountSpecification implements SpecificationInter
   public String clientKeyDirectoryPath;
   public String clientKeyFilename;
   public String tokenFilename;
-  public File clientKeyFile;
-  public File tokenFile;
+
+  @JsonIgnore public File clientKeyFile;
+  @JsonIgnore public File tokenFile;
 
   public static final String resourceDirectory = "kubernetesserviceaccounts";
   public static final String keyDirectoryPathEnvironmentVarName =

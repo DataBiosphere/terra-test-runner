@@ -9,6 +9,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 public class TestScriptResult {
   public List<UserJourneyResult> userJourneyResults;
   public TestScriptResultSummary summary;
+  public TestScriptUserJourneySnapshots userJourneySnapshots;
 
   /**
    * Summary statistics are pulled out into a separate inner class for easier summary reporting.
@@ -38,6 +39,24 @@ public class TestScriptResult {
     }
   }
 
+  /** Store snapshots of UserJourneyResults, mainly used for reporting. */
+  @SuppressFBWarnings(
+      value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
+      justification = "This POJO class is used for easy serialization to JSON using Jackson.")
+  public static class TestScriptUserJourneySnapshots {
+    public String testScriptName;
+    public String testScriptDescription;
+
+    public List<UserJourneyResult> userJourneyResults;
+
+    public TestScriptUserJourneySnapshots() {}
+
+    private TestScriptUserJourneySnapshots(String testScriptName, String testScriptDescription) {
+      this.testScriptName = testScriptName;
+      this.testScriptDescription = testScriptDescription;
+    }
+  }
+
   public TestScriptResult(
       TestScriptSpecification testScriptSpecification, List<UserJourneyResult> userJourneyResults) {
     this.userJourneyResults = userJourneyResults;
@@ -46,10 +65,19 @@ public class TestScriptResult {
         new TestScriptResultSummary(
             testScriptSpecification.name, testScriptSpecification.description);
     calculateStatistics();
+
+    userJourneySnapshots =
+        new TestScriptUserJourneySnapshots(
+            testScriptSpecification.name, testScriptSpecification.description);
+    userJourneySnapshots.userJourneyResults = userJourneyResults;
   }
 
   public TestScriptResultSummary getSummary() {
     return summary;
+  }
+
+  public TestScriptUserJourneySnapshots getUserJourneySnapshots() {
+    return userJourneySnapshots;
   }
 
   /** Loop through the UserJourneyResults calculating reporting statistics of interest. */

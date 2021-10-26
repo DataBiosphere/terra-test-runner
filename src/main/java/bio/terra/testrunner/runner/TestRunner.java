@@ -52,7 +52,7 @@ public class TestRunner {
     public long endUserJourneyTime = -1;
     public long endTime = -1;
     public List<TestScriptResult.TestScriptResultSummary> testScriptResultSummaries;
-    public List<TestScriptResult> userJourneyResults;
+    public List<TestScriptResult.TestScriptUserJourneySnapshots> userJourneySnapshotsCollection;
 
     public TestRunSummary() {}
 
@@ -69,7 +69,7 @@ public class TestRunner {
     // This can be used to facilitate grouping of test runner results on the dashboard.
     private String testSuiteName;
     // Merge testConfiguration into summary.
-    private TestConfiguration testConfiguration;
+    private TestConfiguration testConfig;
 
     public String getStartTimestamp() {
       return millisecondsToTimestampString(startTime);
@@ -95,12 +95,12 @@ public class TestRunner {
       this.testSuiteName = testSuiteName;
     }
 
-    public TestConfiguration getTestConfiguration() {
-      return testConfiguration;
+    public TestConfiguration getTestConfig() {
+      return testConfig;
     }
 
-    public void setTestConfiguration(TestConfiguration testConfiguration) {
-      this.testConfiguration = testConfiguration;
+    public void setTestConfig(TestConfiguration testConfig) {
+      this.testConfig = testConfig;
     }
 
     private static String millisecondsToTimestampString(long milliseconds) {
@@ -359,8 +359,11 @@ public class TestRunner {
     // pull out the test script summary information into the summary object
     summary.testScriptResultSummaries =
         testScriptResults.stream().map(TestScriptResult::getSummary).collect(Collectors.toList());
-    // store individual user journey results into the summary object
-    summary.userJourneyResults = testScriptResults;
+    // store user journey snapshots into the summary object
+    summary.userJourneySnapshotsCollection =
+        testScriptResults.stream()
+            .map(TestScriptResult::getUserJourneySnapshots)
+            .collect(Collectors.toList());
 
     // call the cleanup method of each test script
     logger.info("Test Scripts: Calling the cleanup methods");
@@ -669,7 +672,7 @@ public class TestRunner {
       // get an instance of a runner and tell it to execute the configuration
       TestRunner runner = new TestRunner(testConfiguration);
       runner.summary.setTestSuiteName(testSuite.name);
-      runner.summary.setTestConfiguration(testConfiguration);
+      runner.summary.setTestConfig(testConfiguration);
       boolean testConfigFailed = false;
       try {
         runner.executeTestConfiguration();
