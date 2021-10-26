@@ -63,8 +63,14 @@ runs:
         do
           VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions/app/dev.yaml)
           CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions/app/dev.yaml)
-          echo "::set-env name=${TERRA_COMPONENT}-appVersion::${VERSION}"
-          echo "::set-env name=${TERRA_COMPONENT}-chartVersion::${CHART_VERSION}"
+          echo "${TERRA_COMPONENT}-appVersion=${VERSION}" >> $GITHUB_ENV
+          echo "${TERRA_COMPONENT}-chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
         done < <(yq e '.releases | keys' terra-helmfile/versions/app/dev.yaml -j | jq -r -c '.[]')
 
+      shell: bash
+
+    - name: Echo MC Terra Module versions
+      id: echo-terra-versions
+      run: |
+        echo $agora-appVersion
       shell: bash
