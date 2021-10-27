@@ -1,13 +1,13 @@
-name: 'sync-component-version'
-description: 'Sync MC Terra Module versions'
+name: 'sync-terra-services-version'
+description: 'Calculate latest versions of Terra services'
 author: ''
 inputs:
   env_type:
-    description: 'Environment type: live, personal, preview'
+    description: 'Environment type: live | personal'
     required: true
     default: ''
   environment:
-    description: 'Environment: live - perf, personal - wsmtest, etc'
+    description: 'Environment: live (dev | perf | alpha | staging | prod); personal (wsmtest). See terra-helmfile/enviroments/live; tterra-helmfile/environments/personal, respectively.'
     required: true
     default: ''
   token:
@@ -24,6 +24,7 @@ runs:
         ref: master
         path: terra-helm
 
+    # Check out terra-helmfile repo
     - uses: actions/checkout@v2
       with:
         repository: broadinstitute/terra-helmfile
@@ -31,41 +32,19 @@ runs:
         token: ${{ inputs.token }}
         path: terra-helmfile
 
-    - name: Sync MC Terra Module versions
-      id: sync-terra-versions
+    - name: Calculate latest versions of Terra services
+      if: ${{ contains(['alpha', 'staging', 'prod'], inputs.environment) }}
       run: |
         set -e
-        ls -l terra-helmfile
-        cat terra-helmfile/versions/app/dev.yaml
-        declare -a TERRA_COMPONENTS
-        declare -a TERRA_COMPONENT_VERSIONS
-        declare -a TERRA_COMPONENT_CHART_VERSIONS
 
-        getIndex () {
-          val=$1
-          index=0
-          while ((index<${#TERRA_COMPONENTS[@]}))
-          do
-            # echo "$index ${TERRA_COMPONENTS[$index]}"
-            if [ "${TERRA_COMPONENTS[$index]}" = "$val" ]
-            then
-              echo $index
-              return 0
-            fi
-            ((index++))
-          done
-          echo 'Not found'
-          return 1
-        }
-
-        # Load default versions from terra-helmfile/versions/app/dev.yaml
+        # Load default versions from terra-helmfile/versions/app/*.yaml
         while read TERRA_COMPONENT
         do
-          VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions/app/dev.yaml)
-          CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions/app/dev.yaml)
+          VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions/app/${{ inputs.environment }}.yaml)
+          CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions/app/${{ inputs.environment }}.yaml)
           echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
           echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
-        done < <(yq e '.releases | keys' terra-helmfile/versions/app/dev.yaml -j | jq -r -c '.[]')
+        done < <(yq e '.releases | keys' terra-helmfile/versions/app/${{ inputs.environment }}.yaml -j | jq -r -c '.[]')
 
       shell: bash
 
