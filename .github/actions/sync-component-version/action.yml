@@ -59,9 +59,13 @@ runs:
           ENABLED=$(yq e ".releases.${TERRA_COMPONENT}.enabled" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
           VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
           CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
-          echo $ENABLED
-          echo $VERSION
-          echo $CHART_VERSION
+          echo $TERRA_COMPONENT
+          if $ENABLED; then
+            echo $VERSION
+            echo $CHART_VERSION
+          else
+            echo "~~~~~!"
+          fi
         done < <(yq e '.releases | keys' terra-helmfile/environments/${OVERIDE_ENV}.yaml -j | jq -r -c '.[]')
 
       shell: bash
