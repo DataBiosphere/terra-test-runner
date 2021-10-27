@@ -1,5 +1,10 @@
+# This action can be used by another repo to sync Terra services version on demand by including
+# the following 'uses' property in GitHub Action step.
+# The calling repo must pass the ${{ secrets.BROADBOT_TOKEN }} as input token to this action.
+# - uses: DataBiosphere/terra-test-runner/.github/actions/sync-terra-services-version
+
 name: 'sync-terra-services-version'
-description: 'Calculate latest versions of Terra services'
+description: 'Calculate versions of Terra services'
 author: ''
 inputs:
   env_type:
@@ -17,13 +22,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # Check out terra-helm repo
-    - uses: actions/checkout@v2
-      with:
-        repository: broadinstitute/terra-helm
-        ref: master
-        path: terra-helm
-
     # Check out terra-helmfile repo
     - uses: actions/checkout@v2
       with:
@@ -32,7 +30,7 @@ runs:
         token: ${{ inputs.token }}
         path: terra-helmfile
 
-    - name: Calculate latest versions of Terra services
+    - name: Calculate versions of Terra services
       run: |
         set -e
 
@@ -41,7 +39,7 @@ runs:
           exit 0
         fi
 
-        # Calculates the terra versions
+        # Calculates the Terra versions
         # Positional arguments:
         #   Version file path $1: required
         #   Force enable flag $2: optional
@@ -49,7 +47,7 @@ runs:
           VER_FILE_PATH=$1
           FORCE_ENABLE_FLAG=${2:-}
 
-          echo $VER_FILE_PATH
+          echo "Using $VER_FILE_PATH version file"
           while read TERRA_COMPONENT
           do
             if [ -z $FORCE_ENABLE_FLAG ]; then
@@ -81,46 +79,18 @@ runs:
           done < <(yq e '.releases | keys' terra-helmfile/$VER_FILE_PATH -o=j | jq -r -c '.[]')
         }
 
-        # Determine the base version file to use.
+        # Determine the base version file to use and load versions into envars.
         if ${{ contains(fromJson('["alpha", "staging", "prod"]'), inputs.environment) }}; then
           BASE_VER_FILE_PATH=versions/app/${{ inputs.environment }}.yaml
         else
           # personal, dev, perf
           BASE_VER_FILE_PATH=versions/app/dev.yaml
         fi
-
         calculate_terra_versions $BASE_VER_FILE_PATH true
 
-        # Load default versions from terra-helmfile/versions/app/*.yaml
-        # while read TERRA_COMPONENT
-        # do
-        #  VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions/app/${BASE_ENV}.yaml)
-        #  CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions/app/${BASE_ENV}.yaml)
-        #  echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
-        #  echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
-        # done < <(yq e '.releases | keys' terra-helmfile/versions/app/${BASE_ENV}.yaml -o=j | jq -r -c '.[]')
-
+        # Determine which override version file to use and update the base versions.
         OVERIDE_VER_FILE_PATH=environments/${{ inputs.env_type }}/${{ inputs.environment }}.yaml
         calculate_terra_versions $OVERIDE_VER_FILE_PATH
-
-        # Load versions from terra-helmfile/environments/${OVERIDE_ENV}.yaml
-        # while read TERRA_COMPONENT
-        # do
-        #  ENABLED=$(yq e ".releases.${TERRA_COMPONENT}.enabled" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
-        #  VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
-        #  CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
-        #  echo $TERRA_COMPONENT
-        #  if $ENABLED; then
-        #    if [ ! -n "$VERSION" ] ; then
-        #      echo $VERSION
-        #    fi
-        #    if [ ! -n "$CHART_VERSION" ] ; then
-        #      echo $CHART_VERSION
-        #    fi
-        #  else
-        #    echo "~~~~~!"
-        #  fi
-        #done < <(yq e '.releases | keys' terra-helmfile/environments/${OVERIDE_ENV}.yaml -o=j | jq -r -c '.[]')
 
       shell: bash
 
