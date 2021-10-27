@@ -52,6 +52,18 @@ runs:
           echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
         done < <(yq e '.releases | keys' terra-helmfile/versions/app/${BASE_ENV}.yaml -j | jq -r -c '.[]')
 
+        OVERIDE_ENV=${{ inputs.env_type }}/${{ inputs.environment }}
+        # Load override versions from terra-helmfile/environments/
+        while read TERRA_COMPONENT
+        do
+          ENABLED=$(yq e ".releases.${TERRA_COMPONENT}.enabled" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
+          VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
+          CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
+          echo $ENABLED
+          echo $VERSION
+          echo $CHART_VERSION
+        done < <(yq e '.releases | keys' terra-helmfile/environments/${OVERIDE_ENV}.yaml -j | jq -r -c '.[]')
+
       shell: bash
 
     - name: Echo MC Terra Module versions
