@@ -36,10 +36,11 @@ runs:
       run: |
         set -e
 
-        if {{ inputs.env_type == 'personal' || contains(fromJson('["dev", "perf"]'), inputs.environment)  }}; then
-          BASE_ENV=dev
-        else
+        if ${{ contains(fromJson('["alpha", "staging", "prod"]'), inputs.environment) }}; then
           BASE_ENV=${{ inputs.environment }}
+        else
+          # personal, dev, perf
+          BASE_ENV=dev
         fi
 
         # Load default versions from terra-helmfile/versions/app/*.yaml
