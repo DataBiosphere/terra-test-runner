@@ -62,7 +62,8 @@ runs:
 
             if $ENABLE_FLAG; then
               echo "do ENABLE_FLAG logic"
-              T1=$(yq e '.releases."${TERRA_COMPONENT}".appVersion' terra-helmfile/$VER_FILE_PATH)
+              CHUNK=".releases.${TERRA_COMPONENT}.appVersion"
+              T1=$(yq e "$CHUNK" terra-helmfile/$VER_FILE_PATH)
               echo "${TERRA_COMPONENT} has appVersion: ${T1}"
               VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/$VER_FILE_PATH)
               CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/$VER_FILE_PATH)
