@@ -53,6 +53,7 @@ public class TestRunner {
     public long endTime = -1;
     public List<TestScriptResult.TestScriptResultSummary> testScriptResultSummaries;
     public List<TestScriptResult.TestScriptUserJourneySnapshots> userJourneySnapshotsCollection;
+    public List<TerraVersion> terraVersions;
 
     public TestRunSummary() {}
 
@@ -111,6 +112,36 @@ public class TestRunner {
     }
   }
 
+  public static class TerraVersion {
+    private String appName;
+    private String appVersion;
+    private String chartVersion;
+
+    public String getAppName() {
+      return appName;
+    }
+
+    public void setAppName(String appName) {
+      this.appName = appName;
+    }
+
+    public String getAppVersion() {
+      return appVersion;
+    }
+
+    public void setAppVersion(String appVersion) {
+      this.appVersion = appVersion;
+    }
+
+    public String getChartVersion() {
+      return chartVersion;
+    }
+
+    public void setChartVersion(String chartVersion) {
+      this.chartVersion = chartVersion;
+    }
+  }
+
   protected TestRunner(TestConfiguration config) {
     this.config = config;
     this.scripts = new ArrayList<>();
@@ -120,6 +151,28 @@ public class TestRunner {
     this.testScriptResults = new ArrayList<>();
 
     this.summary = new TestRunSummary(UUID.randomUUID().toString());
+
+    // Load Terra service versions from envvars into summary
+    Map<String, TerraVersion> versions = new HashMap<>();
+    Map<String, String> envvars = System.getenv();
+    envvars.keySet().stream()
+        .filter(envName -> envName.contains("appVersion") || envName.contains("chartVersion"))
+        .forEach(
+            envName -> {
+              String terraComponent = envName.split("_")[0];
+              String versionTag = envName.split("_")[1];
+              if (!versions.containsKey(terraComponent)) {
+                versions.put(terraComponent, new TerraVersion());
+              }
+              if (versionTag.contains("appVersion")) {
+                versions.get(terraComponent).setAppVersion(envvars.get(envName));
+              } else if (versionTag.contains("chartVersion")) {
+                versions.get(terraComponent).setChartVersion(envvars.get(envName));
+              }
+            });
+
+    summary.terraVersions =
+        versions.entrySet().stream().map(entry -> entry.getValue()).collect(Collectors.toList());
   }
 
   protected void executeTestConfiguration() throws Exception {
