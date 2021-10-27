@@ -61,11 +61,11 @@ runs:
               VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/$VER_FILE_PATH)
               CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/$VER_FILE_PATH)
 
-              if ! -n "$VERSION" ; then
+              if ! [ -n "$VERSION" ]; then
                 echo $VERSION
                 echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
               fi
-              if ! -n "$CHART_VERSION" ; then
+              if ! [ -n "$CHART_VERSION" ] ; then
                 echo $CHART_VERSION
                 echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
               fi
