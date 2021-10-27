@@ -48,18 +48,23 @@ runs:
           while read TERRA_COMPONENT
           do
             if [ -z $FORCE_ENABLE_FLAG ]; then
+              echo "FORCE_ENABLE_FLAG not set"
               ENABLE_FLAG=$(yq e ".releases.${TERRA_COMPONENT}.enabled" terra-helmfile/$VER_FILE_PATH)
             else
+              echo "FORCE_ENABLE_FLAG set"
               ENABLE_FLAG=$FORCE_ENABLE_FLAG
             fi
 
             if $ENABLE_FLAG; then
+              echo "do ENABLE_FLAG logic"
               VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/$VER_FILE_PATH)
               CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/$VER_FILE_PATH)
               if [ ! -n "$VERSION" ] ; then
+                echo $VERSION
                 echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
               fi
               if [ ! -n "$CHART_VERSION" ] ; then
+                echo $CHART_VERSION
                 echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
               fi
             fi
@@ -73,6 +78,8 @@ runs:
           # personal, dev, perf
           BASE_VER_FILE_PATH=versions/app/dev.yaml
         fi
+
+        echo $BASE_VER_FILE_PATH
 
         parse_version_file $BASE_VER_FILE_PATH true
 
