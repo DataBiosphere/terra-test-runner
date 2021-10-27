@@ -36,41 +36,76 @@ runs:
       run: |
         set -e
 
-        if ${{ contains(fromJson('["alpha", "staging", "prod"]'), inputs.environment) }}; then
-          BASE_ENV=${{ inputs.environment }}
-        else
-          # personal, dev, perf
-          BASE_ENV=dev
+        if ${{ ! (contains(fromJson('["dev", "perf", "alpha", "staging", "prod"]'), inputs.environment) || contains(fromJson('["live", "personal"]'), inputs.env_type)) }}; then
+          echo "Warning: Invalid inputs. Plese use a valid input: environment = dev | perf | alpha | staging | prod, env_type = live | personal."
+          exit 0
         fi
 
-        # Load default versions from terra-helmfile/versions/app/*.yaml
-        while read TERRA_COMPONENT
-        do
-          VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions/app/${BASE_ENV}.yaml)
-          CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions/app/${BASE_ENV}.yaml)
-          echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
-          echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
-        done < <(yq e '.releases | keys' terra-helmfile/versions/app/${BASE_ENV}.yaml -o=j | jq -r -c '.[]')
+        parse_version_file () {
+          VER_FILE_PATH=$1
+          FORCE_ENABLE_FLAG=${2:-}
 
-        OVERIDE_ENV=${{ inputs.env_type }}/${{ inputs.environment }}
+          while read TERRA_COMPONENT
+          do
+            if [ -z $FORCE_ENABLE_FLAG ]; then
+              ENABLE_FLAG=$(yq e ".releases.${TERRA_COMPONENT}.enabled" terra-helmfile/$VER_FILE_PATH)
+            else
+              ENABLE_FLAG=$FORCE_ENABLE_FLAG
+            fi
+
+            if $ENABLE_FLAG; then
+              VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/$VER_FILE_PATH)
+              CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/$VER_FILE_PATH)
+              if [ ! -n "$VERSION" ] ; then
+                echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
+              fi
+              if [ ! -n "$CHART_VERSION" ] ; then
+                echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
+              fi
+            fi
+          done < <(yq e '.releases | keys' terra-helmfile/$VER_FILE_PATH -o=j | jq -r -c '.[]')
+        }
+
+        # Determine the base version file to use.
+        if ${{ contains(fromJson('["alpha", "staging", "prod"]'), inputs.environment) }}; then
+          BASE_VER_FILE_PATH=versions/app/${{ inputs.environment }}.yaml
+        else
+          # personal, dev, perf
+          BASE_VER_FILE_PATH=versions/app/dev.yaml
+        fi
+
+        parse_version_file $BASE_VER_FILE_PATH true
+
+        # Load default versions from terra-helmfile/versions/app/*.yaml
+        # while read TERRA_COMPONENT
+        # do
+        #  VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions/app/${BASE_ENV}.yaml)
+        #  CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions/app/${BASE_ENV}.yaml)
+        #  echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
+        #  echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
+        # done < <(yq e '.releases | keys' terra-helmfile/versions/app/${BASE_ENV}.yaml -o=j | jq -r -c '.[]')
+
+        OVERIDE_VER_FILE_PATH=environments/${{ inputs.env_type }}/${{ inputs.environment }}.yaml
+        parse_version_file $OVERIDE_VER_FILE_PATH
+
         # Load versions from terra-helmfile/environments/${OVERIDE_ENV}.yaml
-        while read TERRA_COMPONENT
-        do
-          ENABLED=$(yq e ".releases.${TERRA_COMPONENT}.enabled" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
-          VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
-          CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
-          echo $TERRA_COMPONENT
-          if $ENABLED; then
-            if [ ! -n "$VERSION" ] ; then
-              echo $VERSION
-            fi
-            if [ ! -n "$CHART_VERSION" ] ; then
-              echo $CHART_VERSION
-            fi
-          else
-            echo "~~~~~!"
-          fi
-        done < <(yq e '.releases | keys' terra-helmfile/environments/${OVERIDE_ENV}.yaml -o=j | jq -r -c '.[]')
+        # while read TERRA_COMPONENT
+        # do
+        #  ENABLED=$(yq e ".releases.${TERRA_COMPONENT}.enabled" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
+        #  VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
+        #  CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
+        #  echo $TERRA_COMPONENT
+        #  if $ENABLED; then
+        #    if [ ! -n "$VERSION" ] ; then
+        #      echo $VERSION
+        #    fi
+        #    if [ ! -n "$CHART_VERSION" ] ; then
+        #      echo $CHART_VERSION
+        #    fi
+        #  else
+        #    echo "~~~~~!"
+        #  fi
+        #done < <(yq e '.releases | keys' terra-helmfile/environments/${OVERIDE_ENV}.yaml -o=j | jq -r -c '.[]')
 
       shell: bash
 
