@@ -62,8 +62,12 @@ runs:
 
             if $ENABLE_FLAG; then
               echo "do ENABLE_FLAG logic"
-              T1=$(yq e ".releases.${TERRA_COMPONENT} | has(\"appVersion\")" terra-helmfile/$VER_FILE_PATH)
-              echo "${TERRA_COMPONENT} has appVersion: ${T1}"
+              if $(yq e ".releases.${TERRA_COMPONENT} | has(\"appVersion\")" terra-helmfile/$VER_FILE_PATH) ; then
+                VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/$VER_FILE_PATH)
+                CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/$VER_FILE_PATH)
+                echo "${TERRA_COMPONENT} has version: $VERSION, $CHART_VERSION"
+              fi
+
               VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/$VER_FILE_PATH)
               CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/$VER_FILE_PATH)
 
