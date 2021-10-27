@@ -36,18 +36,20 @@ runs:
       run: |
         set -e
 
-        # Load default versions from terra-helmfile/versions/app/*.yaml
-        if ${{ contains(fromJson('["alpha", "staging", "prod"]'), inputs.environment) }}; then
-          while read TERRA_COMPONENT
-          do
-            VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions/app/${{ inputs.environment }}.yaml)
-            CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions/app/${{ inputs.environment }}.yaml)
-            echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
-            echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
-          done < <(yq e '.releases | keys' terra-helmfile/versions/app/${{ inputs.environment }}.yaml -j | jq -r -c '.[]')
+        if {{ inputs.env_type == 'personal' || contains(fromJson('["dev", "perf"]'), inputs.environment)  }}; then
+          BASE_ENV=dev
         else
-          echo ${{ inputs.environment }}
+          BASE_ENV=${{ inputs.environment }}
         fi
+
+        # Load default versions from terra-helmfile/versions/app/*.yaml
+        while read TERRA_COMPONENT
+        do
+          VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions/app/${BASE_ENV}.yaml)
+          CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions/app/${BASE_ENV}.yaml)
+          echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
+          echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
+        done < <(yq e '.releases | keys' terra-helmfile/versions/app/${BASE_ENV}.yaml -j | jq -r -c '.[]')
 
       shell: bash
 
