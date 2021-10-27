@@ -61,10 +61,10 @@ runs:
           CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
           echo $TERRA_COMPONENT
           if $ENABLED; then
-            if "$VERSION" ; then
+            if [ ! -n "$VERSION" ] ; then
               echo $VERSION
             fi
-            if "$CHART_VERSION" ; then
+            if [ ! -n "$CHART_VERSION" ] ; then
               echo $CHART_VERSION
             fi
           else
