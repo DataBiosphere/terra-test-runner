@@ -33,18 +33,21 @@ runs:
         path: terra-helmfile
 
     - name: Calculate latest versions of Terra services
-      if: ${{ contains(['alpha', 'staging', 'prod'], inputs.environment) }}
       run: |
         set -e
 
         # Load default versions from terra-helmfile/versions/app/*.yaml
-        while read TERRA_COMPONENT
-        do
-          VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions/app/${{ inputs.environment }}.yaml)
-          CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions/app/${{ inputs.environment }}.yaml)
-          echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
-          echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
-        done < <(yq e '.releases | keys' terra-helmfile/versions/app/${{ inputs.environment }}.yaml -j | jq -r -c '.[]')
+        if ${{ contains(['alpha', 'staging', 'prod'], inputs.environment) }}; then
+          while read TERRA_COMPONENT
+          do
+            VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions/app/${{ inputs.environment }}.yaml)
+            CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions/app/${{ inputs.environment }}.yaml)
+            echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
+            echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
+          done < <(yq e '.releases | keys' terra-helmfile/versions/app/${{ inputs.environment }}.yaml -j | jq -r -c '.[]')
+        else
+          echo ${{ inputs.environment }}
+        fi
 
       shell: bash
 
