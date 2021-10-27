@@ -37,7 +37,7 @@ runs:
         set -e
 
         # Load default versions from terra-helmfile/versions/app/*.yaml
-        if ${{ contains(fromJson("['alpha', 'staging', 'prod']"), inputs.environment) }}; then
+        if ${{ contains(fromJson('["alpha", "staging", "prod"]'), inputs.environment) }}; then
           while read TERRA_COMPONENT
           do
             VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/versions/app/${{ inputs.environment }}.yaml)
