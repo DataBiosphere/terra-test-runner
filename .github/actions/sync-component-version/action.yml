@@ -41,7 +41,11 @@ runs:
           exit 0
         fi
 
-        parse_version_file () {
+        # Calculates the terra versions
+        # Positional arguments:
+        #   Version file path $1: required
+        #   Force enable flag $2: optional
+        calculate_terra_versions () {
           VER_FILE_PATH=$1
           FORCE_ENABLE_FLAG=${2:-}
 
@@ -61,13 +65,19 @@ runs:
               VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/$VER_FILE_PATH)
               CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/$VER_FILE_PATH)
 
-              if [ -n "$VERSION" ]; then
-                echo $VERSION
+              # Check if $VERSION is not null
+              if [ -n $VERSION ]; then
+                echo "VERSION not null"
                 echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
+              else
+                echo "${TERRA_COMPONENT}.appVersion has not been set in $VER_FILE_PATH"
               fi
-              if [ -n "$CHART_VERSION" ]; then
-                echo $CHART_VERSION
+              # Check if $CHART_VERSION is not null
+              if [ -n $CHART_VERSION ]; then
+                echo "CHART_VERSION not null"
                 echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
+              else
+                echo "${TERRA_COMPONENT}.chartVersion has not been set in $VER_FILE_PATH"
               fi
             fi
           done < <(yq e '.releases | keys' terra-helmfile/$VER_FILE_PATH -o=j | jq -r -c '.[]')
@@ -81,9 +91,7 @@ runs:
           BASE_VER_FILE_PATH=versions/app/dev.yaml
         fi
 
-        echo $BASE_VER_FILE_PATH
-
-        parse_version_file $BASE_VER_FILE_PATH true
+        calculate_terra_versions $BASE_VER_FILE_PATH true
 
         # Load default versions from terra-helmfile/versions/app/*.yaml
         # while read TERRA_COMPONENT
@@ -95,7 +103,7 @@ runs:
         # done < <(yq e '.releases | keys' terra-helmfile/versions/app/${BASE_ENV}.yaml -o=j | jq -r -c '.[]')
 
         OVERIDE_VER_FILE_PATH=environments/${{ inputs.env_type }}/${{ inputs.environment }}.yaml
-        parse_version_file $OVERIDE_VER_FILE_PATH
+        calculate_terra_versions $OVERIDE_VER_FILE_PATH
 
         # Load versions from terra-helmfile/environments/${OVERIDE_ENV}.yaml
         # while read TERRA_COMPONENT
