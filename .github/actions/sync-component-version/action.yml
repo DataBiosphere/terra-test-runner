@@ -50,7 +50,7 @@ runs:
           CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/versions/app/${BASE_ENV}.yaml)
           echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
           echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
-        done < <(yq e '.releases | keys' terra-helmfile/versions/app/${BASE_ENV}.yaml -j | jq -r -c '.[]')
+        done < <(yq e '.releases | keys' terra-helmfile/versions/app/${BASE_ENV}.yaml -o=j | jq -r -c '.[]')
 
         OVERIDE_ENV=${{ inputs.env_type }}/${{ inputs.environment }}
         # Load versions from terra-helmfile/environments/${OVERIDE_ENV}.yaml
@@ -70,7 +70,7 @@ runs:
           else
             echo "~~~~~!"
           fi
-        done < <(yq e '.releases | keys' terra-helmfile/environments/${OVERIDE_ENV}.yaml -j | jq -r -c '.[]')
+        done < <(yq e '.releases | keys' terra-helmfile/environments/${OVERIDE_ENV}.yaml -o=j | jq -r -c '.[]')
 
       shell: bash
 
