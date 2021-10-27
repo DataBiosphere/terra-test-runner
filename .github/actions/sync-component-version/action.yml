@@ -66,14 +66,14 @@ runs:
               CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/$VER_FILE_PATH)
 
               # Check if $VERSION is not null
-              if [ -n $VERSION ] || [ $VERSION != "null" ]; then
+              if [[ -z "${VERSION+x}" ]] ; then
                 echo "VERSION not null"
                 echo "${TERRA_COMPONENT}_appVersion=${VERSION}" >> $GITHUB_ENV
               else
                 echo "${TERRA_COMPONENT}.appVersion has not been set in $VER_FILE_PATH"
               fi
               # Check if $CHART_VERSION is not null
-              if [ -n $CHART_VERSION ] || [ $CHART_VERSION != "null" ]; then
+              if [[ -z "${CHART_VERSION+x}" ]] ; then
                 echo "CHART_VERSION not null"
                 echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
               else
