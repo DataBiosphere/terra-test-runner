@@ -117,6 +117,12 @@ public class TestRunner {
     private String appVersion;
     private String chartVersion;
 
+    public TerraVersion() {}
+
+    public TerraVersion(String appName) {
+      this.appName = appName;
+    }
+
     public String getAppName() {
       return appName;
     }
@@ -162,7 +168,7 @@ public class TestRunner {
               String terraComponent = envName.split("_")[0];
               String versionTag = envName.split("_")[1];
               if (!versions.containsKey(terraComponent)) {
-                versions.put(terraComponent, new TerraVersion());
+                versions.put(terraComponent, new TerraVersion(terraComponent));
               }
               if (versionTag.contains("appVersion")) {
                 versions.get(terraComponent).setAppVersion(envvars.get(envName));
