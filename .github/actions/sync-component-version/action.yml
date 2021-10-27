@@ -53,7 +53,7 @@ runs:
         done < <(yq e '.releases | keys' terra-helmfile/versions/app/${BASE_ENV}.yaml -j | jq -r -c '.[]')
 
         OVERIDE_ENV=${{ inputs.env_type }}/${{ inputs.environment }}
-        # Load override versions from terra-helmfile/environments/
+        # Load versions from terra-helmfile/environments/${OVERIDE_ENV}.yaml
         while read TERRA_COMPONENT
         do
           ENABLED=$(yq e ".releases.${TERRA_COMPONENT}.enabled" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
@@ -61,8 +61,12 @@ runs:
           CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/environments/${OVERIDE_ENV}.yaml)
           echo $TERRA_COMPONENT
           if $ENABLED; then
-            echo $VERSION
-            echo $CHART_VERSION
+            if [ -n "$VERSION" ]; then
+              echo $VERSION
+            fi
+            if [ -n "$CHART_VERSION" ]; then
+              echo $CHART_VERSION
+            fi
           else
             echo "~~~~~!"
           fi
