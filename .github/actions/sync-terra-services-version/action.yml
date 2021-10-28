@@ -39,6 +39,7 @@ runs:
           exit 0
         fi
 
+        # Refer tp https://github.com/mikefarah/yq#install
         which yq || \
           (sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CC86BB64 \
            && sudo add-apt-repository ppa:rmescandon/yq \
