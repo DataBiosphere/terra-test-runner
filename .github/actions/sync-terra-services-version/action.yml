@@ -40,6 +40,7 @@ runs:
         fi
 
         which yq
+        which brew
 
         # Calculates the Terra versions
         # Positional arguments:
