@@ -39,8 +39,14 @@ runs:
           exit 0
         fi
 
-        which yq
-        which brew
+        which yq &> /dev/null
+        echo "-->$?<--"
+
+        which blahblah &> /dev/null
+        echo "-->$?<--"
+
+        which brew &> /dev/null
+        echo "-->$?<--"
 
         # Calculates the Terra versions
         # Positional arguments:
