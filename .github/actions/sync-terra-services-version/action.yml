@@ -42,7 +42,7 @@ runs:
         YQ=$(which yq)
         echo "$YQ"
 
-        YQ=$(which blahblah)
+        YQ=$(which blahblah || "Bad")
         echo "$YQ"
 
         YQ=$(which brew)
