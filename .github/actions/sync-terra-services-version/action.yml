@@ -40,6 +40,7 @@ runs:
         fi
 
         # Refer tp https://github.com/mikefarah/yq#install
+        # Install yq if it is not already installed.
         which yq || \
           (sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys CC86BB64 \
            && sudo add-apt-repository ppa:rmescandon/yq \
