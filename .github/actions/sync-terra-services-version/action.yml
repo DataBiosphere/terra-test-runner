@@ -39,14 +39,7 @@ runs:
           exit 0
         fi
 
-        YQ=$(which yq)
-        echo "$YQ"
-
-        YQ=$(which blahblah || echo "Bad")
-        echo "$YQ"
-
-        YQ=$(which brew)
-        echo "$YQ"
+        which yq || brew install yq
 
         # Calculates the Terra versions
         # Positional arguments:
