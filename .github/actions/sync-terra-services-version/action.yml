@@ -43,6 +43,9 @@ runs:
         # Positional arguments:
         #   Version file path $1: required
         #   Force enable flag $2: optional
+        # Output Terra versions to $GITHUB_ENV with env names in the following format:
+        #   <appName>_appVersion, <appName>_chartVersion
+        # e.g. workspacemanager_appVersion, workspacemanager_chartVersion
         calculate_terra_versions () {
           VER_FILE_PATH=$1
           FORCE_ENABLE_FLAG=${2:-}
