@@ -8,11 +8,11 @@ description: 'Calculate versions of Terra services'
 author: ''
 inputs:
   env_type:
-    description: 'Environment type: live | personal'
-    required: true
+    description: 'Reserved for preview environment. Not yet supported.'
+    required: false
     default: ''
   environment:
-    description: 'Environment: live (dev | perf | alpha | staging | prod); personal (wsmtest). See terra-helmfile/enviroments/live; tterra-helmfile/environments/personal, respectively.'
+    description: 'Environment: live [dev | perf | alpha | staging | prod]; personal [wsmtest]. See terra-helmfile/enviroments/live; tterra-helmfile/environments/personal, respectively.'
     required: true
     default: ''
   token:
@@ -34,9 +34,11 @@ runs:
       run: |
         set -e
 
-        if ${{ ! (contains(fromJson('["dev", "perf", "alpha", "staging", "prod"]'), inputs.environment) || contains(fromJson('["live", "personal"]'), inputs.env_type)) }}; then
-          echo "Warning: Invalid inputs. Plese use a valid input: environment = dev | perf | alpha | staging | prod, env_type = live | personal."
-          exit 0
+        if ${{ ! (contains(fromJson('["dev", "perf", "alpha", "staging", "prod"]'), inputs.environment)) }}; then
+          if [ ! -f terra-helmfile/environments/personal/${{ inputs.environment }}.yaml ]; then
+            echo "Warning: Input is not valid. Please use a valid environment: [ dev | perf | alpha | staging | prod ] or an existing personal environment."
+            exit 0
+          fi
         fi
 
         # Refer tp https://github.com/mikefarah/yq#install
@@ -88,17 +90,21 @@ runs:
         }
 
         # Determine the base version file to use and load versions into envars.
-        if ${{ contains(fromJson('["alpha", "staging", "prod"]'), inputs.environment) }}; then
+        if ${{ contains(fromJson('["dev", "alpha", "staging", "prod"]'), inputs.environment) }}; then
           BASE_VER_FILE_PATH=versions/app/${{ inputs.environment }}.yaml
         else
-          # personal, dev, perf
+          # personal, perf
           BASE_VER_FILE_PATH=versions/app/dev.yaml
         fi
         calculate_terra_versions $BASE_VER_FILE_PATH true
 
         # Determine which override version file to use and update the base versions.
-        OVERIDE_VER_FILE_PATH=environments/${{ inputs.env_type }}/${{ inputs.environment }}.yaml
+        if ${{ contains(fromJson('["dev", "perf", "alpha", "staging", "prod"]'), inputs.environment) }}; then
+          OVERIDE_VER_FILE_PATH=environments/live/${{ inputs.environment }}.yaml
+        else
+          # personal
+          OVERIDE_VER_FILE_PATH=environments/personal/${{ inputs.environment }}.yaml
+        fi
         calculate_terra_versions $OVERIDE_VER_FILE_PATH
 
       shell: bash
-
