@@ -39,14 +39,14 @@ runs:
           exit 0
         fi
 
-        which yq &> /dev/null
-        echo "-->$?<--"
+        YQ=$(which yq)
+        echo "$YQ"
 
-        which blahblah &> /dev/null
-        echo "-->$?<--"
+        YQ=$(which blahblah)
+        echo "$YQ"
 
-        which brew &> /dev/null
-        echo "-->$?<--"
+        YQ=$(which brew)
+        echo "$YQ"
 
         # Calculates the Terra versions
         # Positional arguments:
