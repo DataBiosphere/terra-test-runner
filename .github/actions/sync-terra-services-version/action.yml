@@ -72,7 +72,7 @@ runs:
 
               # Check if chartVersion exist
               if $(yq e ".releases.${TERRA_COMPONENT} | has(\"chartVersion\")" terra-helmfile/$VER_FILE_PATH) ; then
-                CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.appVersion" terra-helmfile/$VER_FILE_PATH)
+                CHART_VERSION=$(yq e ".releases.${TERRA_COMPONENT}.chartVersion" terra-helmfile/$VER_FILE_PATH)
                 echo "${TERRA_COMPONENT}_chartVersion=${CHART_VERSION}" >> $GITHUB_ENV
               else
                 echo "${TERRA_COMPONENT}.chartVersion has not been set in $VER_FILE_PATH"
