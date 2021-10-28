@@ -39,6 +39,14 @@ runs:
           exit 0
         fi
 
+        dpkg -s yq &> /dev/null
+
+        if [ $? -eq 0 ]; then
+          echo "Package yq is installed!"
+        else
+          echo "Package yq is NOT installed!"
+        fi
+
         # Calculates the Terra versions
         # Positional arguments:
         #   Version file path $1: required
