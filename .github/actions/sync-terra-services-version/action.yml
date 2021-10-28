@@ -39,7 +39,7 @@ runs:
           exit 0
         fi
 
-        which yq || brew install yq
+        which yq || (sudo apt-get update && sudo apt-get -y install yq)
 
         # Calculates the Terra versions
         # Positional arguments:
