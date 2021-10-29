@@ -47,6 +47,11 @@ public class TerraVersion {
     this.chartVersion = chartVersion;
   }
 
+  /**
+   * Method to load ALL Terra services version from envvars.
+   *
+   * @return list of TerraVersion.
+   */
   public static List<TerraVersion> loadEnvVars() {
     // Load Terra service versions from envvars into summary
     Map<String, TerraVersion> versions = new HashMap<>();
@@ -70,6 +75,13 @@ public class TerraVersion {
     return versions.entrySet().stream().map(entry -> entry.getValue()).collect(Collectors.toList());
   }
 
+  /**
+   * Method to load Terra services version from envvars given app names as input. Non-existent app
+   * will be ignored.
+   *
+   * @param appName - Terra app name (e.g. agora, workspacemanager)
+   * @return list of TerraVersion.
+   */
   public static List<TerraVersion> loadEnvVars(String... appName) {
     return Arrays.stream(appName)
         .filter(
