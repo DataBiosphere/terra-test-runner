@@ -47,7 +47,7 @@ public class TestRunner {
 
   private boolean exceptionThrownInCleanup = false;
 
-  /** A base class with test runner summary statistics. */
+  /** A base class with test runner summary statistics. Suitable for human inspection. */
   public static class TestRunSummary {
     @JsonView(SummaryViews.Summary.class)
     public String id;
@@ -125,6 +125,9 @@ public class TestRunner {
   /**
    * A subclass of TestRunSummary with additional properties testConfig,
    * userJourneySnapshotsCollection, terraVersions.
+   *
+   * <p>This extended version is suitable for Cloud Function ingestion of test results as single
+   * rows and for streaming inserts to BigQuery in bulk.
    */
   public static class TestRunSummaryConcatenated extends TestRunSummary {
     @JsonView(SummaryViews.ConcatenatedSummary.class)
