@@ -10,6 +10,7 @@ import bio.terra.testrunner.runner.config.TestConfiguration;
 import bio.terra.testrunner.runner.config.TestScriptSpecification;
 import bio.terra.testrunner.runner.config.TestSuite;
 import bio.terra.testrunner.runner.config.TestUserSpecification;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import java.io.File;
@@ -37,6 +38,7 @@ public class TestRunner {
 
   private List<TestScriptResult> testScriptResults;
   protected TestRunSummary summary;
+  protected TestRunSummaryConcatenated summaryConcatenated;
 
   private static long secondsToWaitForPoolShutdown = 60;
 
@@ -45,16 +47,25 @@ public class TestRunner {
 
   private boolean exceptionThrownInCleanup = false;
 
+  /** A base class with test runner summary statistics. */
   public static class TestRunSummary {
+    @JsonView(SummaryViews.Summary.class)
     public String id;
 
+    @JsonView(SummaryViews.Summary.class)
     public long startTime = -1;
+
+    @JsonView(SummaryViews.Summary.class)
     public long startUserJourneyTime = -1;
+
+    @JsonView(SummaryViews.Summary.class)
     public long endUserJourneyTime = -1;
+
+    @JsonView(SummaryViews.Summary.class)
     public long endTime = -1;
+
+    @JsonView(SummaryViews.Summary.class)
     public List<TestScriptResult.TestScriptResultSummary> testScriptResultSummaries;
-    public List<TestScriptResult.TestScriptUserJourneySnapshots> userJourneySnapshotsCollection;
-    public List<TerraVersion> terraVersions;
 
     public TestRunSummary() {}
 
@@ -62,16 +73,22 @@ public class TestRunner {
       this.id = id;
     }
 
+    @JsonView(SummaryViews.Summary.class)
     private String startTimestamp;
+
+    @JsonView(SummaryViews.Summary.class)
     private String startUserJourneyTimestamp;
+
+    @JsonView(SummaryViews.Summary.class)
     private String endUserJourneyTimestamp;
+
+    @JsonView(SummaryViews.Summary.class)
     private String endTimestamp;
 
     // Include user-provided TestSuite name in the summary:
     // This can be used to facilitate grouping of test runner results on the dashboard.
+    @JsonView(SummaryViews.Summary.class)
     private String testSuiteName;
-    // Merge testConfiguration into summary.
-    private TestConfiguration testConfig;
 
     public String getStartTimestamp() {
       return millisecondsToTimestampString(startTime);
@@ -97,6 +114,37 @@ public class TestRunner {
       this.testSuiteName = testSuiteName;
     }
 
+    private static String millisecondsToTimestampString(long milliseconds) {
+      DateFormat dateFormat =
+          new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS'Z'"); // Quoted Z to indicate UTC
+      dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+      return dateFormat.format(new Date(milliseconds));
+    }
+  }
+
+  /**
+   * A subclass of TestRunSummary with additional properties testConfig,
+   * userJourneySnapshotsCollection, terraVersions.
+   */
+  public static class TestRunSummaryConcatenated extends TestRunSummary {
+    @JsonView(SummaryViews.ConcatenatedSummary.class)
+    private TestConfiguration testConfig;
+
+    @JsonView(SummaryViews.ConcatenatedSummary.class)
+    private List<TestScriptResult.TestScriptUserJourneySnapshots> userJourneySnapshotsCollection;
+
+    @JsonView(SummaryViews.ConcatenatedSummary.class)
+    private List<TerraVersion> terraVersions;
+
+    public TestRunSummaryConcatenated() {
+      super();
+    }
+
+    public TestRunSummaryConcatenated(String id) {
+      super();
+      this.id = id;
+    }
+
     public TestConfiguration getTestConfig() {
       return testConfig;
     }
@@ -105,11 +153,22 @@ public class TestRunner {
       this.testConfig = testConfig;
     }
 
-    private static String millisecondsToTimestampString(long milliseconds) {
-      DateFormat dateFormat =
-          new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS'Z'"); // Quoted Z to indicate UTC
-      dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-      return dateFormat.format(new Date(milliseconds));
+    public List<TestScriptResult.TestScriptUserJourneySnapshots>
+        getUserJourneySnapshotsCollection() {
+      return userJourneySnapshotsCollection;
+    }
+
+    public void setUserJourneySnapshotsCollection(
+        List<TestScriptResult.TestScriptUserJourneySnapshots> userJourneySnapshotsCollection) {
+      this.userJourneySnapshotsCollection = userJourneySnapshotsCollection;
+    }
+
+    public List<TerraVersion> getTerraVersions() {
+      return terraVersions;
+    }
+
+    public void setTerraVersions(List<TerraVersion> terraVersions) {
+      this.terraVersions = terraVersions;
     }
   }
 
@@ -120,9 +179,9 @@ public class TestRunner {
     this.disruptionThreadPool = null;
     this.userJourneyFutureLists = new ArrayList<>();
     this.testScriptResults = new ArrayList<>();
-
-    this.summary = new TestRunSummary(UUID.randomUUID().toString());
-    summary.terraVersions = TerraVersion.loadEnvVars();
+    this.summaryConcatenated = new TestRunSummaryConcatenated(UUID.randomUUID().toString());
+    this.summary = (TestRunSummary) this.summaryConcatenated;
+    summaryConcatenated.setTerraVersions(TerraVersion.loadEnvVars());
   }
 
   protected void executeTestConfiguration() throws Exception {
@@ -363,10 +422,10 @@ public class TestRunner {
     summary.testScriptResultSummaries =
         testScriptResults.stream().map(TestScriptResult::getSummary).collect(Collectors.toList());
     // store user journey snapshots into the summary object
-    summary.userJourneySnapshotsCollection =
+    summaryConcatenated.setUserJourneySnapshotsCollection(
         testScriptResults.stream()
             .map(TestScriptResult::getUserJourneySnapshots)
-            .collect(Collectors.toList());
+            .collect(Collectors.toList()));
 
     // call the cleanup method of each test script
     logger.info("Test Scripts: Calling the cleanup methods");
@@ -505,6 +564,7 @@ public class TestRunner {
   private static final String renderedConfigFileName = "RENDERED_testConfiguration.json";
   private static final String userJourneyResultsFileName = "RAWDATA_userJourneyResults.json";
   private static final String runSummaryFileName = "SUMMARY_testRun.json";
+  private static final String runConcatSummaryFileName = "SUMMARY_concat_testRun.json";
   private static final String envVersionFileName = "ENV_componentVersion.json";
 
   /** Helper method to write out the results to files at the end of a test configuration run. */
@@ -512,6 +572,12 @@ public class TestRunner {
     // use Jackson to map the object to a JSON-formatted text block
     ObjectMapper objectMapper = new ObjectMapper();
     ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
+    ObjectWriter summaryObjectWriter =
+        objectMapper.writerWithView(SummaryViews.Summary.class).withDefaultPrettyPrinter();
+    ObjectWriter summaryConcatObjectWriter =
+        objectMapper
+            .writerWithView(SummaryViews.ConcatenatedSummary.class)
+            .withDefaultPrettyPrinter();
 
     // print the summary results to info
     logger.info(objectWriter.writeValueAsString(summary));
@@ -536,6 +602,7 @@ public class TestRunner {
     File userJourneyResultsFile =
         FileUtils.createNewFile(outputDirectory.resolve(userJourneyResultsFileName).toFile());
     File runSummaryFile = outputDirectory.resolve(runSummaryFileName).toFile();
+    File runConcatSummaryFile = outputDirectory.resolve(runConcatSummaryFileName).toFile();
     File terraVersionFile = outputDirectory.resolve(envVersionFileName).toFile();
 
     // write the rendered test configuration that was run to a file
@@ -547,8 +614,13 @@ public class TestRunner {
     logger.info("All user journey results written to file: {}", userJourneyResultsFile.getName());
 
     // write the test run summary to a file
-    objectWriter.writeValue(runSummaryFile, summary);
+    summaryObjectWriter.writeValue(runSummaryFile, summaryConcatenated);
     logger.info("Test run summary written to file: {}", runSummaryFile.getName());
+
+    // write the concatenated test run summary to a file
+    summaryConcatObjectWriter.writeValue(runConcatSummaryFile, summaryConcatenated);
+    logger.info(
+        "Concatenated test run summary written to file: {}", runConcatSummaryFile.getName());
 
     // Write the MCTerra Component versions of target environment to a file
     objectWriter.writeValue(terraVersionFile, componentVersions);
@@ -675,7 +747,7 @@ public class TestRunner {
       // get an instance of a runner and tell it to execute the configuration
       TestRunner runner = new TestRunner(testConfiguration);
       runner.summary.setTestSuiteName(testSuite.name);
-      runner.summary.setTestConfig(testConfiguration);
+      runner.summaryConcatenated.setTestConfig(testConfiguration);
       boolean testConfigFailed = false;
       try {
         runner.executeTestConfiguration();
