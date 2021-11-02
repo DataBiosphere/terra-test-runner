@@ -180,8 +180,8 @@ public class TestRunner {
     this.userJourneyFutureLists = new ArrayList<>();
     this.testScriptResults = new ArrayList<>();
     this.summaryConcatenated = new TestRunSummaryConcatenated(UUID.randomUUID().toString());
-    this.summary = (TestRunSummary) this.summaryConcatenated;
     summaryConcatenated.setTerraVersions(TerraVersion.loadEnvVars());
+    this.summary = (TestRunSummary) this.summaryConcatenated;
   }
 
   protected void executeTestConfiguration() throws Exception {
