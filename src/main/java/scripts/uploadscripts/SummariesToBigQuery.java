@@ -3,6 +3,7 @@ package scripts.uploadscripts;
 import bio.terra.testrunner.collector.MeasurementCollectionScript;
 import bio.terra.testrunner.collector.MeasurementCollector;
 import bio.terra.testrunner.common.utils.BigQueryUtils;
+import bio.terra.testrunner.runner.TestRunSummary;
 import bio.terra.testrunner.runner.TestRunner;
 import bio.terra.testrunner.runner.TestScriptResult;
 import bio.terra.testrunner.runner.config.ServiceAccountSpecification;
@@ -40,7 +41,7 @@ public class SummariesToBigQuery extends UploadScript {
   protected String datasetName; // big query dataset name
 
   protected TestConfiguration renderedTestConfiguration;
-  protected TestRunner.TestRunSummary testRunSummary;
+  protected TestRunSummary testRunSummary;
   protected MeasurementCollectionScript.MeasurementResultSummary[] measurementCollectionSummaries;
 
   /**

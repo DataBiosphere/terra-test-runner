@@ -10,7 +10,6 @@ import bio.terra.testrunner.runner.config.TestConfiguration;
 import bio.terra.testrunner.runner.config.TestScriptSpecification;
 import bio.terra.testrunner.runner.config.TestSuite;
 import bio.terra.testrunner.runner.config.TestUserSpecification;
-import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import java.io.File;
@@ -18,8 +17,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -46,134 +43,6 @@ public class TestRunner {
       new HashMap<String, Map<String, String>>();
 
   private boolean exceptionThrownInCleanup = false;
-
-  /** A base class with test runner summary statistics. Suitable for human inspection. */
-  public static class TestRunSummary {
-    @JsonView(SummaryViews.Summary.class)
-    public String id;
-
-    @JsonView(SummaryViews.Summary.class)
-    public long startTime = -1;
-
-    @JsonView(SummaryViews.Summary.class)
-    public long startUserJourneyTime = -1;
-
-    @JsonView(SummaryViews.Summary.class)
-    public long endUserJourneyTime = -1;
-
-    @JsonView(SummaryViews.Summary.class)
-    public long endTime = -1;
-
-    @JsonView(SummaryViews.Summary.class)
-    public List<TestScriptResult.TestScriptResultSummary> testScriptResultSummaries;
-
-    public TestRunSummary() {}
-
-    public TestRunSummary(String id) {
-      this.id = id;
-    }
-
-    @JsonView(SummaryViews.Summary.class)
-    private String startTimestamp;
-
-    @JsonView(SummaryViews.Summary.class)
-    private String startUserJourneyTimestamp;
-
-    @JsonView(SummaryViews.Summary.class)
-    private String endUserJourneyTimestamp;
-
-    @JsonView(SummaryViews.Summary.class)
-    private String endTimestamp;
-
-    // Include user-provided TestSuite name in the summary:
-    // This can be used to facilitate grouping of test runner results on the dashboard.
-    @JsonView(SummaryViews.Summary.class)
-    private String testSuiteName;
-
-    public String getStartTimestamp() {
-      return millisecondsToTimestampString(startTime);
-    }
-
-    public String getStartUserJourneyTimestamp() {
-      return millisecondsToTimestampString(startUserJourneyTime);
-    }
-
-    public String getEndUserJourneyTimestamp() {
-      return millisecondsToTimestampString(endUserJourneyTime);
-    }
-
-    public String getEndTimestamp() {
-      return millisecondsToTimestampString(endTime);
-    }
-
-    public String getTestSuiteName() {
-      return testSuiteName;
-    }
-
-    public void setTestSuiteName(String testSuiteName) {
-      this.testSuiteName = testSuiteName;
-    }
-
-    private static String millisecondsToTimestampString(long milliseconds) {
-      DateFormat dateFormat =
-          new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS'Z'"); // Quoted Z to indicate UTC
-      dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-      return dateFormat.format(new Date(milliseconds));
-    }
-  }
-
-  /**
-   * A subclass of TestRunSummary with additional properties testConfig,
-   * userJourneySnapshotsCollection, terraVersions.
-   *
-   * <p>This extended version is suitable for Cloud Function ingestion of test results as single
-   * rows and for streaming inserts to BigQuery in bulk.
-   */
-  public static class TestRunSummaryConcatenated extends TestRunSummary {
-    @JsonView(SummaryViews.ConcatenatedSummary.class)
-    private TestConfiguration testConfig;
-
-    @JsonView(SummaryViews.ConcatenatedSummary.class)
-    private List<TestScriptResult.TestScriptUserJourneySnapshots> userJourneySnapshotsCollection;
-
-    @JsonView(SummaryViews.ConcatenatedSummary.class)
-    private List<TerraVersion> terraVersions;
-
-    public TestRunSummaryConcatenated() {
-      super();
-    }
-
-    public TestRunSummaryConcatenated(String id) {
-      super();
-      this.id = id;
-    }
-
-    public TestConfiguration getTestConfig() {
-      return testConfig;
-    }
-
-    public void setTestConfig(TestConfiguration testConfig) {
-      this.testConfig = testConfig;
-    }
-
-    public List<TestScriptResult.TestScriptUserJourneySnapshots>
-        getUserJourneySnapshotsCollection() {
-      return userJourneySnapshotsCollection;
-    }
-
-    public void setUserJourneySnapshotsCollection(
-        List<TestScriptResult.TestScriptUserJourneySnapshots> userJourneySnapshotsCollection) {
-      this.userJourneySnapshotsCollection = userJourneySnapshotsCollection;
-    }
-
-    public List<TerraVersion> getTerraVersions() {
-      return terraVersions;
-    }
-
-    public void setTerraVersions(List<TerraVersion> terraVersions) {
-      this.terraVersions = terraVersions;
-    }
-  }
 
   protected TestRunner(TestConfiguration config) {
     this.config = config;
@@ -664,12 +533,12 @@ public class TestRunner {
   }
 
   /**
-   * Read in the test run summary from the output directory and return the TestRunner.TestRunSummary
-   * Java object.
+   * Read in the test run summary from the output directory and return the TestRunSummary Java
+   * object.
    */
-  public static TestRunner.TestRunSummary getTestRunSummary(Path outputDirectory) throws Exception {
+  public static TestRunSummary getTestRunSummary(Path outputDirectory) throws Exception {
     return FileUtils.readOutputFileIntoJavaObject(
-        outputDirectory, TestRunner.runSummaryFileName, TestRunner.TestRunSummary.class);
+        outputDirectory, TestRunner.runSummaryFileName, TestRunSummary.class);
   }
 
   /**
@@ -688,7 +557,7 @@ public class TestRunner {
 
     // build a list of output directories that contain test run results
     List<Path> testRunOutputDirectories = new ArrayList<>();
-    TestRunner.TestRunSummary testRunSummary = null;
+    TestRunSummary testRunSummary = null;
     try {
       testRunSummary = getTestRunSummary(outputDirectory);
     } catch (Exception ex) {
