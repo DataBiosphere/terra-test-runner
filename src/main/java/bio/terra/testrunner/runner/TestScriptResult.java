@@ -7,7 +7,6 @@ import java.util.List;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 public class TestScriptResult {
-  public List<UserJourneyResult> userJourneyResults;
   public TestScriptResultSummary summary;
   public TestScriptUserJourneySnapshots userJourneySnapshots;
 
@@ -59,17 +58,15 @@ public class TestScriptResult {
 
   public TestScriptResult(
       TestScriptSpecification testScriptSpecification, List<UserJourneyResult> userJourneyResults) {
-    this.userJourneyResults = userJourneyResults;
+    this.userJourneySnapshots =
+        new TestScriptUserJourneySnapshots(
+            testScriptSpecification.name, testScriptSpecification.description);
+    userJourneySnapshots.userJourneyResults = userJourneyResults;
 
     summary =
         new TestScriptResultSummary(
             testScriptSpecification.name, testScriptSpecification.description);
     calculateStatistics();
-
-    userJourneySnapshots =
-        new TestScriptUserJourneySnapshots(
-            testScriptSpecification.name, testScriptSpecification.description);
-    userJourneySnapshots.userJourneyResults = userJourneyResults;
   }
 
   public TestScriptResultSummary getSummary() {
@@ -83,8 +80,8 @@ public class TestScriptResult {
   /** Loop through the UserJourneyResults calculating reporting statistics of interest. */
   private void calculateStatistics() {
     DescriptiveStatistics descriptiveStatistics = new DescriptiveStatistics();
-    for (int ctr = 0; ctr < userJourneyResults.size(); ctr++) {
-      UserJourneyResult result = userJourneyResults.get(ctr);
+    for (int ctr = 0; ctr < userJourneySnapshots.userJourneyResults.size(); ctr++) {
+      UserJourneyResult result = userJourneySnapshots.userJourneyResults.get(ctr);
 
       // count the number of user journeys that completed and threw exceptions
       summary.numCompleted += (result.completed) ? 1 : 0;
@@ -95,7 +92,7 @@ public class TestScriptResult {
     }
     summary.elapsedTimeStatistics =
         BasicStatistics.calculateStandardStatistics(descriptiveStatistics);
-    summary.totalRun = userJourneyResults.size();
+    summary.totalRun = userJourneySnapshots.userJourneyResults.size();
 
     summary.isFailure =
         (summary.numCompleted < summary.totalRun) || (summary.numExceptionsThrown > 0);
