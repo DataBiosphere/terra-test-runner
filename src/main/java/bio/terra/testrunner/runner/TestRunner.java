@@ -30,10 +30,12 @@ public class TestRunner {
   private TestConfiguration config;
   private List<TestScript> scripts;
   private DeploymentScript deploymentScript;
+  private VersionScript versionScript;
   private List<ThreadPoolExecutor> threadPools;
   private ThreadPoolExecutor disruptionThreadPool;
   private List<List<Future<UserJourneyResult>>> userJourneyFutureLists;
 
+  private VersionScriptResult versionScriptResult;
   private List<TestScriptResult> testScriptResults;
   protected TestRunSummary summary;
 
@@ -153,7 +155,7 @@ public class TestRunner {
   }
 
   private void executeTestConfigurationNoGuaranteedCleanup() throws Exception {
-    // specify any value overrides in the Helm chart, then deploy
+    // deploy the server if specified by the test configuration
     if (!config.server.skipDeployment) {
       // get an instance of the deployment script class
       try {
@@ -190,6 +192,32 @@ public class TestRunner {
       modifyKubernetesPostDeployment();
     } else {
       logger.info("Kubernetes: Skipping Kubernetes configuration post-deployment");
+    }
+
+    // determine the server version if specified by the test configuration
+    if (config.server.versionScript != null) {
+      // get an instance of the version script class
+      try {
+        versionScript =
+            config.server.versionScript.scriptClass.getDeclaredConstructor().newInstance();
+      } catch (IllegalAccessException | InstantiationException niEx) {
+        logger.error(
+            "Version: Error calling constructor of VersionScript class: {}",
+            config.server.versionScript.name,
+            niEx);
+        throw new IllegalArgumentException(
+            "Error calling constructor of VersionScript class: " + config.server.versionScript.name,
+            niEx);
+      }
+
+      // set any parameters specified by the configuration
+      versionScript.setParameters(config.server.versionScript.parameters);
+
+      // call the determineVersion method to get the version
+      logger.info("Version: Calling {}.determineVersion()", versionScript.getClass().getName());
+      versionScriptResult = versionScript.determineVersion(config.server);
+    } else {
+      logger.info("Version: Skipping version determination");
     }
 
     // setup the instance of each test script class
