@@ -1,9 +1,11 @@
 package scripts.versionscripts;
 
+import bio.terra.testrunner.common.utils.KubernetesClientUtils;
 import bio.terra.testrunner.runner.VersionScript;
 import bio.terra.testrunner.runner.VersionScriptResult;
 import bio.terra.testrunner.runner.config.ServerSpecification;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +39,9 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
    * the terra-helmfile GitHub repository.
    */
   public VersionScriptResult determineVersion(ServerSpecification server) throws Exception {
+    Map<String, Map<String, String>> kubernetesComponentVersions =
+        !server.skipKubernetes ? KubernetesClientUtils.importComponentVersions() : null;
+
     // TODO pull these from env vars, add more service versions if needed
     String wsmHelmAppVersion = "1.0";
     String wsmHelmChartVersion = "2.0";
@@ -44,6 +49,7 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
     return new VersionScriptResult.Builder()
         .wsmHelmAppVersion(wsmHelmAppVersion)
         .wsmHelmChartVersion(wsmHelmChartVersion)
+        .kubernetesComponentVersions(kubernetesComponentVersions)
         .build();
   }
 }
