@@ -430,6 +430,7 @@ public class TestRunner {
   private static final String userJourneyResultsFileName = "RAWDATA_userJourneyResults.json";
   private static final String runSummaryFileName = "SUMMARY_testRun.json";
   private static final String envVersionFileName = "ENV_componentVersion.json";
+  private static final String fullOutputFileName = "FULL_testRunOutput.json";
 
   /** Helper method to write out the results to files at the end of a test configuration run. */
   protected void writeOutResults(String outputParentDirName) throws IOException {
@@ -461,6 +462,7 @@ public class TestRunner {
         FileUtils.createNewFile(outputDirectory.resolve(userJourneyResultsFileName).toFile());
     File runSummaryFile = outputDirectory.resolve(runSummaryFileName).toFile();
     File terraVersionFile = outputDirectory.resolve(envVersionFileName).toFile();
+    File runFullOutputFile = outputDirectory.resolve(fullOutputFileName).toFile();
 
     // write the rendered test configuration that was run to a file
     objectWriter.writeValue(renderedConfigFile, config);
@@ -477,6 +479,11 @@ public class TestRunner {
     // Write the MCTerra Component versions of target environment to a file
     objectWriter.writeValue(terraVersionFile, componentVersions);
     logger.info("MCTerra Component versions written to file: {}", terraVersionFile.getName());
+
+    // write full output to a single file for easier automated processing
+    TestRunFullOutput runFullOutput =
+        new TestRunFullOutput(config, testScriptResults, summary, componentVersions);
+    objectWriter.writeValue(runFullOutputFile, runFullOutput);
   }
 
   /** Helper method to print out the PASSED/FAILED tests at the end of a suite run. */
