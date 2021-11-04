@@ -2,6 +2,7 @@ package scripts.uploadscripts;
 
 import bio.terra.testrunner.common.utils.FileUtils;
 import bio.terra.testrunner.common.utils.StorageUtils;
+import bio.terra.testrunner.runner.TestRunSummary;
 import bio.terra.testrunner.runner.TestRunner;
 import bio.terra.testrunner.runner.config.ServiceAccountSpecification;
 import bio.terra.testrunner.uploader.UploadScript;
@@ -59,7 +60,7 @@ public class CompressDirectoryToBucket extends UploadScript {
           "Parent directory of the directory to compress is null: "
               + outputDirectory.toAbsolutePath());
     }
-    TestRunner.TestRunSummary testRunSummary = TestRunner.getTestRunSummary(outputDirectory);
+    TestRunSummary testRunSummary = TestRunner.getTestRunSummary(outputDirectory);
     String archiveFileName = testRunSummary.id + ".tar.gz";
     Path archiveFile = outputDirectoryParent.resolve(archiveFileName);
 
