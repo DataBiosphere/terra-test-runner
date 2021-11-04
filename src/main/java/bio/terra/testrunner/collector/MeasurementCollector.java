@@ -3,6 +3,7 @@ package bio.terra.testrunner.collector;
 import bio.terra.testrunner.collector.config.MeasurementCollectionScriptSpecification;
 import bio.terra.testrunner.collector.config.MeasurementList;
 import bio.terra.testrunner.common.utils.FileUtils;
+import bio.terra.testrunner.runner.TestRunSummary;
 import bio.terra.testrunner.runner.TestRunner;
 import bio.terra.testrunner.runner.config.ServerSpecification;
 import bio.terra.testrunner.runner.config.TestConfiguration;
@@ -162,8 +163,7 @@ public class MeasurementCollector {
       // read in the test config and test run summary files
       TestConfiguration renderedTestConfig =
           TestRunner.getRenderedTestConfiguration(testRunOutputDirectory);
-      TestRunner.TestRunSummary testRunSummary =
-          TestRunner.getTestRunSummary(testRunOutputDirectory);
+      TestRunSummary testRunSummary = TestRunner.getTestRunSummary(testRunOutputDirectory);
 
       if (renderedTestConfig.server.skipKubernetes) {
         logger.warn("The skipKubernetes flag is true, so there may be no measurements to collect.");
