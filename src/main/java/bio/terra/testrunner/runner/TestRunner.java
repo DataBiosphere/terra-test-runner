@@ -36,7 +36,7 @@ public class TestRunner {
   // test run outputs
   private List<TestScriptResult> testScriptResults;
   protected TestRunSummary summary;
-  protected TestRunFullOutput fullOutput;
+  protected TestRunFullOutput runFullOutput;
 
   private static long secondsToWaitForPoolShutdown = 60;
 
@@ -52,9 +52,9 @@ public class TestRunner {
     this.disruptionThreadPool = null;
     this.userJourneyFutureLists = new ArrayList<>();
     this.testScriptResults = new ArrayList<>();
-    this.fullOutput = new TestRunFullOutput(UUID.randomUUID().toString());
-    fullOutput.terraVersions = TerraVersion.loadEnvVars();
-    this.summary = (TestRunSummary) this.fullOutput;
+    this.runFullOutput = new TestRunFullOutput(UUID.randomUUID().toString());
+    runFullOutput.terraVersions = TerraVersion.loadEnvVars();
+    this.summary = (TestRunSummary) this.runFullOutput;
   }
 
   protected void executeTestConfiguration() throws Exception {
@@ -294,7 +294,7 @@ public class TestRunner {
     // pull out the test script summary information into the summary object
     summary.testScriptResultSummaries =
         testScriptResults.stream().map(TestScriptResult::getSummary).collect(Collectors.toList());
-    fullOutput.testScriptResults = testScriptResults;
+    runFullOutput.testScriptResults = testScriptResults;
 
     // call the cleanup method of each test script
     logger.info("Test Scripts: Calling the cleanup methods");
@@ -444,7 +444,7 @@ public class TestRunner {
     ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
     ObjectWriter summaryObjectWriter =
         objectMapper.writerWithView(SummaryViews.Summary.class).withDefaultPrettyPrinter();
-    ObjectWriter summaryConcatObjectWriter =
+    ObjectWriter fullOutputObjectWriter =
         objectMapper.writerWithView(SummaryViews.FullOutput.class).withDefaultPrettyPrinter();
 
     // print the summary results to info
@@ -470,7 +470,6 @@ public class TestRunner {
     File userJourneyResultsFile =
         FileUtils.createNewFile(outputDirectory.resolve(userJourneyResultsFileName).toFile());
     File runSummaryFile = outputDirectory.resolve(runSummaryFileName).toFile();
-    File runConcatSummaryFile = outputDirectory.resolve(runConcatSummaryFileName).toFile();
     File terraVersionFile = outputDirectory.resolve(envVersionFileName).toFile();
     File runFullOutputFile = outputDirectory.resolve(fullOutputFileName).toFile();
 
@@ -483,17 +482,15 @@ public class TestRunner {
     logger.info("All user journey results written to file: {}", userJourneyResultsFile.getName());
 
     // write the test run summary to a file
-    summaryObjectWriter.writeValue(runSummaryFile, fullOutput);
+    summaryObjectWriter.writeValue(runSummaryFile, runFullOutput);
     logger.info("Test run summary written to file: {}", runSummaryFile.getName());
-
-    // write the concatenated test run summary to a file
-    summaryConcatObjectWriter.writeValue(runConcatSummaryFile, fullOutput);
-    logger.info(
-        "Concatenated test run summary written to file: {}", runConcatSummaryFile.getName());
 
     // Write the MCTerra Component versions of target environment to a file
     objectWriter.writeValue(terraVersionFile, componentVersions);
     logger.info("MCTerra Component versions written to file: {}", terraVersionFile.getName());
+
+    fullOutputObjectWriter.writeValue(runFullOutputFile, runFullOutput);
+    logger.info("Test run full output written to file: {}", runFullOutputFile.getName());
   }
 
   /** Helper method to print out the PASSED/FAILED tests at the end of a suite run. */
@@ -616,7 +613,7 @@ public class TestRunner {
       // get an instance of a runner and tell it to execute the configuration
       TestRunner runner = new TestRunner(testConfiguration);
       runner.summary.setTestSuiteName(testSuite.name);
-      runner.fullOutput.testConfiguration = testConfiguration;
+      runner.runFullOutput.testConfiguration = testConfiguration;
       boolean testConfigFailed = false;
       try {
         runner.executeTestConfiguration();
