@@ -4,6 +4,6 @@ public class SummaryViews {
   /** JSON View for TestRunSummary. */
   public static class Summary {}
 
-  /** JSON view for TestRunSummaryConcatenated. */
-  public static class ConcatenatedSummary extends Summary {}
+  /** JSON view for TestRunFullOutput. */
+  public static class FullOutput extends Summary {}
 }

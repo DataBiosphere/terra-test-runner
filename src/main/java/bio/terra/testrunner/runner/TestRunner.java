@@ -33,9 +33,10 @@ public class TestRunner {
   private ThreadPoolExecutor disruptionThreadPool;
   private List<List<Future<UserJourneyResult>>> userJourneyFutureLists;
 
+  // test run outputs
   private List<TestScriptResult> testScriptResults;
   protected TestRunSummary summary;
-  protected TestRunSummaryConcatenated summaryConcatenated;
+  protected TestRunFullOutput fullOutput;
 
   private static long secondsToWaitForPoolShutdown = 60;
 
@@ -51,9 +52,9 @@ public class TestRunner {
     this.disruptionThreadPool = null;
     this.userJourneyFutureLists = new ArrayList<>();
     this.testScriptResults = new ArrayList<>();
-    this.summaryConcatenated = new TestRunSummaryConcatenated(UUID.randomUUID().toString());
-    summaryConcatenated.setTerraVersions(TerraVersion.loadEnvVars());
-    this.summary = (TestRunSummary) this.summaryConcatenated;
+    this.fullOutput = new TestRunFullOutput(UUID.randomUUID().toString());
+    fullOutput.terraVersions = TerraVersion.loadEnvVars();
+    this.summary = (TestRunSummary) this.fullOutput;
   }
 
   protected void executeTestConfiguration() throws Exception {
@@ -293,11 +294,7 @@ public class TestRunner {
     // pull out the test script summary information into the summary object
     summary.testScriptResultSummaries =
         testScriptResults.stream().map(TestScriptResult::getSummary).collect(Collectors.toList());
-    // store user journey snapshots into the summary object
-    summaryConcatenated.setUserJourneySnapshotsCollection(
-        testScriptResults.stream()
-            .map(TestScriptResult::getUserJourneySnapshots)
-            .collect(Collectors.toList()));
+    fullOutput.testScriptResults = testScriptResults;
 
     // call the cleanup method of each test script
     logger.info("Test Scripts: Calling the cleanup methods");
@@ -438,6 +435,7 @@ public class TestRunner {
   private static final String runSummaryFileName = "SUMMARY_testRun.json";
   private static final String runConcatSummaryFileName = "SUMMARY_concat_testRun.json";
   private static final String envVersionFileName = "ENV_componentVersion.json";
+  private static final String fullOutputFileName = "FULL_testRunOutput.json";
 
   /** Helper method to write out the results to files at the end of a test configuration run. */
   protected void writeOutResults(String outputParentDirName) throws IOException {
@@ -447,9 +445,7 @@ public class TestRunner {
     ObjectWriter summaryObjectWriter =
         objectMapper.writerWithView(SummaryViews.Summary.class).withDefaultPrettyPrinter();
     ObjectWriter summaryConcatObjectWriter =
-        objectMapper
-            .writerWithView(SummaryViews.ConcatenatedSummary.class)
-            .withDefaultPrettyPrinter();
+        objectMapper.writerWithView(SummaryViews.FullOutput.class).withDefaultPrettyPrinter();
 
     // print the summary results to info
     logger.info(objectWriter.writeValueAsString(summary));
@@ -476,6 +472,7 @@ public class TestRunner {
     File runSummaryFile = outputDirectory.resolve(runSummaryFileName).toFile();
     File runConcatSummaryFile = outputDirectory.resolve(runConcatSummaryFileName).toFile();
     File terraVersionFile = outputDirectory.resolve(envVersionFileName).toFile();
+    File runFullOutputFile = outputDirectory.resolve(fullOutputFileName).toFile();
 
     // write the rendered test configuration that was run to a file
     objectWriter.writeValue(renderedConfigFile, config);
@@ -486,11 +483,11 @@ public class TestRunner {
     logger.info("All user journey results written to file: {}", userJourneyResultsFile.getName());
 
     // write the test run summary to a file
-    summaryObjectWriter.writeValue(runSummaryFile, summaryConcatenated);
+    summaryObjectWriter.writeValue(runSummaryFile, fullOutput);
     logger.info("Test run summary written to file: {}", runSummaryFile.getName());
 
     // write the concatenated test run summary to a file
-    summaryConcatObjectWriter.writeValue(runConcatSummaryFile, summaryConcatenated);
+    summaryConcatObjectWriter.writeValue(runConcatSummaryFile, fullOutput);
     logger.info(
         "Concatenated test run summary written to file: {}", runConcatSummaryFile.getName());
 
@@ -619,14 +616,14 @@ public class TestRunner {
       // get an instance of a runner and tell it to execute the configuration
       TestRunner runner = new TestRunner(testConfiguration);
       runner.summary.setTestSuiteName(testSuite.name);
-      runner.summaryConcatenated.setTestConfig(testConfiguration);
+      runner.fullOutput.testConfiguration = testConfiguration;
       boolean testConfigFailed = false;
       try {
         runner.executeTestConfiguration();
 
         // even if the test configuration didn't throw an exception, it still may have failed due to
         // a timeout
-        for (TestScriptResult.TestScriptResultSummary testScriptResultSummary :
+        for (TestScriptResultSummary testScriptResultSummary :
             runner.summary.testScriptResultSummaries) {
           if (testScriptResultSummary.isFailure) {
             testConfigFailed = true;

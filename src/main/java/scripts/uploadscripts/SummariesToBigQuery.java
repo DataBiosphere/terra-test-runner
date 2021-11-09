@@ -5,7 +5,7 @@ import bio.terra.testrunner.collector.MeasurementCollector;
 import bio.terra.testrunner.common.utils.BigQueryUtils;
 import bio.terra.testrunner.runner.TestRunSummary;
 import bio.terra.testrunner.runner.TestRunner;
-import bio.terra.testrunner.runner.TestScriptResult;
+import bio.terra.testrunner.runner.TestScriptResultSummary;
 import bio.terra.testrunner.runner.config.ServiceAccountSpecification;
 import bio.terra.testrunner.runner.config.TestConfiguration;
 import bio.terra.testrunner.runner.config.TestScriptSpecification;
@@ -99,8 +99,8 @@ public class SummariesToBigQuery extends UploadScript {
     tableId = TableId.of(datasetName, testScriptResultsTableName);
     InsertAllRequest.Builder insertRequestBuilder = InsertAllRequest.newBuilder(tableId);
     // Store test summaries in a Map with test names as keys
-    Map<String, TestScriptResult.TestScriptResultSummary> testScriptResultSummaries =
-        new ConcurrentHashMap<String, TestScriptResult.TestScriptResultSummary>();
+    Map<String, TestScriptResultSummary> testScriptResultSummaries =
+        new ConcurrentHashMap<String, TestScriptResultSummary>();
     testRunSummary.testScriptResultSummaries.stream()
         .forEach(
             runSummary -> testScriptResultSummaries.put(runSummary.testScriptName, runSummary));
@@ -158,8 +158,7 @@ public class SummariesToBigQuery extends UploadScript {
 
   /** Build a single row for each test script result. */
   private Map<String, Object> buildTestScriptResultsRow(
-      TestScriptSpecification testScriptSpecification,
-      TestScriptResult.TestScriptResultSummary testScriptResult) {
+      TestScriptSpecification testScriptSpecification, TestScriptResultSummary testScriptResult) {
     Map<String, Object> rowContent = new HashMap<>();
 
     rowContent.put("testRun_id", testRunSummary.id);

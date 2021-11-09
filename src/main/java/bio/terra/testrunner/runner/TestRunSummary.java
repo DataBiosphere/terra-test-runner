@@ -25,7 +25,7 @@ public class TestRunSummary {
   public long endTime = -1;
 
   @JsonView(SummaryViews.Summary.class)
-  public List<TestScriptResult.TestScriptResultSummary> testScriptResultSummaries;
+  public List<TestScriptResultSummary> testScriptResultSummaries;
 
   public TestRunSummary() {}
 
