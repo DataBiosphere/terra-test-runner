@@ -27,7 +27,7 @@ public class TestRunFullOutput extends TestRunSummary {
   public List<TestScriptResult> testScriptResults;
 
   @JsonView(SummaryViews.FullOutput.class)
-  public VersionScriptResult terraVersions;
+  public List<VersionScriptResult> terraVersions;
 
   public TestRunFullOutput() {
     super();

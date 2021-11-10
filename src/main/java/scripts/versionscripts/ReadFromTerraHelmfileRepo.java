@@ -6,6 +6,7 @@ import bio.terra.testrunner.runner.config.ServerSpecification;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -41,7 +42,7 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
    * This method determines the version by reading the helm app/chart versions in the terra-helmfile
    * GitHub repository.
    */
-  public VersionScriptResult determineVersion(ServerSpecification server) throws Exception {
+  public List<VersionScriptResult> determineVersion(ServerSpecification server) throws Exception {
     // TODO: QA-1643 Re-enable importComponentVersions API route pending DevOps readiness
     // Map<String, Map<String, String>> kubernetesComponentVersions =
     //    !server.skipKubernetes ? KubernetesClientUtils.importComponentVersions() : null;
@@ -66,10 +67,12 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
     String wsmHelmChartVersion =
         helmRelease.getReleases().get("workspacemanager").getChartVersion().orElse("");
 
-    return new VersionScriptResult.Builder()
-        .wsmHelmAppVersion(wsmHelmAppVersion)
-        .wsmHelmChartVersion(wsmHelmChartVersion)
-        .build();
+    return Arrays.asList(
+        new VersionScriptResult.Builder()
+            .appName("workspacemanager")
+            .helmAppVersion(wsmHelmAppVersion)
+            .helmChartVersion(wsmHelmChartVersion)
+            .build());
   }
 
   /**

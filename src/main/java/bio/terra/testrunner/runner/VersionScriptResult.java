@@ -8,30 +8,38 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public class VersionScriptResult {
   // TODO: add more fields here for other version information we may care about
   //  (e.g. git hashes, helm versions for other services)
-  public String wsmHelmAppVersion;
-  public String wsmHelmChartVersion;
+  public String appName;
+  public String helmAppVersion;
+  public String helmChartVersion;
 
   // TODO: QA-1643 Re-enable importComponentVersions API route pending DevOps readiness
   // public Map<String, Map<String, String>> kubernetesComponentVersions;
 
   public VersionScriptResult(Builder builder) {
-    this.wsmHelmAppVersion = builder.wsmHelmAppVersion;
-    this.wsmHelmChartVersion = builder.wsmHelmChartVersion;
+    this.appName = builder.appName;
+    this.helmAppVersion = builder.helmAppVersion;
+    this.helmChartVersion = builder.helmChartVersion;
     // this.kubernetesComponentVersions = builder.kubernetesComponentVersions;
   }
 
   public static class Builder {
-    private String wsmHelmAppVersion;
-    private String wsmHelmChartVersion;
+    private String appName;
+    private String helmAppVersion;
+    private String helmChartVersion;
     // private Map<String, Map<String, String>> kubernetesComponentVersions;
 
-    public Builder wsmHelmAppVersion(String wsmHelmAppVersion) {
-      this.wsmHelmAppVersion = wsmHelmAppVersion;
+    public Builder appName(String appName) {
+      this.appName = appName;
       return this;
     }
 
-    public Builder wsmHelmChartVersion(String wsmHelmChartVersion) {
-      this.wsmHelmChartVersion = wsmHelmChartVersion;
+    public Builder helmAppVersion(String helmAppVersion) {
+      this.helmAppVersion = helmAppVersion;
+      return this;
+    }
+
+    public Builder helmChartVersion(String helmChartVersion) {
+      this.helmChartVersion = helmChartVersion;
       return this;
     }
 
