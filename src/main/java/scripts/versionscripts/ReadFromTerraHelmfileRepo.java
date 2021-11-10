@@ -52,6 +52,9 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
     mapper.findAndRegisterModules();
     HelmRelease helmRelease = mapper.readValue(new File(baseFilePath), HelmRelease.class);
     HelmRelease helmOverride = mapper.readValue(new File(overrideFilePath), HelmRelease.class);
+
+    // Loop through the override helm values and replacing any base helm values, then returning the
+    // now-modified base helm values map.
     merge(helmOverride.getReleases(), helmRelease.getReleases());
     logger.info(
         "Done merging Helm override values from {} into base values obtained from {}",
@@ -70,6 +73,11 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
         .build();
   }
 
+  /**
+   * @param from a Java Map instance that represents the source of updates
+   * @param to a Java Map instance to receive updates from source map
+   * @return the same 'to' instance with merged keys from the source map
+   */
   private Map<String, HelmReleaseVersion> merge(
       Map<String, HelmReleaseVersion> from, Map<String, HelmReleaseVersion> to) {
     from.forEach(
