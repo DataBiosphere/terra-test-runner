@@ -24,7 +24,7 @@ public class VersionScriptResult {
   public static class Builder {
     private String wsmHelmAppVersion;
     private String wsmHelmChartVersion;
-    private Map<String, Map<String, String>> kubernetesComponentVersions;
+    // private Map<String, Map<String, String>> kubernetesComponentVersions;
 
     public Builder wsmHelmAppVersion(String wsmHelmAppVersion) {
       this.wsmHelmAppVersion = wsmHelmAppVersion;
