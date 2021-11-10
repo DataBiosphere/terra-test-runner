@@ -58,7 +58,7 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
         overrideFilePath,
         baseFilePath);
 
-    // TODO pull these from env vars or terra-helmfile, add more service versions if needed
+    // Pull 'workspacemanager' versions from terra-helmfile, add more service versions if needed.
     String wsmHelmAppVersion =
         helmRelease.getReleases().get("workspacemanager").getAppVersion().orElse("");
     String wsmHelmChartVersion =
