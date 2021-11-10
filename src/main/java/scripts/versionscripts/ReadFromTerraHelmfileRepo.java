@@ -11,7 +11,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripts.versionscripts.model.HelmRelease;
-import scripts.versionscripts.model.HelmReleaseVersion;
 
 public class ReadFromTerraHelmfileRepo extends VersionScript {
   private static final Logger logger = LoggerFactory.getLogger(ReadFromTerraHelmfileRepo.class);
@@ -78,15 +77,16 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
    * @param to a Java Map instance to receive updates from source map
    * @return the same 'to' instance with merged keys from the source map
    */
-  private Map<String, HelmReleaseVersion> merge(
-      Map<String, HelmReleaseVersion> from, Map<String, HelmReleaseVersion> to) {
+  private Map<String, HelmRelease.HelmReleaseVersion> merge(
+      Map<String, HelmRelease.HelmReleaseVersion> from,
+      Map<String, HelmRelease.HelmReleaseVersion> to) {
     from.forEach(
         (app, version) ->
             to.merge(
                 app,
                 version,
                 (toVersion, fromVersion) ->
-                    new HelmReleaseVersion(
+                    new HelmRelease.HelmReleaseVersion(
                         fromVersion.getEnabled() != null && fromVersion.getEnabled().isPresent()
                             ? fromVersion.getEnabled()
                             : toVersion.getEnabled(),
