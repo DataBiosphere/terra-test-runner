@@ -1,7 +1,5 @@
 package scripts.versionscripts;
 
-import bio.terra.testrunner.common.HelmRelease;
-import bio.terra.testrunner.common.HelmReleaseVersion;
 import bio.terra.testrunner.runner.VersionScript;
 import bio.terra.testrunner.runner.VersionScriptResult;
 import bio.terra.testrunner.runner.config.ServerSpecification;
@@ -12,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scripts.versionscripts.model.HelmRelease;
+import scripts.versionscripts.model.HelmReleaseVersion;
 
 public class ReadFromTerraHelmfileRepo extends VersionScript {
   private static final Logger logger = LoggerFactory.getLogger(ReadFromTerraHelmfileRepo.class);

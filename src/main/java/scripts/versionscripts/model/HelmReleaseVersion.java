@@ -1,4 +1,4 @@
-package bio.terra.testrunner.common;
+package scripts.versionscripts.model;
 
 import java.util.Optional;
 
