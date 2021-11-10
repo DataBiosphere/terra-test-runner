@@ -2,6 +2,12 @@ package bio.terra.testrunner.common;
 
 import java.util.Optional;
 
+/**
+ * The HelmReleaseVersion represents the version properties that terra-helmfile keeps track of per
+ * MCTerra service. For example: 'duos' in
+ * https://github.com/broadinstitute/terra-helmfile/blob/master/versions/app/dev.yaml and
+ * https://github.com/broadinstitute/terra-helmfile/blob/master/environments/live/dev.yaml
+ */
 public class HelmReleaseVersion {
   private Optional<Boolean> enabled;
   private Optional<String> chartVersion;
