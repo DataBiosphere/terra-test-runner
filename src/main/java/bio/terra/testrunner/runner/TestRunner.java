@@ -30,17 +30,16 @@ public class TestRunner {
   private TestConfiguration config;
   private List<TestScript> scripts;
   private DeploymentScript deploymentScript;
+  private VersionScript versionScript;
   private List<ThreadPoolExecutor> threadPools;
   private ThreadPoolExecutor disruptionThreadPool;
   private List<List<Future<UserJourneyResult>>> userJourneyFutureLists;
 
+  private VersionScriptResult versionScriptResult;
   private List<TestScriptResult> testScriptResults;
   protected TestRunSummary summary;
 
   private static long secondsToWaitForPoolShutdown = 60;
-
-  private static Map<String, Map<String, String>> componentVersions =
-      new HashMap<String, Map<String, String>>();
 
   private boolean exceptionThrownInCleanup = false;
 
@@ -153,7 +152,7 @@ public class TestRunner {
   }
 
   private void executeTestConfigurationNoGuaranteedCleanup() throws Exception {
-    // specify any value overrides in the Helm chart, then deploy
+    // deploy the server if specified by the test configuration
     if (!config.server.skipDeployment) {
       // get an instance of the deployment script class
       try {
@@ -186,10 +185,35 @@ public class TestRunner {
     // update any Kubernetes properties specified by the test configuration
     if (!config.server.skipKubernetes) {
       KubernetesClientUtils.buildKubernetesClientObjectWithClientKey(config.server);
-      componentVersions = KubernetesClientUtils.importComponentVersions();
       modifyKubernetesPostDeployment();
     } else {
       logger.info("Kubernetes: Skipping Kubernetes configuration post-deployment");
+    }
+
+    // determine the server version if specified by the test configuration
+    if (config.server.versionScript != null) {
+      // get an instance of the version script class
+      try {
+        versionScript =
+            config.server.versionScript.scriptClass.getDeclaredConstructor().newInstance();
+      } catch (IllegalAccessException | InstantiationException niEx) {
+        logger.error(
+            "Version: Error calling constructor of VersionScript class: {}",
+            config.server.versionScript.name,
+            niEx);
+        throw new IllegalArgumentException(
+            "Error calling constructor of VersionScript class: " + config.server.versionScript.name,
+            niEx);
+      }
+
+      // set any parameters specified by the configuration
+      versionScript.setParameters(config.server.versionScript.parameters);
+
+      // call the determineVersion method to get the version
+      logger.info("Version: Calling {}.determineVersion()", versionScript.getClass().getName());
+      versionScriptResult = versionScript.determineVersion(config.server);
+    } else {
+      logger.info("Version: Skipping version determination");
     }
 
     // setup the instance of each test script class
@@ -486,7 +510,7 @@ public class TestRunner {
   private static final String renderedConfigFileName = "RENDERED_testConfiguration.json";
   private static final String userJourneyResultsFileName = "RAWDATA_userJourneyResults.json";
   private static final String runSummaryFileName = "SUMMARY_testRun.json";
-  private static final String envVersionFileName = "ENV_componentVersion.json";
+  private static final String envVersionFileName = "ENV_versionResult.json";
 
   /** Helper method to write out the results to files at the end of a test configuration run. */
   protected void writeOutResults(String outputParentDirName) throws IOException {
@@ -531,9 +555,9 @@ public class TestRunner {
     objectWriter.writeValue(runSummaryFile, summary);
     logger.info("Test run summary written to file: {}", runSummaryFile.getName());
 
-    // Write the MCTerra Component versions of target environment to a file
-    objectWriter.writeValue(terraVersionFile, componentVersions);
-    logger.info("MCTerra Component versions written to file: {}", terraVersionFile.getName());
+    // write the version result to a file
+    objectWriter.writeValue(terraVersionFile, versionScriptResult);
+    logger.info("Version script result written to file: {}", terraVersionFile.getName());
   }
 
   /** Helper method to print out the PASSED/FAILED tests at the end of a suite run. */

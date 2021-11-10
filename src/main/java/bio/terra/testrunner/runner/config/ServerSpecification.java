@@ -68,6 +68,11 @@ public class ServerSpecification implements SpecificationInterface {
   // when set to true, there is no deploy before each test run
   public boolean skipDeployment = false;
 
+  // =============================================
+  // Version: information required to get the server version
+  // how to (optionally) lookup the version before each test run
+  public VersionScriptSpecification versionScript;
+
   public static final String resourceDirectory = "servers";
 
   ServerSpecification() {}
@@ -109,10 +114,7 @@ public class ServerSpecification implements SpecificationInterface {
     return server;
   }
 
-  /**
-   * Validate the server specification read in from the JSON file. None of the properties should be
-   * null.
-   */
+  /** Validate the server specification read in from the JSON file. */
   public void validate() {
     if (!skipKubernetes) {
       if (cluster == null) {
@@ -135,6 +137,10 @@ public class ServerSpecification implements SpecificationInterface {
       throw new IllegalArgumentException("Test Runner Service Account must be defined");
     }
     testRunnerServiceAccount.validate();
+
+    if (versionScript != null) {
+      versionScript.validate();
+    }
 
     if (bufferClientServiceAccount != null) {
       bufferClientServiceAccount.validate();
