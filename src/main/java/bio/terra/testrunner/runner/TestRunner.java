@@ -3,7 +3,6 @@ package bio.terra.testrunner.runner;
 import static bio.terra.testrunner.common.commands.PrintHelp.ANSI_PURPLE;
 import static bio.terra.testrunner.common.commands.PrintHelp.ANSI_RESET;
 
-import bio.terra.testrunner.common.TerraVersion;
 import bio.terra.testrunner.common.utils.FileUtils;
 import bio.terra.testrunner.common.utils.KubernetesClientUtils;
 import bio.terra.testrunner.runner.config.TestConfiguration;
@@ -52,7 +51,6 @@ public class TestRunner {
     this.userJourneyFutureLists = new ArrayList<>();
     this.testScriptResults = new ArrayList<>();
     this.runFullOutput = new TestRunFullOutput(UUID.randomUUID().toString());
-    runFullOutput.terraVersions = TerraVersion.loadEnvVars();
     this.summary = (TestRunSummary) this.runFullOutput;
   }
 
@@ -157,7 +155,7 @@ public class TestRunner {
 
       // call the determineVersion method to get the version
       logger.info("Version: Calling {}.determineVersion()", versionScript.getClass().getName());
-      versionScriptResult = versionScript.determineVersion(config.server);
+      this.runFullOutput.terraVersions = versionScript.determineVersion(config.server);
     } else {
       logger.info("Version: Skipping version determination");
     }
@@ -457,8 +455,6 @@ public class TestRunner {
   private static final String renderedConfigFileName = "RENDERED_testConfiguration.json";
   private static final String userJourneyResultsFileName = "RAWDATA_userJourneyResults.json";
   private static final String runSummaryFileName = "SUMMARY_testRun.json";
-  private static final String runConcatSummaryFileName = "SUMMARY_concat_testRun.json";
-  private static final String envVersionFileName = "ENV_componentVersion.json";
   private static final String fullOutputFileName = "FULL_testRunOutput.json";
   private static final String envVersionFileName = "ENV_versionResult.json";
 
@@ -509,10 +505,6 @@ public class TestRunner {
     // write the test run summary to a file
     summaryObjectWriter.writeValue(runSummaryFile, runFullOutput);
     logger.info("Test run summary written to file: {}", runSummaryFile.getName());
-
-    // Write the MCTerra Component versions of target environment to a file
-    objectWriter.writeValue(terraVersionFile, componentVersions);
-    logger.info("MCTerra Component versions written to file: {}", terraVersionFile.getName());
 
     fullOutputObjectWriter.writeValue(runFullOutputFile, runFullOutput);
     logger.info("Test run full output written to file: {}", runFullOutputFile.getName());

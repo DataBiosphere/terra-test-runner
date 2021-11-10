@@ -42,7 +42,7 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
    * GitHub repository.
    */
   public VersionScriptResult determineVersion(ServerSpecification server) throws Exception {
-    // TODO QA-1643: Re-enable importComponentVersions API route pending DevOps readiness
+    // TODO: QA-1643 Re-enable importComponentVersions API route pending DevOps readiness
     // Map<String, Map<String, String>> kubernetesComponentVersions =
     //    !server.skipKubernetes ? KubernetesClientUtils.importComponentVersions() : null;
 

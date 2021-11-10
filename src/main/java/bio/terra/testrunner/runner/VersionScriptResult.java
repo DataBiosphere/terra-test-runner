@@ -11,7 +11,7 @@ public class VersionScriptResult {
   public String wsmHelmAppVersion;
   public String wsmHelmChartVersion;
 
-  // TODO QA-1643: Re-enable importComponentVersions API route pending DevOps readiness
+  // TODO: QA-1643 Re-enable importComponentVersions API route pending DevOps readiness
   // public Map<String, Map<String, String>> kubernetesComponentVersions;
 
   public VersionScriptResult(Builder builder) {
@@ -35,7 +35,7 @@ public class VersionScriptResult {
       return this;
     }
 
-    // TODO QA-1643: Re-enable importComponentVersions API route pending DevOps readiness
+    // TODO: QA-1643 Re-enable importComponentVersions API route pending DevOps readiness
     // public Builder kubernetesComponentVersions(
     //    Map<String, Map<String, String>> kubernetesComponentVersions) {
     //  this.kubernetesComponentVersions = kubernetesComponentVersions;

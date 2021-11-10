@@ -1,6 +1,5 @@
 package bio.terra.testrunner.runner;
 
-import bio.terra.testrunner.common.TerraVersion;
 import bio.terra.testrunner.runner.config.TestConfiguration;
 import com.fasterxml.jackson.annotation.JsonView;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -28,7 +27,7 @@ public class TestRunFullOutput extends TestRunSummary {
   public List<TestScriptResult> testScriptResults;
 
   @JsonView(SummaryViews.FullOutput.class)
-  public List<TerraVersion> terraVersions;
+  public VersionScriptResult terraVersions;
 
   public TestRunFullOutput() {
     super();
