@@ -1,7 +1,6 @@
 package bio.terra.testrunner.runner;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.Map;
 
 @SuppressFBWarnings(
     value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
