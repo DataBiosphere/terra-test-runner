@@ -2,7 +2,6 @@ package scripts.versionscripts;
 
 import bio.terra.testrunner.common.HelmRelease;
 import bio.terra.testrunner.common.HelmReleaseVersion;
-import bio.terra.testrunner.common.utils.KubernetesClientUtils;
 import bio.terra.testrunner.runner.VersionScript;
 import bio.terra.testrunner.runner.VersionScriptResult;
 import bio.terra.testrunner.runner.config.ServerSpecification;
@@ -44,9 +43,9 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
    * GitHub repository.
    */
   public VersionScriptResult determineVersion(ServerSpecification server) throws Exception {
-    // The importComponentVersions API route will be provided by DevOps sometime in the future
-    Map<String, Map<String, String>> kubernetesComponentVersions =
-        !server.skipKubernetes ? KubernetesClientUtils.importComponentVersions() : null;
+    // TODO QA-1643: Re-enable importComponentVersions API route pending DevOps readiness
+    // Map<String, Map<String, String>> kubernetesComponentVersions =
+    //    !server.skipKubernetes ? KubernetesClientUtils.importComponentVersions() : null;
 
     // Pull versions from terra-helmfile
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -68,7 +67,6 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
     return new VersionScriptResult.Builder()
         .wsmHelmAppVersion(wsmHelmAppVersion)
         .wsmHelmChartVersion(wsmHelmChartVersion)
-        .kubernetesComponentVersions(kubernetesComponentVersions)
         .build();
   }
 
