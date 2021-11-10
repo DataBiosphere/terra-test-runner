@@ -58,6 +58,7 @@ dependencies {
     implementation group: 'org.apache.commons', name: 'commons-math3', version: "${apacheMath}"
     compileOnly "com.google.code.findbugs:annotations:${findbugsAnnotations}"
     implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: "${jackson}"
+    implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: "${jackson}"
     implementation group: 'io.kubernetes', name: 'client-java', version: "${kubernetesClient}"
     implementation group: 'ch.qos.logback', name: 'logback-classic', version: "${logback}"
     implementation group: 'org.slf4j', name: 'slf4j-api', version: "${slf4j}"
