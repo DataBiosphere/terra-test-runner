@@ -1,7 +1,6 @@
 package bio.terra.testrunner.runner;
 
 import bio.terra.testrunner.runner.config.TestConfiguration;
-import com.fasterxml.jackson.annotation.JsonView;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 
@@ -19,22 +18,44 @@ import java.util.List;
 @SuppressFBWarnings(
     value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
     justification = "This POJO class is used for easy serialization to JSON using Jackson.")
-public class TestRunFullOutput extends TestRunSummary {
-  @JsonView(SummaryViews.FullOutput.class)
+public class TestRunFullOutput {
   public TestConfiguration testConfiguration;
-
-  @JsonView(SummaryViews.FullOutput.class)
   public List<TestScriptResult> testScriptResults;
+  public VersionScriptResult versionScriptResult;
+  public String id;
+  public long startTime = -1;
+  public long startUserJourneyTime = -1;
+  public long endUserJourneyTime = -1;
+  public long endTime = -1;
 
-  @JsonView(SummaryViews.FullOutput.class)
-  public List<VersionScriptResult> terraVersions;
+  public List<TestScriptResultSummary> testScriptResultSummaries;
+  public String startTimestamp;
+  public String startUserJourneyTimestamp;
+  public String endUserJourneyTimestamp;
+  public String endTimestamp;
 
-  public TestRunFullOutput() {
-    super();
-  }
+  // Include user-provided TestSuite name in the summary:
+  // This can be used to facilitate grouping of test runner results on the dashboard.
+  public String testSuiteName;
 
-  public TestRunFullOutput(String id) {
-    super();
-    this.id = id;
+  public TestRunFullOutput(
+      TestConfiguration testConfiguration,
+      List<TestScriptResult> testScriptResults,
+      TestRunSummary testRunSummary,
+      VersionScriptResult versionScriptResult) {
+    this.testConfiguration = testConfiguration;
+    this.testScriptResults = testScriptResults;
+    this.versionScriptResult = versionScriptResult;
+    this.id = testRunSummary.id;
+    this.startTime = testRunSummary.startTime;
+    this.startUserJourneyTime = testRunSummary.startUserJourneyTime;
+    this.endUserJourneyTime = testRunSummary.endUserJourneyTime;
+    this.endTime = testRunSummary.endTime;
+    this.testScriptResultSummaries = testRunSummary.testScriptResultSummaries;
+    this.startTimestamp = testRunSummary.getStartTimestamp();
+    this.startUserJourneyTimestamp = testRunSummary.getStartUserJourneyTimestamp();
+    this.endUserJourneyTimestamp = testRunSummary.getEndUserJourneyTimestamp();
+    this.endTimestamp = testRunSummary.getEndTimestamp();
+    this.testSuiteName = testRunSummary.getTestSuiteName();
   }
 }

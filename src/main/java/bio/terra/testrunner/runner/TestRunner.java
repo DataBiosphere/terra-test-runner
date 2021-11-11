@@ -34,7 +34,7 @@ public class TestRunner {
   private List<List<Future<UserJourneyResult>>> userJourneyFutureLists;
 
   // test run outputs
-  private List<VersionScriptResult> versionScriptResult;
+  private VersionScriptResult versionScriptResult;
   private List<TestScriptResult> testScriptResults;
   protected TestRunSummary summary;
   protected TestRunFullOutput runFullOutput;
@@ -50,8 +50,7 @@ public class TestRunner {
     this.disruptionThreadPool = null;
     this.userJourneyFutureLists = new ArrayList<>();
     this.testScriptResults = new ArrayList<>();
-    this.runFullOutput = new TestRunFullOutput(UUID.randomUUID().toString());
-    this.summary = (TestRunSummary) this.runFullOutput;
+    this.summary = new TestRunSummary(UUID.randomUUID().toString());
   }
 
   protected void executeTestConfiguration() throws Exception {
@@ -156,7 +155,6 @@ public class TestRunner {
       // call the determineVersion method to get the version
       logger.info("Version: Calling {}.determineVersion()", versionScript.getClass().getName());
       this.versionScriptResult = versionScript.determineVersion(config.server);
-      this.runFullOutput.terraVersions = versionScriptResult;
     } else {
       logger.info("Version: Skipping version determination");
     }
@@ -317,7 +315,6 @@ public class TestRunner {
     // pull out the test script summary information into the summary object
     summary.testScriptResultSummaries =
         testScriptResults.stream().map(TestScriptResult::getSummary).collect(Collectors.toList());
-    runFullOutput.testScriptResults = testScriptResults;
 
     // call the cleanup method of each test script
     logger.info("Test Scripts: Calling the cleanup methods");
@@ -464,10 +461,6 @@ public class TestRunner {
     // use Jackson to map the object to a JSON-formatted text block
     ObjectMapper objectMapper = new ObjectMapper();
     ObjectWriter objectWriter = objectMapper.writerWithDefaultPrettyPrinter();
-    ObjectWriter summaryObjectWriter =
-        objectMapper.writerWithView(SummaryViews.Summary.class).withDefaultPrettyPrinter();
-    ObjectWriter fullOutputObjectWriter =
-        objectMapper.writerWithView(SummaryViews.FullOutput.class).withDefaultPrettyPrinter();
 
     // print the summary results to info
     logger.info(objectWriter.writeValueAsString(summary));
@@ -504,10 +497,13 @@ public class TestRunner {
     logger.info("All user journey results written to file: {}", userJourneyResultsFile.getName());
 
     // write the test run summary to a file
-    summaryObjectWriter.writeValue(runSummaryFile, runFullOutput);
+    objectWriter.writeValue(runSummaryFile, summary);
     logger.info("Test run summary written to file: {}", runSummaryFile.getName());
 
-    fullOutputObjectWriter.writeValue(runFullOutputFile, runFullOutput);
+    // write full output to a single file for easier automated processing
+    TestRunFullOutput runFullOutput =
+        new TestRunFullOutput(config, testScriptResults, summary, versionScriptResult);
+    objectWriter.writeValue(runFullOutputFile, runFullOutput);
     logger.info("Test run full output written to file: {}", runFullOutputFile.getName());
 
     // write the version result to a file
@@ -635,7 +631,6 @@ public class TestRunner {
       // get an instance of a runner and tell it to execute the configuration
       TestRunner runner = new TestRunner(testConfiguration);
       runner.summary.setTestSuiteName(testSuite.name);
-      runner.runFullOutput.testConfiguration = testConfiguration;
       boolean testConfigFailed = false;
       try {
         runner.executeTestConfiguration();

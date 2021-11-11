@@ -17,7 +17,7 @@ public abstract class VersionScript {
   public void setParameters(List<String> parameters) throws Exception {}
 
   /** The version script determineVersion method looks up the version. */
-  public List<VersionScriptResult> determineVersion(ServerSpecification server) throws Exception {
+  public VersionScriptResult determineVersion(ServerSpecification server) throws Exception {
     throw new UnsupportedOperationException("determineVersion must be overridden by sub-classes");
   }
 }
