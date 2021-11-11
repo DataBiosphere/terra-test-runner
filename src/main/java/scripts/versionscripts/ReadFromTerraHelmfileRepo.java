@@ -63,6 +63,7 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
         helmRelease.getReleases().get("workspacemanager").getChartVersion().orElse("");
 
     // TODO: QA-1643 Re-enable importComponentVersions API route pending DevOps readiness
+    // New version sources should appear in VersionScriptResult.
     // Map<String, Map<String, String>> kubernetesComponentVersions =
     //    !server.skipKubernetes ? KubernetesClientUtils.importComponentVersions() : null;
 
