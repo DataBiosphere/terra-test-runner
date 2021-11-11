@@ -34,7 +34,7 @@ public class TestRunner {
   private List<List<Future<UserJourneyResult>>> userJourneyFutureLists;
 
   // test run outputs
-  private VersionScriptResult versionScriptResult;
+  private List<VersionScriptResult> versionScriptResult;
   private List<TestScriptResult> testScriptResults;
   protected TestRunSummary summary;
   protected TestRunFullOutput runFullOutput;
@@ -155,7 +155,8 @@ public class TestRunner {
 
       // call the determineVersion method to get the version
       logger.info("Version: Calling {}.determineVersion()", versionScript.getClass().getName());
-      this.runFullOutput.terraVersions = versionScript.determineVersion(config.server);
+      this.versionScriptResult = versionScript.determineVersion(config.server);
+      this.runFullOutput.terraVersions = versionScriptResult;
     } else {
       logger.info("Version: Skipping version determination");
     }
