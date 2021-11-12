@@ -153,7 +153,7 @@ public class TestRunner {
                     logger.info(
                         "Version: Calling {}.determineVersion()",
                         versionScript.getClass().getName());
-                    return determineVersionResult(versionScript, config.server);
+                    return determineVersion(versionScript, config.server);
                   })
               .collect(Collectors.toList());
     } else {
@@ -362,7 +362,7 @@ public class TestRunner {
     }
   }
 
-  private VersionScriptResult determineVersionResult(
+  private VersionScriptResult determineVersion(
       VersionScript versionScript, ServerSpecification server) {
     try {
       return versionScript.determineVersion(server);
