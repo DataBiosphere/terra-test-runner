@@ -5,10 +5,12 @@ import static bio.terra.testrunner.common.commands.PrintHelp.ANSI_RESET;
 
 import bio.terra.testrunner.common.utils.FileUtils;
 import bio.terra.testrunner.common.utils.KubernetesClientUtils;
+import bio.terra.testrunner.runner.config.ServerSpecification;
 import bio.terra.testrunner.runner.config.TestConfiguration;
 import bio.terra.testrunner.runner.config.TestScriptSpecification;
 import bio.terra.testrunner.runner.config.TestSuite;
 import bio.terra.testrunner.runner.config.TestUserSpecification;
+import bio.terra.testrunner.runner.config.VersionScriptSpecification;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import java.io.File;
@@ -28,13 +30,13 @@ public class TestRunner {
   private TestConfiguration config;
   private List<TestScript> scripts;
   private DeploymentScript deploymentScript;
-  private VersionScript versionScript;
+  private List<VersionScript> versionScripts;
   private List<ThreadPoolExecutor> threadPools;
   private ThreadPoolExecutor disruptionThreadPool;
   private List<List<Future<UserJourneyResult>>> userJourneyFutureLists;
 
   // test run outputs
-  private VersionScriptResult versionScriptResult;
+  private List<VersionScriptResult> versionScriptResults;
   private List<TestScriptResult> testScriptResults;
   protected TestRunSummary summary;
   protected TestRunFullOutput runFullOutput;
@@ -134,27 +136,26 @@ public class TestRunner {
     }
 
     // determine the server version if specified by the test configuration
-    if (config.server.versionScript != null) {
-      // get an instance of the version script class
-      try {
-        versionScript =
-            config.server.versionScript.scriptClass.getDeclaredConstructor().newInstance();
-      } catch (IllegalAccessException | InstantiationException niEx) {
-        logger.error(
-            "Version: Error calling constructor of VersionScript class: {}",
-            config.server.versionScript.name,
-            niEx);
-        throw new IllegalArgumentException(
-            "Error calling constructor of VersionScript class: " + config.server.versionScript.name,
-            niEx);
-      }
-
-      // set any parameters specified by the configuration
-      versionScript.setParameters(config.server.versionScript.parameters);
+    if (config.server.versionScripts != null && !config.server.versionScripts.isEmpty()) {
+      // get instance of the all version script classes
+      versionScripts =
+          config.server.versionScripts.stream()
+              .map(
+                  versionScriptSpecification ->
+                      instantiateVersionScript(versionScriptSpecification))
+              .collect(Collectors.toList());
 
       // call the determineVersion method to get the version
-      logger.info("Version: Calling {}.determineVersion()", versionScript.getClass().getName());
-      this.versionScriptResult = versionScript.determineVersion(config.server);
+      versionScriptResults =
+          versionScripts.stream()
+              .map(
+                  versionScript -> {
+                    logger.info(
+                        "Version: Calling {}.determineVersion()",
+                        versionScript.getClass().getName());
+                    return determineVersionResult(versionScript, config.server);
+                  })
+              .collect(Collectors.toList());
     } else {
       logger.info("Version: Skipping version determination");
     }
@@ -337,6 +338,39 @@ public class TestRunner {
     }
   }
 
+  private VersionScript instantiateVersionScript(
+      VersionScriptSpecification versionScriptSpecification) {
+    try {
+      VersionScript versionScript =
+          versionScriptSpecification.scriptClass.getDeclaredConstructor().newInstance();
+      // set any parameters specified by the configuration
+      versionScript.setParameters(versionScriptSpecification.parameters);
+
+      // call the determineVersion method to get the version
+      logger.info("Version: Calling {}.determineVersion()", versionScript.getClass().getName());
+      return versionScript;
+    } catch (InstantiationException | IllegalAccessException e) {
+      logger.error(
+          "Version: Error calling constructor of VersionScript class: {}",
+          versionScriptSpecification.name,
+          e);
+      throw new IllegalArgumentException(
+          "Error calling constructor of VersionScript class: " + versionScriptSpecification.name,
+          e);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private VersionScriptResult determineVersionResult(
+      VersionScript versionScript, ServerSpecification server) {
+    try {
+      return versionScript.determineVersion(server);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   /**
    * Call the setup() method of each TestScript class. If one of the classes throws an exception,
    * stop looping through the remaining setup methods and return the exception.
@@ -502,12 +536,12 @@ public class TestRunner {
 
     // write full output to a single file for easier automated processing
     TestRunFullOutput runFullOutput =
-        new TestRunFullOutput(config, testScriptResults, summary, versionScriptResult);
+        new TestRunFullOutput(config, testScriptResults, summary, versionScriptResults);
     objectWriter.writeValue(runFullOutputFile, runFullOutput);
     logger.info("Test run full output written to file: {}", runFullOutputFile.getName());
 
     // write the version result to a file
-    objectWriter.writeValue(terraVersionFile, versionScriptResult);
+    objectWriter.writeValue(terraVersionFile, versionScriptResults);
     logger.info("Version script result written to file: {}", terraVersionFile.getName());
   }
 

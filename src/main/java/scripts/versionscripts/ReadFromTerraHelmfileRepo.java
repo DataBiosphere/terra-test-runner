@@ -3,11 +3,8 @@ package scripts.versionscripts;
 import bio.terra.testrunner.runner.VersionScript;
 import bio.terra.testrunner.runner.VersionScriptResult;
 import bio.terra.testrunner.runner.config.ServerSpecification;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import java.io.File;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripts.versionscripts.model.HelmRelease;
@@ -42,15 +39,20 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
    * GitHub repository.
    */
   public VersionScriptResult determineVersion(ServerSpecification server) throws Exception {
+    return new VersionScriptResult.Builder()
+        .helmVersions(buildHelmVersion(server, baseFilePath, overrideFilePath))
+        .build();
+  }
+
+  public static List<VersionScriptResult.HelmVersion> buildHelmVersion(
+      ServerSpecification server, String baseFilePath, String overrideFilePath) throws Exception {
     // Pull versions from terra-helmfile
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    mapper.findAndRegisterModules();
-    HelmRelease helmRelease = mapper.readValue(new File(baseFilePath), HelmRelease.class);
-    HelmRelease helmOverride = mapper.readValue(new File(overrideFilePath), HelmRelease.class);
+    HelmRelease helmRelease = HelmRelease.fromFile(baseFilePath);
+    HelmRelease helmOverride = HelmRelease.fromFile(overrideFilePath);
 
     // Loop through the override helm values and replacing any base helm values, then returning the
     // now-modified base helm values map.
-    merge(helmOverride.getReleases(), helmRelease.getReleases());
+    HelmRelease.merge(helmOverride, helmRelease);
     logger.info(
         "Done merging Helm override values from {} into base values obtained from {}",
         overrideFilePath,
@@ -62,46 +64,11 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
     String wsmHelmChartVersion =
         helmRelease.getReleases().get("workspacemanager").getChartVersion().orElse("");
 
-    // TODO: QA-1643 Re-enable importComponentVersions API route pending DevOps readiness
-    // New version sources should appear in VersionScriptResult.
-    // Map<String, Map<String, String>> kubernetesComponentVersions =
-    //    !server.skipKubernetes ? KubernetesClientUtils.importComponentVersions() : null;
-
-    return new VersionScriptResult()
-        .add(
-            new VersionScriptResult.HelmVersion.Builder()
-                .appName("workspacemanager")
-                .helmAppVersion(wsmHelmAppVersion)
-                .helmChartVersion(wsmHelmChartVersion)
-                .build());
-  }
-
-  /**
-   * @param from a Java Map instance that represents the source of updates
-   * @param to a Java Map instance to receive updates from source map
-   * @return the same 'to' instance with merged keys from the source map
-   */
-  private Map<String, HelmRelease.HelmReleaseVersion> merge(
-      Map<String, HelmRelease.HelmReleaseVersion> from,
-      Map<String, HelmRelease.HelmReleaseVersion> to) {
-    from.forEach(
-        (app, version) ->
-            to.merge(
-                app,
-                version,
-                (toVersion, fromVersion) ->
-                    new HelmRelease.HelmReleaseVersion(
-                        fromVersion.getEnabled() != null && fromVersion.getEnabled().isPresent()
-                            ? fromVersion.getEnabled()
-                            : toVersion.getEnabled(),
-                        fromVersion.getChartVersion() != null
-                                && fromVersion.getChartVersion().isPresent()
-                            ? fromVersion.getChartVersion()
-                            : toVersion.getChartVersion(),
-                        fromVersion.getAppVersion() != null
-                                && fromVersion.getAppVersion().isPresent()
-                            ? fromVersion.getAppVersion()
-                            : toVersion.getAppVersion())));
-    return to;
+    return Arrays.asList(
+        new VersionScriptResult.HelmVersion.Builder()
+            .appName("workspacemanager")
+            .helmAppVersion(wsmHelmAppVersion)
+            .helmChartVersion(wsmHelmChartVersion)
+            .build());
   }
 }

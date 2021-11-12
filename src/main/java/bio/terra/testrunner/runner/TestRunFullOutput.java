@@ -21,7 +21,7 @@ import java.util.List;
 public class TestRunFullOutput {
   public TestConfiguration testConfiguration;
   public List<TestScriptResult> testScriptResults;
-  public VersionScriptResult versionScriptResult;
+  public List<VersionScriptResult> versionScriptResults;
   public String id;
   public long startTime = -1;
   public long startUserJourneyTime = -1;
@@ -42,10 +42,10 @@ public class TestRunFullOutput {
       TestConfiguration testConfiguration,
       List<TestScriptResult> testScriptResults,
       TestRunSummary testRunSummary,
-      VersionScriptResult versionScriptResult) {
+      List<VersionScriptResult> versionScriptResults) {
     this.testConfiguration = testConfiguration;
     this.testScriptResults = testScriptResults;
-    this.versionScriptResult = versionScriptResult;
+    this.versionScriptResults = versionScriptResults;
     this.id = testRunSummary.id;
     this.startTime = testRunSummary.startTime;
     this.startUserJourneyTime = testRunSummary.startUserJourneyTime;

@@ -1,5 +1,9 @@
 package scripts.versionscripts.model;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -7,7 +11,7 @@ import java.util.Optional;
  * The HelmRelease class represents a map of all MCTerra releases as defined in terra-helmfile. For
  * example: https://github.com/broadinstitute/terra-helmfile/blob/master/versions/app/dev.yaml
  */
-public class HelmRelease {
+public final class HelmRelease {
   private Map<String, HelmReleaseVersion> releases;
 
   public Map<String, HelmReleaseVersion> getReleases() {
@@ -16,6 +20,49 @@ public class HelmRelease {
 
   public void setReleases(Map<String, HelmReleaseVersion> releases) {
     this.releases = releases;
+  }
+
+  /**
+   * This method parses a version file in yaml format and returns the serialized HelmRelease object.
+   *
+   * @param path of version file
+   * @return HelmRelease object
+   * @throws IOException
+   */
+  public static HelmRelease fromFile(String path) throws IOException {
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    mapper.findAndRegisterModules();
+    return mapper.readValue(new File(path), HelmRelease.class);
+  }
+
+  /**
+   * @param from a Java Map instance that represents the source of updates
+   * @param to a Java Map instance to receive updates from source map
+   * @return the same 'to' instance with merged keys from the source map
+   */
+  public static HelmRelease merge(HelmRelease from, HelmRelease to) {
+    from.getReleases()
+        .forEach(
+            (app, version) ->
+                to.getReleases()
+                    .merge(
+                        app,
+                        version,
+                        (toVersion, fromVersion) ->
+                            new HelmRelease.HelmReleaseVersion(
+                                fromVersion.getEnabled() != null
+                                        && fromVersion.getEnabled().isPresent()
+                                    ? fromVersion.getEnabled()
+                                    : toVersion.getEnabled(),
+                                fromVersion.getChartVersion() != null
+                                        && fromVersion.getChartVersion().isPresent()
+                                    ? fromVersion.getChartVersion()
+                                    : toVersion.getChartVersion(),
+                                fromVersion.getAppVersion() != null
+                                        && fromVersion.getAppVersion().isPresent()
+                                    ? fromVersion.getAppVersion()
+                                    : toVersion.getAppVersion())));
+    return to;
   }
 
   /**
