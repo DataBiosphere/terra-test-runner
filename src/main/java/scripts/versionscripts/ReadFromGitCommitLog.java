@@ -33,10 +33,7 @@ public class ReadFromGitCommitLog extends VersionScript {
     gitDir = parameters.get(0);
   }
 
-  /**
-   * This method determines the version by reading the helm app/chart versions in the terra-helmfile
-   * GitHub repository.
-   */
+  /** This method determines the version by reading the versions from Git commit log. */
   public VersionScriptResult determineVersion(ServerSpecification server) throws Exception {
     return new VersionScriptResult.Builder().gitVersions(buildGitVersion(server, gitDir)).build();
   }
