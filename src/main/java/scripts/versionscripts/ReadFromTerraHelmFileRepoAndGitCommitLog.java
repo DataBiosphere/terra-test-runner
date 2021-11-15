@@ -14,6 +14,7 @@ public class ReadFromTerraHelmFileRepoAndGitCommitLog extends VersionScript {
   /** Public constructor so that this class can be instantiated via reflection. */
   public ReadFromTerraHelmFileRepoAndGitCommitLog() {}
 
+  private String appName;
   private String baseFilePath;
   private String overrideFilePath;
   private String gitDir;
@@ -26,13 +27,14 @@ public class ReadFromTerraHelmFileRepoAndGitCommitLog extends VersionScript {
    * @param parameters list of string parameters supplied by the version list
    */
   public void setParameters(List<String> parameters) throws Exception {
-    if (parameters == null || parameters.size() < 3) {
+    if (parameters == null || parameters.size() < 4) {
       throw new IllegalArgumentException(
           "Must provide terra helmfile file paths in the parameters list");
     }
-    baseFilePath = parameters.get(0);
-    overrideFilePath = parameters.get(1);
-    gitDir = parameters.get(2);
+    appName = parameters.get(0);
+    baseFilePath = parameters.get(1);
+    overrideFilePath = parameters.get(2);
+    gitDir = parameters.get(3);
   }
 
   /**
@@ -42,7 +44,8 @@ public class ReadFromTerraHelmFileRepoAndGitCommitLog extends VersionScript {
   public VersionScriptResult determineVersion(ServerSpecification server) throws Exception {
     return new VersionScriptResult.Builder()
         .helmVersions(
-            ReadFromTerraHelmfileRepo.buildHelmVersion(server, baseFilePath, overrideFilePath))
+            ReadFromTerraHelmfileRepo.buildHelmVersion(
+                server, appName, baseFilePath, overrideFilePath))
         .gitVersions(ReadFromGitCommitLog.buildGitVersion(server, gitDir))
         .build();
   }

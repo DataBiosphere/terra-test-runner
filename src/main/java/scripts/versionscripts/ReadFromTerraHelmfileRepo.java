@@ -16,6 +16,7 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
   /** Public constructor so that this class can be instantiated via reflection. */
   public ReadFromTerraHelmfileRepo() {}
 
+  private String appName;
   private String baseFilePath;
   private String overrideFilePath;
 
@@ -27,12 +28,13 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
    * @param parameters list of string parameters supplied by the version list
    */
   public void setParameters(List<String> parameters) throws Exception {
-    if (parameters == null || parameters.size() < 2) {
+    if (parameters == null || parameters.size() < 3) {
       throw new IllegalArgumentException(
           "Must provide terra helmfile file paths in the parameters list");
     }
-    baseFilePath = parameters.get(0);
-    overrideFilePath = parameters.get(1);
+    appName = parameters.get(0);
+    baseFilePath = parameters.get(1);
+    overrideFilePath = parameters.get(2);
   }
 
   /**
@@ -41,12 +43,13 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
    */
   public VersionScriptResult determineVersion(ServerSpecification server) throws Exception {
     return new VersionScriptResult.Builder()
-        .helmVersions(buildHelmVersion(server, baseFilePath, overrideFilePath))
+        .helmVersions(buildHelmVersion(server, appName, baseFilePath, overrideFilePath))
         .build();
   }
 
   public static List<HelmVersion> buildHelmVersion(
-      ServerSpecification server, String baseFilePath, String overrideFilePath) throws Exception {
+      ServerSpecification server, String appName, String baseFilePath, String overrideFilePath)
+      throws Exception {
     // Pull versions from terra-helmfile
     HelmRelease helmRelease = HelmRelease.fromFile(baseFilePath);
     HelmRelease helmOverride = HelmRelease.fromFile(overrideFilePath);
@@ -59,17 +62,15 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
         overrideFilePath,
         baseFilePath);
 
-    // Pull 'workspacemanager' versions from terra-helmfile, add more service versions if needed.
-    String wsmHelmAppVersion =
-        helmRelease.getReleases().get("workspacemanager").getAppVersion().orElse("");
-    String wsmHelmChartVersion =
-        helmRelease.getReleases().get("workspacemanager").getChartVersion().orElse("");
+    // Pull appName versions from terra-helmfile, add more service versions if needed.
+    String helmAppVersion = helmRelease.getReleases().get(appName).getAppVersion().orElse("");
+    String helmChartVersion = helmRelease.getReleases().get(appName).getChartVersion().orElse("");
 
     return Arrays.asList(
         new HelmVersion.Builder()
-            .appName("workspacemanager")
-            .helmAppVersion(wsmHelmAppVersion)
-            .helmChartVersion(wsmHelmChartVersion)
+            .appName(appName)
+            .helmAppVersion(helmAppVersion)
+            .helmChartVersion(helmChartVersion)
             .build());
   }
 }
