@@ -3,6 +3,7 @@ package scripts.versionscripts;
 import bio.terra.testrunner.runner.VersionScript;
 import bio.terra.testrunner.runner.VersionScriptResult;
 import bio.terra.testrunner.runner.config.ServerSpecification;
+import bio.terra.testrunner.runner.version.HelmVersion;
 import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;
@@ -44,7 +45,7 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
         .build();
   }
 
-  public static List<VersionScriptResult.HelmVersion> buildHelmVersion(
+  public static List<HelmVersion> buildHelmVersion(
       ServerSpecification server, String baseFilePath, String overrideFilePath) throws Exception {
     // Pull versions from terra-helmfile
     HelmRelease helmRelease = HelmRelease.fromFile(baseFilePath);
@@ -65,7 +66,7 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
         helmRelease.getReleases().get("workspacemanager").getChartVersion().orElse("");
 
     return Arrays.asList(
-        new VersionScriptResult.HelmVersion.Builder()
+        new HelmVersion.Builder()
             .appName("workspacemanager")
             .helmAppVersion(wsmHelmAppVersion)
             .helmChartVersion(wsmHelmChartVersion)

@@ -1,5 +1,7 @@
 package bio.terra.testrunner.runner;
 
+import bio.terra.testrunner.runner.version.GitVersion;
+import bio.terra.testrunner.runner.version.HelmVersion;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
 
@@ -38,90 +40,6 @@ public class VersionScriptResult {
   }
 
   // TODO: add more overloaded add methods for other version sources
-
-  // Builder for helm versions
-  public static class HelmVersion {
-    public String appName;
-    public String helmAppVersion;
-    public String helmChartVersion;
-
-    public HelmVersion(Builder builder) {
-      this.appName = builder.appName;
-      this.helmAppVersion = builder.helmAppVersion;
-      this.helmChartVersion = builder.helmChartVersion;
-    }
-
-    public static class Builder {
-      private String appName;
-      private String helmAppVersion;
-      private String helmChartVersion;
-
-      public Builder appName(String appName) {
-        this.appName = appName;
-        return this;
-      }
-
-      public Builder helmAppVersion(String helmAppVersion) {
-        this.helmAppVersion = helmAppVersion;
-        return this;
-      }
-
-      public Builder helmChartVersion(String helmChartVersion) {
-        this.helmChartVersion = helmChartVersion;
-        return this;
-      }
-
-      public HelmVersion build() {
-        return new HelmVersion(this);
-      }
-    }
-  }
-
-  // Builder for git versions
-  public static class GitVersion {
-    public String remoteOriginUrl;
-    public String branch;
-    public String refHeadCommit;
-    public String shortRefHeadCommit;
-
-    public GitVersion(Builder builder) {
-      this.remoteOriginUrl = builder.remoteOriginUrl;
-      this.branch = builder.branch;
-      this.refHeadCommit = builder.refHeadCommit;
-      this.shortRefHeadCommit = builder.shortRefHeadCommit;
-    }
-
-    public static class Builder {
-      private String remoteOriginUrl;
-      private String branch;
-      private String refHeadCommit;
-      private String shortRefHeadCommit;
-
-      public Builder remoteOriginUrl(String remoteOriginUrl) {
-        this.remoteOriginUrl = remoteOriginUrl;
-        return this;
-      }
-
-      public Builder branch(String branch) {
-        this.branch = branch;
-        return this;
-      }
-
-      public Builder refHeadCommit(String refHeadCommit) {
-        this.refHeadCommit = refHeadCommit;
-        return this;
-      }
-
-      public Builder shortRefHeadCommit(String shortRefHeadCommit) {
-        this.shortRefHeadCommit = shortRefHeadCommit;
-        return this;
-      }
-
-      public GitVersion build() {
-        return new GitVersion(this);
-      }
-    }
-  }
 
   // TODO: QA-1643 Re-enable or add builder for importComponentVersions API route pending DevOps
   // readiness

@@ -3,6 +3,7 @@ package scripts.versionscripts;
 import bio.terra.testrunner.runner.VersionScript;
 import bio.terra.testrunner.runner.VersionScriptResult;
 import bio.terra.testrunner.runner.config.ServerSpecification;
+import bio.terra.testrunner.runner.version.GitVersion;
 import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;
@@ -40,13 +41,13 @@ public class ReadFromGitCommitLog extends VersionScript {
     return new VersionScriptResult.Builder().gitVersions(buildGitVersion(server, gitDir)).build();
   }
 
-  public static List<VersionScriptResult.GitVersion> buildGitVersion(
-      ServerSpecification server, String gitDir) throws Exception {
+  public static List<GitVersion> buildGitVersion(ServerSpecification server, String gitDir)
+      throws Exception {
 
     GitRelease git = new GitRelease(gitDir);
 
     return Arrays.asList(
-        new VersionScriptResult.GitVersion.Builder()
+        new GitVersion.Builder()
             .remoteOriginUrl(git.getRemoteOriginUrl())
             .branch(git.getBranch())
             .refHeadCommit(git.getRefHeadCommit())
