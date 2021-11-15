@@ -10,10 +10,9 @@ import java.util.List;
  *
  * <p>This extended version is suitable for Cloud Function ingestion of test results as single rows
  * and for streaming inserts to BigQuery in bulk.
- */
-/**
- * All output information from a test run is included in this POJO for easier automated processing
- * (i.e. one file instead of four).
+ *
+ * <p>All output information from a test run is included in this POJO for easier automated
+ * processing (i.e. one file instead of four).
  */
 @SuppressFBWarnings(
     value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
