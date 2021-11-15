@@ -5,7 +5,6 @@ import static bio.terra.testrunner.common.commands.PrintHelp.ANSI_RESET;
 
 import bio.terra.testrunner.common.utils.FileUtils;
 import bio.terra.testrunner.common.utils.KubernetesClientUtils;
-import bio.terra.testrunner.runner.config.ServerSpecification;
 import bio.terra.testrunner.runner.config.TestConfiguration;
 import bio.terra.testrunner.runner.config.TestScriptSpecification;
 import bio.terra.testrunner.runner.config.TestSuite;
@@ -137,25 +136,21 @@ public class TestRunner {
 
     // determine the server version if specified by the test configuration
     if (config.server.versionScripts != null && !config.server.versionScripts.isEmpty()) {
-      // get instance of the all version script classes
-      versionScripts =
-          config.server.versionScripts.stream()
-              .map(
-                  versionScriptSpecification ->
-                      instantiateVersionScript(versionScriptSpecification))
-              .collect(Collectors.toList());
-
-      // call the determineVersion method to get the version
-      versionScriptResults =
-          versionScripts.stream()
-              .map(
-                  versionScript -> {
-                    logger.info(
-                        "Version: Calling {}.determineVersion()",
-                        versionScript.getClass().getName());
-                    return determineVersion(versionScript, config.server);
-                  })
-              .collect(Collectors.toList());
+      for (VersionScriptSpecification spec : config.server.versionScripts) {
+        VersionScript versionScript = spec.scriptClass.getDeclaredConstructor().newInstance();
+        logger.info("Version: Instantiated {} class", versionScript.getClass().getName());
+        versionScript.setParameters(spec.parameters);
+        if (versionScripts == null) {
+          versionScripts = new ArrayList<>();
+        }
+        versionScripts.add(versionScript);
+        logger.info("Version: Calling {}.determineVersion()", versionScript.getClass().getName());
+        VersionScriptResult versionScriptResult = versionScript.determineVersion(config.server);
+        if (versionScriptResults == null) {
+          versionScriptResults = new ArrayList<>();
+        }
+        versionScriptResults.add(versionScriptResult);
+      }
     } else {
       logger.info("Version: Skipping version determination");
     }
@@ -335,39 +330,6 @@ public class TestRunner {
       deploymentScript.teardown();
     } else {
       logger.info("Deployment: Skipping deployment teardown");
-    }
-  }
-
-  private VersionScript instantiateVersionScript(
-      VersionScriptSpecification versionScriptSpecification) {
-    try {
-      VersionScript versionScript =
-          versionScriptSpecification.scriptClass.getDeclaredConstructor().newInstance();
-      // set any parameters specified by the configuration
-      versionScript.setParameters(versionScriptSpecification.parameters);
-
-      // Instantiate VersionScript
-      logger.info("Version: Instantiate {} class", versionScript.getClass().getName());
-      return versionScript;
-    } catch (InstantiationException | IllegalAccessException e) {
-      logger.error(
-          "Version: Error calling constructor of VersionScript class: {}",
-          versionScriptSpecification.name,
-          e);
-      throw new IllegalArgumentException(
-          "Error calling constructor of VersionScript class: " + versionScriptSpecification.name,
-          e);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private VersionScriptResult determineVersion(
-      VersionScript versionScript, ServerSpecification server) {
-    try {
-      return versionScript.determineVersion(server);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
     }
   }
 
