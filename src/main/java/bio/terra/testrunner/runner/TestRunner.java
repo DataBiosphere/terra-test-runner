@@ -346,8 +346,8 @@ public class TestRunner {
       // set any parameters specified by the configuration
       versionScript.setParameters(versionScriptSpecification.parameters);
 
-      // call the determineVersion method to get the version
-      logger.info("Version: Calling {}.determineVersion()", versionScript.getClass().getName());
+      // Instantiate VersionScript
+      logger.info("Version: Instantiate {} class", versionScript.getClass().getName());
       return versionScript;
     } catch (InstantiationException | IllegalAccessException e) {
       logger.error(
