@@ -38,7 +38,6 @@ public class TestRunner {
   private List<VersionScriptResult> versionScriptResults;
   private List<TestScriptResult> testScriptResults;
   protected TestRunSummary summary;
-  protected TestRunFullOutput runFullOutput;
 
   private static long secondsToWaitForPoolShutdown = 60;
 
