@@ -2,12 +2,13 @@ package bio.terra.testrunner.runner;
 
 import bio.terra.testrunner.common.BasicStatistics;
 import bio.terra.testrunner.runner.config.TestScriptSpecification;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 public class TestScriptResult {
   public List<UserJourneyResult> userJourneyResults;
-  public TestScriptResultSummary summary;
+  @JsonIgnore public TestScriptResultSummary summary;
 
   public TestScriptResult(
       TestScriptSpecification testScriptSpecification, List<UserJourneyResult> userJourneyResults) {
