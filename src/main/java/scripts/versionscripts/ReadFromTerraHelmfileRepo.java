@@ -64,7 +64,9 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
 
     // Pull appName versions from terra-helmfile, add more service versions if needed.
     String helmAppVersion = helmRelease.getReleases().get(appName).getAppVersion().orElse("");
+    if (helmAppVersion.isEmpty()) logger.info("appVersion was not defined for {}", appName);
     String helmChartVersion = helmRelease.getReleases().get(appName).getChartVersion().orElse("");
+    if (helmChartVersion.isEmpty()) logger.info("chartVersion was not defined for {}", appName);
 
     return Arrays.asList(
         new HelmVersion.Builder()
