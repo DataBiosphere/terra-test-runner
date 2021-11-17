@@ -3,6 +3,7 @@ package bio.terra.testrunner.runner;
 import bio.terra.testrunner.runner.config.TestConfiguration;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A subclass of TestRunSummary with additional properties testConfig,
@@ -19,7 +20,7 @@ import java.util.List;
     justification = "This POJO class is used for easy serialization to JSON using Jackson.")
 public class TestRunFullOutput {
   public TestConfiguration testConfiguration;
-  public List<TestScriptResult> testScriptResults;
+  public List<Map<String, List<UserJourneyResult>>> testScriptResults;
   public List<VersionScriptResult> versionScriptResults;
   public String id;
   public long startTime = -1;
@@ -39,7 +40,7 @@ public class TestRunFullOutput {
 
   public TestRunFullOutput(
       TestConfiguration testConfiguration,
-      List<TestScriptResult> testScriptResults,
+      List<Map<String, List<UserJourneyResult>>> testScriptResults,
       TestRunSummary testRunSummary,
       List<VersionScriptResult> versionScriptResults) {
     this.testConfiguration = testConfiguration;

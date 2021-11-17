@@ -497,7 +497,14 @@ public class TestRunner {
 
     // write full output to a single file for easier automated processing
     TestRunFullOutput runFullOutput =
-        new TestRunFullOutput(config, testScriptResults, summary, versionScriptResults);
+        new TestRunFullOutput(
+            config,
+            // Map userJourneyResults from testScriptResults to key-value pairs.
+            testScriptResults.stream()
+                .map(r -> Collections.singletonMap("userJourneyResults", r.getUserJourneyResults()))
+                .collect(Collectors.toList()),
+            summary,
+            versionScriptResults);
     objectWriter.writeValue(runFullOutputFile, runFullOutput);
     logger.info("Test run full output written to file: {}", runFullOutputFile.getName());
 
