@@ -19,6 +19,8 @@ public class UserJourneyResult {
   public String exceptionStackTrace;
   public String exceptionMessage;
 
+  public UserJourneyResult() {}
+
   public UserJourneyResult(String userJourneyDescription, String threadName) {
     this.userJourneyDescription = userJourneyDescription;
     this.threadName = threadName;

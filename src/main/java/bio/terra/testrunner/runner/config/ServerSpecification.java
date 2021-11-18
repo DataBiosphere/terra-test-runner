@@ -3,6 +3,7 @@ package bio.terra.testrunner.runner.config;
 import bio.terra.testrunner.common.utils.FileUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
+import java.util.List;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -71,7 +72,7 @@ public class ServerSpecification implements SpecificationInterface {
   // =============================================
   // Version: information required to get the server version
   // how to (optionally) lookup the version before each test run
-  public VersionScriptSpecification versionScript;
+  public List<VersionScriptSpecification> versionScripts;
 
   public static final String resourceDirectory = "servers";
 
@@ -138,8 +139,8 @@ public class ServerSpecification implements SpecificationInterface {
     }
     testRunnerServiceAccount.validate();
 
-    if (versionScript != null) {
-      versionScript.validate();
+    if (versionScripts != null && !versionScripts.isEmpty()) {
+      versionScripts.forEach(versionScript -> versionScript.validate());
     }
 
     if (bufferClientServiceAccount != null) {

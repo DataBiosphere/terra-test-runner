@@ -9,6 +9,7 @@ import bio.terra.testrunner.runner.config.TestConfiguration;
 import bio.terra.testrunner.runner.config.TestScriptSpecification;
 import bio.terra.testrunner.runner.config.TestSuite;
 import bio.terra.testrunner.runner.config.TestUserSpecification;
+import bio.terra.testrunner.runner.config.VersionScriptSpecification;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import java.io.File;
@@ -16,8 +17,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -30,74 +29,19 @@ public class TestRunner {
   private TestConfiguration config;
   private List<TestScript> scripts;
   private DeploymentScript deploymentScript;
-  private VersionScript versionScript;
+  private List<VersionScript> versionScripts;
   private List<ThreadPoolExecutor> threadPools;
   private ThreadPoolExecutor disruptionThreadPool;
   private List<List<Future<UserJourneyResult>>> userJourneyFutureLists;
 
-  private VersionScriptResult versionScriptResult;
+  // test run outputs
+  private List<VersionScriptResult> versionScriptResults;
   private List<TestScriptResult> testScriptResults;
   protected TestRunSummary summary;
 
   private static long secondsToWaitForPoolShutdown = 60;
 
   private boolean exceptionThrownInCleanup = false;
-
-  public static class TestRunSummary {
-    public String id;
-
-    public long startTime = -1;
-    public long startUserJourneyTime = -1;
-    public long endUserJourneyTime = -1;
-    public long endTime = -1;
-    public List<TestScriptResult.TestScriptResultSummary> testScriptResultSummaries;
-
-    public TestRunSummary() {}
-
-    public TestRunSummary(String id) {
-      this.id = id;
-    }
-
-    private String startTimestamp;
-    private String startUserJourneyTimestamp;
-    private String endUserJourneyTimestamp;
-    private String endTimestamp;
-
-    // Include user-provided TestSuite name in the summary:
-    // This can be used to facilitate grouping of test runner results on the dashboard.
-    private String testSuiteName;
-
-    public String getStartTimestamp() {
-      return millisecondsToTimestampString(startTime);
-    }
-
-    public String getStartUserJourneyTimestamp() {
-      return millisecondsToTimestampString(startUserJourneyTime);
-    }
-
-    public String getEndUserJourneyTimestamp() {
-      return millisecondsToTimestampString(endUserJourneyTime);
-    }
-
-    public String getEndTimestamp() {
-      return millisecondsToTimestampString(endTime);
-    }
-
-    public String getTestSuiteName() {
-      return testSuiteName;
-    }
-
-    public void setTestSuiteName(String testSuiteName) {
-      this.testSuiteName = testSuiteName;
-    }
-
-    private static String millisecondsToTimestampString(long milliseconds) {
-      DateFormat dateFormat =
-          new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSS'Z'"); // Quoted Z to indicate UTC
-      dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-      return dateFormat.format(new Date(milliseconds));
-    }
-  }
 
   protected TestRunner(TestConfiguration config) {
     this.config = config;
@@ -106,7 +50,6 @@ public class TestRunner {
     this.disruptionThreadPool = null;
     this.userJourneyFutureLists = new ArrayList<>();
     this.testScriptResults = new ArrayList<>();
-
     this.summary = new TestRunSummary(UUID.randomUUID().toString());
   }
 
@@ -191,27 +134,22 @@ public class TestRunner {
     }
 
     // determine the server version if specified by the test configuration
-    if (config.server.versionScript != null) {
-      // get an instance of the version script class
-      try {
-        versionScript =
-            config.server.versionScript.scriptClass.getDeclaredConstructor().newInstance();
-      } catch (IllegalAccessException | InstantiationException niEx) {
-        logger.error(
-            "Version: Error calling constructor of VersionScript class: {}",
-            config.server.versionScript.name,
-            niEx);
-        throw new IllegalArgumentException(
-            "Error calling constructor of VersionScript class: " + config.server.versionScript.name,
-            niEx);
+    if (config.server.versionScripts != null && !config.server.versionScripts.isEmpty()) {
+      for (VersionScriptSpecification spec : config.server.versionScripts) {
+        VersionScript versionScript = spec.scriptClass.getDeclaredConstructor().newInstance();
+        logger.info("Version: Instantiated {} class", versionScript.getClass().getName());
+        versionScript.setParameters(spec.parameters);
+        if (versionScripts == null) {
+          versionScripts = new ArrayList<>();
+        }
+        versionScripts.add(versionScript);
+        logger.info("Version: Calling {}.determineVersion()", versionScript.getClass().getName());
+        VersionScriptResult versionScriptResult = versionScript.determineVersion(config.server);
+        if (versionScriptResults == null) {
+          versionScriptResults = new ArrayList<>();
+        }
+        versionScriptResults.add(versionScriptResult);
       }
-
-      // set any parameters specified by the configuration
-      versionScript.setParameters(config.server.versionScript.parameters);
-
-      // call the determineVersion method to get the version
-      logger.info("Version: Calling {}.determineVersion()", versionScript.getClass().getName());
-      versionScriptResult = versionScript.determineVersion(config.server);
     } else {
       logger.info("Version: Skipping version determination");
     }
@@ -510,6 +448,7 @@ public class TestRunner {
   private static final String renderedConfigFileName = "RENDERED_testConfiguration.json";
   private static final String userJourneyResultsFileName = "RAWDATA_userJourneyResults.json";
   private static final String runSummaryFileName = "SUMMARY_testRun.json";
+  private static final String fullOutputFileName = "FULL_testRunOutput.json";
   private static final String envVersionFileName = "ENV_versionResult.json";
 
   /** Helper method to write out the results to files at the end of a test configuration run. */
@@ -542,6 +481,7 @@ public class TestRunner {
         FileUtils.createNewFile(outputDirectory.resolve(userJourneyResultsFileName).toFile());
     File runSummaryFile = outputDirectory.resolve(runSummaryFileName).toFile();
     File terraVersionFile = outputDirectory.resolve(envVersionFileName).toFile();
+    File runFullOutputFile = outputDirectory.resolve(fullOutputFileName).toFile();
 
     // write the rendered test configuration that was run to a file
     objectWriter.writeValue(renderedConfigFile, config);
@@ -555,8 +495,14 @@ public class TestRunner {
     objectWriter.writeValue(runSummaryFile, summary);
     logger.info("Test run summary written to file: {}", runSummaryFile.getName());
 
+    // write full output to a single file for easier automated processing
+    TestRunFullOutput runFullOutput =
+        new TestRunFullOutput(config, testScriptResults, summary, versionScriptResults);
+    objectWriter.writeValue(runFullOutputFile, runFullOutput);
+    logger.info("Test run full output written to file: {}", runFullOutputFile.getName());
+
     // write the version result to a file
-    objectWriter.writeValue(terraVersionFile, versionScriptResult);
+    objectWriter.writeValue(terraVersionFile, versionScriptResults);
     logger.info("Version script result written to file: {}", terraVersionFile.getName());
   }
 
@@ -594,12 +540,12 @@ public class TestRunner {
   }
 
   /**
-   * Read in the test run summary from the output directory and return the TestRunner.TestRunSummary
-   * Java object.
+   * Read in the test run summary from the output directory and return the TestRunSummary Java
+   * object.
    */
-  public static TestRunner.TestRunSummary getTestRunSummary(Path outputDirectory) throws Exception {
+  public static TestRunSummary getTestRunSummary(Path outputDirectory) throws Exception {
     return FileUtils.readOutputFileIntoJavaObject(
-        outputDirectory, TestRunner.runSummaryFileName, TestRunner.TestRunSummary.class);
+        outputDirectory, TestRunner.runSummaryFileName, TestRunSummary.class);
   }
 
   /**
@@ -618,7 +564,7 @@ public class TestRunner {
 
     // build a list of output directories that contain test run results
     List<Path> testRunOutputDirectories = new ArrayList<>();
-    TestRunner.TestRunSummary testRunSummary = null;
+    TestRunSummary testRunSummary = null;
     try {
       testRunSummary = getTestRunSummary(outputDirectory);
     } catch (Exception ex) {
@@ -686,7 +632,7 @@ public class TestRunner {
 
         // even if the test configuration didn't throw an exception, it still may have failed due to
         // a timeout
-        for (TestScriptResult.TestScriptResultSummary testScriptResultSummary :
+        for (TestScriptResultSummary testScriptResultSummary :
             runner.summary.testScriptResultSummaries) {
           if (testScriptResultSummary.isFailure) {
             testConfigFailed = true;

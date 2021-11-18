@@ -53,6 +53,8 @@ dependencies {
         googleOauth2 = '0.22.0'
         googleStorage = '1.113.2'
         googleContainer = "v1-rev93-1.25.0"
+
+        jgit = "5.13.0.202109080827-r"
     }
 
     implementation group: 'org.apache.commons', name: 'commons-math3', version: "${apacheMath}"
@@ -69,6 +71,8 @@ dependencies {
     implementation group: 'com.google.auth', name: 'google-auth-library-oauth2-http', version: "${googleOauth2}"
     implementation group: 'com.google.cloud', name: 'google-cloud-storage', version: "${googleStorage}"
     implementation group: 'com.google.apis', name: 'google-api-services-container', version: "${googleContainer}"
+
+    implementation group: 'org.eclipse.jgit', name: 'org.eclipse.jgit', version: "${jgit}"
 }
 
 test {

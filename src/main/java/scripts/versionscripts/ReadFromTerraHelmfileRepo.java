@@ -3,11 +3,9 @@ package scripts.versionscripts;
 import bio.terra.testrunner.runner.VersionScript;
 import bio.terra.testrunner.runner.VersionScriptResult;
 import bio.terra.testrunner.runner.config.ServerSpecification;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import java.io.File;
+import bio.terra.testrunner.runner.version.HelmVersion;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripts.versionscripts.model.HelmRelease;
@@ -18,6 +16,7 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
   /** Public constructor so that this class can be instantiated via reflection. */
   public ReadFromTerraHelmfileRepo() {}
 
+  private String appName;
   private String baseFilePath;
   private String overrideFilePath;
 
@@ -29,12 +28,13 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
    * @param parameters list of string parameters supplied by the version list
    */
   public void setParameters(List<String> parameters) throws Exception {
-    if (parameters == null || parameters.size() < 2) {
+    if (parameters == null || parameters.size() < 3) {
       throw new IllegalArgumentException(
           "Must provide terra helmfile file paths in the parameters list");
     }
-    baseFilePath = parameters.get(0);
-    overrideFilePath = parameters.get(1);
+    appName = parameters.get(0);
+    baseFilePath = parameters.get(1);
+    overrideFilePath = parameters.get(2);
   }
 
   /**
@@ -42,62 +42,37 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
    * GitHub repository.
    */
   public VersionScriptResult determineVersion(ServerSpecification server) throws Exception {
-    // TODO QA-1643: Re-enable importComponentVersions API route pending DevOps readiness
-    // Map<String, Map<String, String>> kubernetesComponentVersions =
-    //    !server.skipKubernetes ? KubernetesClientUtils.importComponentVersions() : null;
+    return new VersionScriptResult.Builder()
+        .helmVersions(buildHelmVersion(server, appName, baseFilePath, overrideFilePath))
+        .build();
+  }
 
+  public static List<HelmVersion> buildHelmVersion(
+      ServerSpecification server, String appName, String baseFilePath, String overrideFilePath)
+      throws Exception {
     // Pull versions from terra-helmfile
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    mapper.findAndRegisterModules();
-    HelmRelease helmRelease = mapper.readValue(new File(baseFilePath), HelmRelease.class);
-    HelmRelease helmOverride = mapper.readValue(new File(overrideFilePath), HelmRelease.class);
+    HelmRelease helmRelease = HelmRelease.fromFile(baseFilePath);
+    HelmRelease helmOverride = HelmRelease.fromFile(overrideFilePath);
 
     // Loop through the override helm values and replacing any base helm values, then returning the
     // now-modified base helm values map.
-    merge(helmOverride.getReleases(), helmRelease.getReleases());
+    HelmRelease.merge(helmOverride, helmRelease);
     logger.info(
         "Done merging Helm override values from {} into base values obtained from {}",
         overrideFilePath,
         baseFilePath);
 
-    // Pull 'workspacemanager' versions from terra-helmfile, add more service versions if needed.
-    String wsmHelmAppVersion =
-        helmRelease.getReleases().get("workspacemanager").getAppVersion().orElse("");
-    String wsmHelmChartVersion =
-        helmRelease.getReleases().get("workspacemanager").getChartVersion().orElse("");
+    // Pull appName versions from terra-helmfile, add more service versions if needed.
+    String helmAppVersion = helmRelease.getReleases().get(appName).getAppVersion().orElse("");
+    if (helmAppVersion.isEmpty()) logger.info("appVersion was not defined for {}", appName);
+    String helmChartVersion = helmRelease.getReleases().get(appName).getChartVersion().orElse("");
+    if (helmChartVersion.isEmpty()) logger.info("chartVersion was not defined for {}", appName);
 
-    return new VersionScriptResult.Builder()
-        .wsmHelmAppVersion(wsmHelmAppVersion)
-        .wsmHelmChartVersion(wsmHelmChartVersion)
-        .build();
-  }
-
-  /**
-   * @param from a Java Map instance that represents the source of updates
-   * @param to a Java Map instance to receive updates from source map
-   * @return the same 'to' instance with merged keys from the source map
-   */
-  private Map<String, HelmRelease.HelmReleaseVersion> merge(
-      Map<String, HelmRelease.HelmReleaseVersion> from,
-      Map<String, HelmRelease.HelmReleaseVersion> to) {
-    from.forEach(
-        (app, version) ->
-            to.merge(
-                app,
-                version,
-                (toVersion, fromVersion) ->
-                    new HelmRelease.HelmReleaseVersion(
-                        fromVersion.getEnabled() != null && fromVersion.getEnabled().isPresent()
-                            ? fromVersion.getEnabled()
-                            : toVersion.getEnabled(),
-                        fromVersion.getChartVersion() != null
-                                && fromVersion.getChartVersion().isPresent()
-                            ? fromVersion.getChartVersion()
-                            : toVersion.getChartVersion(),
-                        fromVersion.getAppVersion() != null
-                                && fromVersion.getAppVersion().isPresent()
-                            ? fromVersion.getAppVersion()
-                            : toVersion.getAppVersion())));
-    return to;
+    return Arrays.asList(
+        new HelmVersion.Builder()
+            .appName(appName)
+            .helmAppVersion(helmAppVersion)
+            .helmChartVersion(helmChartVersion)
+            .build());
   }
 }

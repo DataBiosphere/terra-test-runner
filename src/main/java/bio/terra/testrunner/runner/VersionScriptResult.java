@@ -1,49 +1,47 @@
 package bio.terra.testrunner.runner;
 
+import bio.terra.testrunner.runner.version.GitVersion;
+import bio.terra.testrunner.runner.version.HelmVersion;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.List;
 
 @SuppressFBWarnings(
     value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
     justification = "This POJO class is used for easy serialization to JSON using Jackson.")
 public class VersionScriptResult {
+  public List<HelmVersion> helmVersions;
+  public List<GitVersion> gitVersions;
   // TODO: add more fields here for other version information we may care about
-  //  (e.g. git hashes, helm versions for other services)
-  public String wsmHelmAppVersion;
-  public String wsmHelmChartVersion;
 
-  // TODO QA-1643: Re-enable importComponentVersions API route pending DevOps readiness
-  // public Map<String, Map<String, String>> kubernetesComponentVersions;
+  // public VersionScriptResult() {}
 
   public VersionScriptResult(Builder builder) {
-    this.wsmHelmAppVersion = builder.wsmHelmAppVersion;
-    this.wsmHelmChartVersion = builder.wsmHelmChartVersion;
-    // this.kubernetesComponentVersions = builder.kubernetesComponentVersions;
+    this.helmVersions = builder.helmVersions;
+    this.gitVersions = builder.gitVersions;
   }
 
   public static class Builder {
-    private String wsmHelmAppVersion;
-    private String wsmHelmChartVersion;
-    // private Map<String, Map<String, String>> kubernetesComponentVersions;
+    private List<HelmVersion> helmVersions;
+    private List<GitVersion> gitVersions;
 
-    public Builder wsmHelmAppVersion(String wsmHelmAppVersion) {
-      this.wsmHelmAppVersion = wsmHelmAppVersion;
+    public VersionScriptResult.Builder helmVersions(List<HelmVersion> helmVersions) {
+      this.helmVersions = helmVersions;
       return this;
     }
 
-    public Builder wsmHelmChartVersion(String wsmHelmChartVersion) {
-      this.wsmHelmChartVersion = wsmHelmChartVersion;
+    public VersionScriptResult.Builder gitVersions(List<GitVersion> gitVersions) {
+      this.gitVersions = gitVersions;
       return this;
     }
-
-    // TODO QA-1643: Re-enable importComponentVersions API route pending DevOps readiness
-    // public Builder kubernetesComponentVersions(
-    //    Map<String, Map<String, String>> kubernetesComponentVersions) {
-    //  this.kubernetesComponentVersions = kubernetesComponentVersions;
-    //  return this;
-    // }
 
     public VersionScriptResult build() {
       return new VersionScriptResult(this);
     }
   }
+
+  // TODO: add more overloaded add methods for other version sources
+
+  // TODO: QA-1643 Re-enable or add builder for importComponentVersions API route pending DevOps
+  // readiness
+  // public Map<String, Map<String, String>> kubernetesComponentVersions;
 }
