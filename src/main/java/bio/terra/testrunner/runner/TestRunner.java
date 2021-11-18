@@ -499,10 +499,8 @@ public class TestRunner {
     TestRunFullOutput runFullOutput =
         new TestRunFullOutput(
             config,
-            // Map userJourneyResults from testScriptResults to key-value pairs.
-            testScriptResults.stream()
-                .map(r -> Collections.singletonMap("userJourneyResults", r.getUserJourneyResults()))
-                .collect(Collectors.toList()),
+            // Unnest testScriptResults
+            unnestUserJourneyResults(testScriptResults),
             summary,
             versionScriptResults);
     objectWriter.writeValue(runFullOutputFile, runFullOutput);
@@ -511,6 +509,27 @@ public class TestRunner {
     // write the version result to a file
     objectWriter.writeValue(terraVersionFile, versionScriptResults);
     logger.info("Version script result written to file: {}", terraVersionFile.getName());
+  }
+
+  // A mapper that unnest List<TestScriptResult> from TestScriptResult
+  private List<Map<String, Object>> unnestUserJourneyResults(
+      List<TestScriptResult> testScriptResults) {
+    return testScriptResults.stream()
+        .map(
+            r -> {
+              String testScriptName = r.getSummary().testScriptName;
+              String testScriptDescription = r.getSummary().testScriptDescription;
+              List<UserJourneyResult> userJourneyResults = r.getUserJourneyResults();
+
+              return new HashMap<String, Object>() {
+                {
+                  put("testScriptName", testScriptName);
+                  put("testScriptDescription", testScriptDescription);
+                  put("userJourneyResults", userJourneyResults);
+                }
+              };
+            })
+        .collect(Collectors.toList());
   }
 
   /** Helper method to print out the PASSED/FAILED tests at the end of a suite run. */

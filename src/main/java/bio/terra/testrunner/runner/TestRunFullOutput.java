@@ -25,7 +25,7 @@ public class TestRunFullOutput {
   // For each element in testScriptResults, we can derive the testScriptName and
   // testScriptDescription properties from the corresponding positional element in
   // testScriptResultSummaries.
-  public List<Map<String, List<UserJourneyResult>>> testScriptResults;
+  public List<Map<String, Object>> testScriptResults;
   public List<TestScriptResultSummary> testScriptResultSummaries;
 
   public List<VersionScriptResult> versionScriptResults;
@@ -46,7 +46,7 @@ public class TestRunFullOutput {
 
   public TestRunFullOutput(
       TestConfiguration testConfiguration,
-      List<Map<String, List<UserJourneyResult>>> testScriptResults,
+      List<Map<String, Object>> testScriptResults,
       TestRunSummary testRunSummary,
       List<VersionScriptResult> versionScriptResults) {
     this.testConfiguration = testConfiguration;
