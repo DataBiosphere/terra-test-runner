@@ -2,8 +2,10 @@ package bio.terra.testrunner.runner;
 
 import bio.terra.testrunner.runner.config.TestConfiguration;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A subclass of TestRunSummary with additional properties testConfig,
@@ -46,11 +48,11 @@ public class TestRunFullOutput {
 
   public TestRunFullOutput(
       TestConfiguration testConfiguration,
-      List<Map<String, Object>> testScriptResults,
+      List<TestScriptResult> testScriptResults,
       TestRunSummary testRunSummary,
       List<VersionScriptResult> versionScriptResults) {
     this.testConfiguration = testConfiguration;
-    this.testScriptResults = testScriptResults;
+    this.testScriptResults = unnestUserJourneyResults(testScriptResults);
     this.versionScriptResults = versionScriptResults;
     this.id = testRunSummary.id;
     this.startTime = testRunSummary.startTime;
@@ -63,5 +65,26 @@ public class TestRunFullOutput {
     this.endUserJourneyTimestamp = testRunSummary.getEndUserJourneyTimestamp();
     this.endTimestamp = testRunSummary.getEndTimestamp();
     this.testSuiteName = testRunSummary.getTestSuiteName();
+  }
+
+  // A mapper that unnest List<TestScriptResult> from TestScriptResult
+  private List<Map<String, Object>> unnestUserJourneyResults(
+      List<TestScriptResult> testScriptResults) {
+    return testScriptResults.stream()
+        .map(
+            r -> {
+              String testScriptName = r.getSummary().testScriptName;
+              String testScriptDescription = r.getSummary().testScriptDescription;
+              List<UserJourneyResult> userJourneyResults = r.getUserJourneyResults();
+
+              return new HashMap<String, Object>() {
+                {
+                  put("testScriptName", testScriptName);
+                  put("testScriptDescription", testScriptDescription);
+                  put("userJourneyResults", userJourneyResults);
+                }
+              };
+            })
+        .collect(Collectors.toList());
   }
 }
