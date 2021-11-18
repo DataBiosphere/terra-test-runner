@@ -20,7 +20,14 @@ import java.util.Map;
     justification = "This POJO class is used for easy serialization to JSON using Jackson.")
 public class TestRunFullOutput {
   public TestConfiguration testConfiguration;
+
+  // The testScriptResults and testScriptResultSummaries must have identical size.
+  // For each element in testScriptResults, we can derive the testScriptName and
+  // testScriptDescription properties from the corresponding positional element in
+  // testScriptResultSummaries.
   public List<Map<String, List<UserJourneyResult>>> testScriptResults;
+  public List<TestScriptResultSummary> testScriptResultSummaries;
+
   public List<VersionScriptResult> versionScriptResults;
   public String id;
   public long startTime = -1;
@@ -28,7 +35,6 @@ public class TestRunFullOutput {
   public long endUserJourneyTime = -1;
   public long endTime = -1;
 
-  public List<TestScriptResultSummary> testScriptResultSummaries;
   public String startTimestamp;
   public String startUserJourneyTimestamp;
   public String endUserJourneyTimestamp;
