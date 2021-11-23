@@ -1,6 +1,6 @@
 package scripts.versionscripts.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.File;
@@ -12,8 +12,8 @@ import java.util.Optional;
  * The HelmRelease class represents a map of all MCTerra releases as defined in terra-helmfile. For
  * example: https://github.com/broadinstitute/terra-helmfile/blob/master/versions/app/dev.yaml
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class HelmRelease {
-  @JsonIgnore private Optional<String> defaultCluster;
   private Map<String, HelmReleaseVersion> releases;
 
   public Map<String, HelmReleaseVersion> getReleases() {
@@ -22,14 +22,6 @@ public final class HelmRelease {
 
   public void setReleases(Map<String, HelmReleaseVersion> releases) {
     this.releases = releases;
-  }
-
-  public Optional<String> getDefaultCluster() {
-    return defaultCluster;
-  }
-
-  public void setDefaultCluster(Optional<String> defaultCluster) {
-    this.defaultCluster = defaultCluster;
   }
 
   /**
@@ -81,11 +73,11 @@ public final class HelmRelease {
    * https://github.com/broadinstitute/terra-helmfile/blob/master/versions/app/dev.yaml and
    * https://github.com/broadinstitute/terra-helmfile/blob/master/environments/live/dev.yaml
    */
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class HelmReleaseVersion {
     private Optional<Boolean> enabled;
     private Optional<String> chartVersion;
     private Optional<String> appVersion;
-    @JsonIgnore private Optional<String> cluster;
 
     public HelmReleaseVersion() {}
 
@@ -118,14 +110,6 @@ public final class HelmRelease {
 
     public void setAppVersion(Optional<String> appVersion) {
       this.appVersion = appVersion;
-    }
-
-    public Optional<String> getCluster() {
-      return cluster;
-    }
-
-    public void setCluster(Optional<String> cluster) {
-      this.cluster = cluster;
     }
   }
 }
