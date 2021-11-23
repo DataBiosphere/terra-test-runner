@@ -1,5 +1,6 @@
 package scripts.versionscripts.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.File;
@@ -11,6 +12,7 @@ import java.util.Optional;
  * The HelmRelease class represents a map of all MCTerra releases as defined in terra-helmfile. For
  * example: https://github.com/broadinstitute/terra-helmfile/blob/master/versions/app/dev.yaml
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class HelmRelease {
   private Map<String, HelmReleaseVersion> releases;
 
@@ -71,6 +73,7 @@ public final class HelmRelease {
    * https://github.com/broadinstitute/terra-helmfile/blob/master/versions/app/dev.yaml and
    * https://github.com/broadinstitute/terra-helmfile/blob/master/environments/live/dev.yaml
    */
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class HelmReleaseVersion {
     private Optional<Boolean> enabled;
     private Optional<String> chartVersion;
