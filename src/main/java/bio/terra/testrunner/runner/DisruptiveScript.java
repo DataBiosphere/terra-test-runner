@@ -4,6 +4,7 @@ import bio.terra.testrunner.runner.config.ServerSpecification;
 import bio.terra.testrunner.runner.config.TestUserSpecification;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
+import java.util.Map;
 
 @SuppressFBWarnings(
     value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
@@ -56,9 +57,9 @@ public abstract class DisruptiveScript {
    * Test Runner based on the current Test Configuration, and can be used by the Disruptive script
    * methods.
    *
-   * @param parameters list of string parameters supplied by the test configuration
+   * @param parameters map of string key-value pairs supplied by the test configuration
    */
-  public void setParameters(List<String> parameters) throws Exception {}
+  public void setParameters(Map<String, String> parameters) throws Exception {}
 
   /**
    * The test script disrupt method contains the actions we want to perform in order disrupt the

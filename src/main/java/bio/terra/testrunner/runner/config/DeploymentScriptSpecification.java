@@ -1,12 +1,12 @@
 package bio.terra.testrunner.runner.config;
 
 import bio.terra.testrunner.runner.DeploymentScript;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DeploymentScriptSpecification implements SpecificationInterface {
   public String name = "";
-  public List<String> parameters = new ArrayList<>();
+  public Map<String, String> parameters = new HashMap<>();
 
   public Class<? extends DeploymentScript> scriptClass;
 

@@ -2,7 +2,7 @@ package bio.terra.testrunner.uploader;
 
 import bio.terra.testrunner.runner.config.ServiceAccountSpecification;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,9 +16,9 @@ public abstract class UploadScript {
    * Setter for any parameters required by the upload script. These parameters will be set by the
    * Result Uploader based on the current Upload List, and can be used by the upload script methods.
    *
-   * @param parameters list of string parameters supplied by the upload list
+   * @param parameters map of string key-value pairs supplied by the upload list
    */
-  public void setParameters(List<String> parameters) throws Exception {}
+  public void setParameters(Map<String, String> parameters) throws Exception {}
 
   /**
    * Upload the test results saved to the given directory. Results may include Test Runner

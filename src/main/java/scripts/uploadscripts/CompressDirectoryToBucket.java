@@ -15,12 +15,14 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.channels.Channels;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class CompressDirectoryToBucket extends UploadScript {
   private static final Logger logger = LoggerFactory.getLogger(CompressDirectoryToBucket.class);
+
+  public static final String BUCKET_PATH_PARAMETER_KEY = "bucket-path";
 
   /** Public constructor so that this class can be instantiated via reflection. */
   public CompressDirectoryToBucket() {}
@@ -33,11 +35,11 @@ public class CompressDirectoryToBucket extends UploadScript {
    *
    * @param parameters list of string parameters supplied by the upload list
    */
-  public void setParameters(List<String> parameters) throws Exception {
-    if (parameters == null || parameters.size() < 1) {
-      throw new IllegalArgumentException("Must provide bucket path in the parameters list");
+  public void setParameters(Map<String, String> parameters) throws Exception {
+    if (parameters == null || !parameters.containsKey(BUCKET_PATH_PARAMETER_KEY)) {
+      throw new IllegalArgumentException("Must provide bucket-path in the parameters list");
     }
-    bucketPath = parameters.get(0);
+    bucketPath = parameters.get(BUCKET_PATH_PARAMETER_KEY);
     if (!bucketPath.startsWith("gs://")) { // only handle GCS buckets
       throw new IllegalArgumentException("Bucket path must start with gs://");
     }

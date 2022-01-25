@@ -6,12 +6,17 @@ import bio.terra.testrunner.runner.config.ServerSpecification;
 import bio.terra.testrunner.runner.version.HelmVersion;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scripts.versionscripts.model.HelmRelease;
 
 public class ReadFromTerraHelmfileRepo extends VersionScript {
   private static final Logger logger = LoggerFactory.getLogger(ReadFromTerraHelmfileRepo.class);
+
+  public static final String APP_NAME_PARAMETER_KEY = "app-name";
+  public static final String BASE_FILE_PATH_PARAMETER_KEY = "base-file-path";
+  public static final String OVERRIDE_FILE_PATH_PARAMETER_KEY = "override-file-path";
 
   /** Public constructor so that this class can be instantiated via reflection. */
   public ReadFromTerraHelmfileRepo() {}
@@ -27,14 +32,18 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
    *
    * @param parameters list of string parameters supplied by the version list
    */
-  public void setParameters(List<String> parameters) throws Exception {
-    if (parameters == null || parameters.size() < 3) {
+  @Override
+  public void setParameters(Map<String, String> parameters) throws Exception {
+    if (parameters == null
+        || !parameters.containsKey(APP_NAME_PARAMETER_KEY)
+        || !parameters.containsKey(BASE_FILE_PATH_PARAMETER_KEY)
+        || !parameters.containsKey(OVERRIDE_FILE_PATH_PARAMETER_KEY)) {
       throw new IllegalArgumentException(
-          "Must provide terra helmfile file paths in the parameters list");
+          "Must provide app-name, base-file-path, and override-file-path as parameters");
     }
-    appName = parameters.get(0);
-    baseFilePath = parameters.get(1);
-    overrideFilePath = parameters.get(2);
+    appName = parameters.get(APP_NAME_PARAMETER_KEY);
+    baseFilePath = parameters.get(BASE_FILE_PATH_PARAMETER_KEY);
+    overrideFilePath = parameters.get(OVERRIDE_FILE_PATH_PARAMETER_KEY);
   }
 
   /**
