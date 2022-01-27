@@ -2,7 +2,7 @@ package bio.terra.testrunner.runner;
 
 import bio.terra.testrunner.runner.config.ApplicationSpecification;
 import bio.terra.testrunner.runner.config.ServerSpecification;
-import java.util.List;
+import java.util.Map;
 
 public abstract class DeploymentScript {
   /** Public constructor so that this class can be instantiated via reflection. */
@@ -13,9 +13,9 @@ public abstract class DeploymentScript {
    * the Test Runner based on the current Test Configuration, and can be used by the Deployment
    * script methods.
    *
-   * @param parameters list of string parameters supplied by the test configuration
+   * @param parameters map of string key-value pairs supplied by the test configuration
    */
-  public void setParameters(List<String> parameters) throws Exception {}
+  public void setParameters(Map<String, String> parameters) throws Exception {}
 
   /** The deployment script deploy method kicks off the deployment. */
   public void deploy(ServerSpecification server, ApplicationSpecification app) throws Exception {

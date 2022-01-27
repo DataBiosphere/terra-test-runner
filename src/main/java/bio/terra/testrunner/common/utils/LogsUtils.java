@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,5 +120,14 @@ public class LogsUtils {
         + " AND timestamp<=\""
         + endTimestamp
         + "\"";
+  }
+
+  /** Build a pretty description string from a map of key:value parameter pairs. */
+  public static String parametersToString(Map<String, String> params) {
+    StringBuilder sb = new StringBuilder();
+    for (Map.Entry<String, String> param : params.entrySet()) {
+      sb.append("{").append(param.getKey()).append(": ").append(param.getValue()).append("},");
+    }
+    return sb.toString();
   }
 }

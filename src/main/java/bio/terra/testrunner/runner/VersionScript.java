@@ -1,7 +1,7 @@
 package bio.terra.testrunner.runner;
 
 import bio.terra.testrunner.runner.config.ServerSpecification;
-import java.util.List;
+import java.util.Map;
 
 public abstract class VersionScript {
   /** Public constructor so that this class can be instantiated via reflection. */
@@ -12,9 +12,9 @@ public abstract class VersionScript {
    * Test Runner based on the current Test Configuration, and can be used by the Version script
    * methods.
    *
-   * @param parameters list of string parameters supplied by the test configuration
+   * @param parameters map of string key-value pairs supplied by the test configuration
    */
-  public void setParameters(List<String> parameters) throws Exception {}
+  public void setParameters(Map<String, String> parameters) throws Exception {}
 
   /** The version script determineVersion method looks up the version. */
   public VersionScriptResult determineVersion(ServerSpecification server) throws Exception {

@@ -7,6 +7,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,9 +64,9 @@ public abstract class MeasurementCollectionScript<T> {
    * be set by the Measurement Collector based on the current Measurement List, and can be used by
    * the measurement collection script methods.
    *
-   * @param parameters list of string parameters supplied by the measurement collection script
+   * @param parameters map of string key-value pairs supplied by the measurement collection script
    */
-  public void setParameters(List<String> parameters) throws Exception {}
+  public void setParameters(Map<String, String> parameters) throws Exception {}
 
   /** The class generic parameter specifies the type of a single raw data point. */
   protected List<T> dataPoints;

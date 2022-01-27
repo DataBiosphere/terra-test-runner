@@ -4,6 +4,7 @@ import bio.terra.testrunner.runner.config.ServerSpecification;
 import bio.terra.testrunner.runner.config.TestUserSpecification;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.List;
+import java.util.Map;
 
 @SuppressFBWarnings(
     value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
@@ -53,9 +54,9 @@ public abstract class TestScript {
    * Setter for any parameters required by the test script. These parameters will be set by the Test
    * Runner based on the current Test Configuration, and can be used by the Test script methods.
    *
-   * @param parameters list of string parameters supplied by the test configuration
+   * @param parameters map of string key-value pairs, parameters supplied by the test configuration
    */
-  public void setParameters(List<String> parameters) throws Exception {}
+  public void setParameters(Map<String, String> parameters) throws Exception {}
 
   /**
    * The test script setup contains the API call(s) that we do not want to profile and will not be

@@ -3,7 +3,7 @@ package bio.terra.testrunner.collector.config;
 import bio.terra.testrunner.collector.MeasurementCollectionScript;
 import bio.terra.testrunner.runner.config.SpecificationInterface;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.List;
+import java.util.Map;
 
 @SuppressFBWarnings(
     value = "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD",
@@ -11,7 +11,7 @@ import java.util.List;
 public class MeasurementCollectionScriptSpecification implements SpecificationInterface {
   public String name;
   public String description;
-  public List<String> parameters;
+  public Map<String, String> parameters;
   public boolean saveRawDataPoints;
 
   private MeasurementCollectionScript scriptClassInstance;

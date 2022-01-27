@@ -2,15 +2,15 @@ package bio.terra.testrunner.runner.config;
 
 import bio.terra.testrunner.runner.VersionScript;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressFBWarnings(
     value = "UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD",
     justification = "This POJO class is used for easy serialization to JSON using Jackson.")
 public class VersionScriptSpecification implements SpecificationInterface {
   public String name = "";
-  public List<String> parameters = new ArrayList<>();
+  public Map<String, String> parameters = new HashMap<>();
   public String description;
 
   public Class<? extends VersionScript> scriptClass;

@@ -20,7 +20,6 @@ import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +32,9 @@ import org.slf4j.LoggerFactory;
         "The statistics field will be populated by sub-classes of MeasurementCollectionScript.")
 public class SummariesToBigQuery extends UploadScript {
   private static final Logger logger = LoggerFactory.getLogger(SummariesToBigQuery.class);
+
+  public static final String BQ_PROJECT_ID_PARAMETER_KEY = "project-id";
+  public static final String BQ_DATASET_NAME_PARAMETER_KEY = "dataset-name";
 
   /** Public constructor so that this class can be instantiated via reflection. */
   public SummariesToBigQuery() {}
@@ -51,13 +53,15 @@ public class SummariesToBigQuery extends UploadScript {
    * @param parameters list of string parameters supplied by the upload list
    */
   @Override
-  public void setParameters(List<String> parameters) throws Exception {
-    if (parameters == null || parameters.size() < 2) {
+  public void setParameters(Map<String, String> parameters) throws Exception {
+    if (parameters == null
+        || !parameters.containsKey(BQ_PROJECT_ID_PARAMETER_KEY)
+        || !parameters.containsKey(BQ_DATASET_NAME_PARAMETER_KEY)) {
       throw new IllegalArgumentException(
-          "Must provide BigQuery project_id and dataset_name in the parameters list");
+          "Must provide BigQuery project-id and dataset-name keys in the parameters list");
     }
-    projectId = parameters.get(0);
-    datasetName = parameters.get(1);
+    projectId = parameters.get(BQ_PROJECT_ID_PARAMETER_KEY);
+    datasetName = parameters.get(BQ_DATASET_NAME_PARAMETER_KEY);
   }
 
   private static String testRunTableName = "testRun";

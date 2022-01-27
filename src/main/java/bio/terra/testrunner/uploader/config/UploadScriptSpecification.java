@@ -3,7 +3,7 @@ package bio.terra.testrunner.uploader.config;
 import bio.terra.testrunner.runner.config.SpecificationInterface;
 import bio.terra.testrunner.uploader.UploadScript;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.List;
+import java.util.Map;
 
 @SuppressFBWarnings(
     value = "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD",
@@ -11,7 +11,7 @@ import java.util.List;
 public class UploadScriptSpecification implements SpecificationInterface {
   public String name;
   public String description;
-  public List<String> parameters;
+  public Map<String, String> parameters;
 
   private UploadScript scriptClassInstance;
 

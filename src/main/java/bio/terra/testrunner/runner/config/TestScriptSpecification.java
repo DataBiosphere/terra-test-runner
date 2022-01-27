@@ -1,8 +1,9 @@
 package bio.terra.testrunner.runner.config;
 
+import bio.terra.testrunner.common.utils.LogsUtils;
 import bio.terra.testrunner.runner.TestScript;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @SuppressFBWarnings(
@@ -14,7 +15,7 @@ public class TestScriptSpecification implements SpecificationInterface {
   public int userJourneyThreadPoolSize = 1;
   public long expectedTimeForEach;
   public String expectedTimeForEachUnit;
-  public List<String> parameters;
+  public Map<String, String> parameters;
 
   private TestScript scriptClassInstance;
   public TimeUnit expectedTimeForEachUnitObj;
@@ -59,7 +60,7 @@ public class TestScriptSpecification implements SpecificationInterface {
     // generate a separate description property that also includes any test script parameters
     description = name;
     if (parameters != null) {
-      description += ": " + String.join(",", parameters);
+      description += ": " + LogsUtils.parametersToString(parameters);
     }
   }
 }
