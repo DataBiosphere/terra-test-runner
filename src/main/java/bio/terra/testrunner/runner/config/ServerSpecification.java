@@ -45,6 +45,9 @@ public class ServerSpecification implements SpecificationInterface {
   // Formally, Terraform used the externalcreds module to identify this service.
   public String policyManagerUri;
 
+  // Catalog Service
+  public String catalogUri;
+
   // =============================================
   // Cluster & deployment: information required to manipulate Kubernetes and deploy
   // Kubernetes cluster specification
