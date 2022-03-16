@@ -739,9 +739,11 @@ architecture related to streaming test results from `GCS` bucket to `BigQuery`.
 
 #### Debug a test configuration or script
 
-* The Gradle run task just calls the main method of the TestRunner or
+* The Gradle run task just calls the main method of the RunTest or
   MeasurementCollector class. To debug, add a Run/Debug Configuration in
   IntelliJ that calls this method with the same arguments.
+
+![Intellij run configuration](https://user-images.githubusercontent.com/10929390/158693901-1292131b-7fce-426d-b791-0b1420848a25.png)
 
 * To debug a test script without the test runner, for example to make sure the
   API calls are coded correctly, add a main method that executes the
