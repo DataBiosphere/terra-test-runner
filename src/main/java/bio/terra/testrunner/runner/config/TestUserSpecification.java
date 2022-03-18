@@ -1,6 +1,7 @@
 package bio.terra.testrunner.runner.config;
 
 import bio.terra.testrunner.common.utils.FileUtils;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 
@@ -25,7 +26,7 @@ public class TestUserSpecification implements SpecificationInterface {
    */
   public static TestUserSpecification fromJSONFile(String resourceFileName) throws Exception {
     // use Jackson to map the stream contents to a TestConfiguration object
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper().enable(JsonParser.Feature.ALLOW_COMMENTS);
 
     InputStream inputStream =
         FileUtils.getResourceFileHandle(resourceDirectory + "/" + resourceFileName);

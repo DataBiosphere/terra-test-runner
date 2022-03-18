@@ -1,6 +1,7 @@
 package scripts.versionscripts.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.File;
@@ -32,7 +33,8 @@ public final class HelmRelease {
    * @throws IOException
    */
   public static HelmRelease fromFile(String path) throws IOException {
-    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    ObjectMapper mapper =
+        new ObjectMapper(new YAMLFactory()).enable(JsonParser.Feature.ALLOW_COMMENTS);
     mapper.findAndRegisterModules();
     return mapper.readValue(new File(path), HelmRelease.class);
   }

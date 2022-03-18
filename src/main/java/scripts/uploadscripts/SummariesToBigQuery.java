@@ -10,6 +10,7 @@ import bio.terra.testrunner.runner.config.ServiceAccountSpecification;
 import bio.terra.testrunner.runner.config.TestConfiguration;
 import bio.terra.testrunner.runner.config.TestScriptSpecification;
 import bio.terra.testrunner.uploader.UploadScript;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.bigquery.BigQuery;
@@ -196,7 +197,7 @@ public class SummariesToBigQuery extends UploadScript {
 
   /** Build a single row for each test run. */
   private Map<String, Object> buildTestRunRow(Path outputDirectory) throws JsonProcessingException {
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper().enable(JsonParser.Feature.ALLOW_COMMENTS);
     Map<String, Object> rowContent = new HashMap<>();
 
     rowContent.put("id", testRunSummary.id);
