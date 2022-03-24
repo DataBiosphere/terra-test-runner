@@ -41,9 +41,11 @@ public class ServerSpecification implements SpecificationInterface {
   // Workspace Manager-related fields
   public String workspaceManagerUri;
 
-  // Policy Service-related fields
-  // Formally, Terraform used the externalcreds module to identify this service.
-  public String policyManagerUri;
+  // External Credentials Manager
+  public String externalCredentialsManagerUri;
+
+  // Drs Hub
+  public String drsHubUri;
 
   // Catalog Service
   public String catalogUri;
