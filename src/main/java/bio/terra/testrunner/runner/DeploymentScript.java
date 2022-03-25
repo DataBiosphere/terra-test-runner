@@ -13,9 +13,10 @@ public abstract class DeploymentScript {
    * the Test Runner based on the current Test Configuration, and can be used by the Deployment
    * script methods.
    *
-   * @param parameters map of string key-value pairs supplied by the test configuration
+   * @param parametersMap map of string key-value pairs supplied by the server.deploymentScript
+   *     configuration
    */
-  public void setParameters(Map<String, String> parameters) throws Exception {}
+  public void setParametersMap(Map<String, String> parametersMap) throws Exception {}
 
   /** The deployment script deploy method kicks off the deployment. */
   public void deploy(ServerSpecification server, ApplicationSpecification app) throws Exception {

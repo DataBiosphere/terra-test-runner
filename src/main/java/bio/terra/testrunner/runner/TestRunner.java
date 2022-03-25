@@ -112,7 +112,7 @@ public class TestRunner {
       }
 
       // set any parameters specified by the configuration
-      deploymentScript.setParameters(config.server.deploymentScript.parameters);
+      deploymentScript.setParametersMap(config.server.deploymentScript.parametersMap);
 
       // call the deploy and waitForDeployToFinish methods to do the deployment
       logger.info("Deployment: Calling {}.deploy()", deploymentScript.getClass().getName());
@@ -138,7 +138,7 @@ public class TestRunner {
       for (VersionScriptSpecification spec : config.server.versionScripts) {
         VersionScript versionScript = spec.scriptClass.getDeclaredConstructor().newInstance();
         logger.info("Version: Instantiated {} class", versionScript.getClass().getName());
-        versionScript.setParameters(spec.parameters);
+        versionScript.setParametersMap(spec.parametersMap);
         if (versionScripts == null) {
           versionScripts = new ArrayList<>();
         }
@@ -167,7 +167,7 @@ public class TestRunner {
       testScriptInstance.setServer(config.server);
 
       // set any parameters specified by the configuration
-      testScriptInstance.setParameters(testScriptSpecification.parameters);
+      testScriptInstance.setParametersMap(testScriptSpecification.parametersMap);
 
       scripts.add(testScriptInstance);
     }
@@ -187,7 +187,7 @@ public class TestRunner {
           config.disruptiveScript.disruptiveScriptClassInstance();
       disruptiveScriptInstance.setBillingAccount(config.billingAccount);
       disruptiveScriptInstance.setServer(config.server);
-      disruptiveScriptInstance.setParameters(config.disruptiveScript.parameters);
+      disruptiveScriptInstance.setParametersMap(config.disruptiveScript.parametersMap);
 
       // create a thread pool for running its disrupt method
       disruptionThreadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);

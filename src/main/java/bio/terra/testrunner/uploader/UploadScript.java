@@ -16,9 +16,9 @@ public abstract class UploadScript {
    * Setter for any parameters required by the upload script. These parameters will be set by the
    * Result Uploader based on the current Upload List, and can be used by the upload script methods.
    *
-   * @param parameters map of string key-value pairs supplied by the upload list
+   * @param parametersMap map of string key-value pairs supplied by the upload list
    */
-  public void setParameters(Map<String, String> parameters) throws Exception {}
+  public void setParametersMap(Map<String, String> parametersMap) throws Exception {}
 
   /**
    * Upload the test results saved to the given directory. Results may include Test Runner

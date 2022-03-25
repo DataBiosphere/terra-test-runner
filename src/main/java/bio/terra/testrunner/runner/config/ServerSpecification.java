@@ -1,6 +1,7 @@
 package bio.terra.testrunner.runner.config;
 
 import bio.terra.testrunner.common.utils.FileUtils;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 import java.util.List;
@@ -42,12 +43,15 @@ public class ServerSpecification implements SpecificationInterface {
   public String workspaceManagerUri;
 
   // External Credentials Manager
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   public String externalCredentialsManagerUri;
 
   // Drs Hub
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   public String drsHubUri;
 
   // Catalog Service
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   public String catalogUri;
 
   // =============================================
