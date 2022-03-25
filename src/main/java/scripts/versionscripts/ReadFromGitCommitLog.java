@@ -26,15 +26,16 @@ public class ReadFromGitCommitLog extends VersionScript {
    * Test Runner based on the current Test Configuration, and can be used by the version script
    * methods.
    *
-   * @param parameters list of string parameters supplied by the version list
+   * @param parametersMap map of string key-value pairs supplied by the server.versionScripts
+   *     configuration
    */
   @Override
-  public void setParameters(Map<String, String> parameters) throws Exception {
-    if (parameters == null || !parameters.containsKey(GIT_DIR_PARAMETER_KEY)) {
+  public void setParametersMap(Map<String, String> parametersMap) throws Exception {
+    if (parametersMap == null || !parametersMap.containsKey(GIT_DIR_PARAMETER_KEY)) {
       throw new IllegalArgumentException(
           "Must provide file path of local .git as git-dir in the parameters list");
     }
-    gitDir = parameters.get(GIT_DIR_PARAMETER_KEY);
+    gitDir = parametersMap.get(GIT_DIR_PARAMETER_KEY);
   }
 
   /** This method determines the version by reading the versions from Git commit log. */

@@ -54,9 +54,10 @@ public abstract class TestScript {
    * Setter for any parameters required by the test script. These parameters will be set by the Test
    * Runner based on the current Test Configuration, and can be used by the Test script methods.
    *
-   * @param parameters map of string key-value pairs, parameters supplied by the test configuration
+   * @param parametersMap map of string key-value pairs, parameters supplied by the test
+   *     configuration
    */
-  public void setParameters(Map<String, String> parameters) throws Exception {}
+  public void setParametersMap(Map<String, String> parametersMap) throws Exception {}
 
   /**
    * The test script setup contains the API call(s) that we do not want to profile and will not be

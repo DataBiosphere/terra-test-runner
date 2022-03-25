@@ -125,6 +125,7 @@ public class LogsUtils {
   /** Build a pretty description string from a map of key:value parameter pairs. */
   public static String parametersToString(Map<String, String> params) {
     StringBuilder sb = new StringBuilder();
+    if (params == null || params.keySet().isEmpty()) return "{}";
     for (Map.Entry<String, String> param : params.entrySet()) {
       sb.append("{").append(param.getKey()).append(": ").append(param.getValue()).append("},");
     }

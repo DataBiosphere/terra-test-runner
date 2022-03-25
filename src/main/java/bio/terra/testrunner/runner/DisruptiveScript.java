@@ -57,9 +57,9 @@ public abstract class DisruptiveScript {
    * Test Runner based on the current Test Configuration, and can be used by the Disruptive script
    * methods.
    *
-   * @param parameters map of string key-value pairs supplied by the test configuration
+   * @param parametersMap map of string key-value pairs supplied by the test configuration
    */
-  public void setParameters(Map<String, String> parameters) throws Exception {}
+  public void setParametersMap(Map<String, String> parametersMap) throws Exception {}
 
   /**
    * The test script disrupt method contains the actions we want to perform in order disrupt the

@@ -33,13 +33,13 @@ public class CompressDirectoryToBucket extends UploadScript {
    * Setter for any parameters required by the upload script. These parameters will be set by the
    * Result Uploader based on the current Upload List, and can be used by the upload script methods.
    *
-   * @param parameters list of string parameters supplied by the upload list
+   * @param parametersMap lmap of string key-value pairs supplied by the upload list
    */
-  public void setParameters(Map<String, String> parameters) throws Exception {
-    if (parameters == null || !parameters.containsKey(BUCKET_PATH_PARAMETER_KEY)) {
+  public void setParametersMap(Map<String, String> parametersMap) throws Exception {
+    if (parametersMap == null || !parametersMap.containsKey(BUCKET_PATH_PARAMETER_KEY)) {
       throw new IllegalArgumentException("Must provide bucket-path in the parameters list");
     }
-    bucketPath = parameters.get(BUCKET_PATH_PARAMETER_KEY);
+    bucketPath = parametersMap.get(BUCKET_PATH_PARAMETER_KEY);
     if (!bucketPath.startsWith("gs://")) { // only handle GCS buckets
       throw new IllegalArgumentException("Bucket path must start with gs://");
     }

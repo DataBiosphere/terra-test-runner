@@ -2,7 +2,10 @@ package bio.terra.testrunner.runner.config;
 
 import bio.terra.testrunner.common.utils.LogsUtils;
 import bio.terra.testrunner.runner.TestScript;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -15,7 +18,9 @@ public class TestScriptSpecification implements SpecificationInterface {
   public int userJourneyThreadPoolSize = 1;
   public long expectedTimeForEach;
   public String expectedTimeForEachUnit;
-  public Map<String, String> parameters;
+
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  public Map<String, String> parametersMap;
 
   private TestScript scriptClassInstance;
   public TimeUnit expectedTimeForEachUnitObj;
@@ -59,8 +64,18 @@ public class TestScriptSpecification implements SpecificationInterface {
 
     // generate a separate description property that also includes any test script parameters
     description = name;
-    if (parameters != null) {
-      description += ": " + LogsUtils.parametersToString(parameters);
+    if (parametersMap != null) {
+      description += ": " + LogsUtils.parametersToString(parametersMap);
     }
+  }
+
+  /**
+   * Return parametersMap as a JSON string
+   *
+   * @return a Java String
+   */
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  public List<String> getParameters() {
+    return Arrays.asList(new String[] {LogsUtils.parametersToString(parametersMap)});
   }
 }

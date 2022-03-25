@@ -64,9 +64,10 @@ public abstract class MeasurementCollectionScript<T> {
    * be set by the Measurement Collector based on the current Measurement List, and can be used by
    * the measurement collection script methods.
    *
-   * @param parameters map of string key-value pairs supplied by the measurement collection script
+   * @param parametersMap map of string key-value pairs supplied by the measurement collection
+   *     script
    */
-  public void setParameters(Map<String, String> parameters) throws Exception {}
+  public void setParametersMap(Map<String, String> parametersMap) throws Exception {}
 
   /** The class generic parameter specifies the type of a single raw data point. */
   protected List<T> dataPoints;

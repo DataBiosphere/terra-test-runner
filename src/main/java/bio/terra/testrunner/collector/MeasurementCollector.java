@@ -49,7 +49,7 @@ public class MeasurementCollector {
       // setup an instance of each measurement script class
       MeasurementCollectionScript script = specification.scriptClassInstance();
       script.initialize(server, specification.description, specification.saveRawDataPoints);
-      script.setParameters(specification.parameters);
+      script.setParametersMap(specification.parametersMap);
 
       // download raw data points and process them
       logger.info("Executing measurement collection script: {}", specification.description);
