@@ -4,7 +4,7 @@ import bio.terra.testrunner.common.utils.FileUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * An instance of this class represents a single Terra environment or deployment. It contains all
