@@ -22,6 +22,7 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scripts.runtimeenvscripts.GitHubActionsWorkflowRunContext;
 
 public class TestRunner {
   private static final Logger logger = LoggerFactory.getLogger(TestRunner.class);
@@ -37,7 +38,7 @@ public class TestRunner {
   // test run outputs
   private List<VersionScriptResult> versionScriptResults;
   private List<TestScriptResult> testScriptResults;
-  private GitHubContextScriptResult gitHubContextResult;
+  private TestRunnerEnvironmentScriptResult gitHubContextResult;
   protected TestRunSummary summary;
 
   private static long secondsToWaitForPoolShutdown = 60;
@@ -155,15 +156,26 @@ public class TestRunner {
       logger.info("Version: Skipping version determination");
     }
 
-    if (config.server.githubWorkflowContextScript != null) {
-      GitHubContextScript ghContextScript =
+    if (config.server.testRunnerEnvironmentScript != null) {
+      TestRunnerEnvironmentScript ghContextScript =
           config
               .server
-              .githubWorkflowContextScript
+              .testRunnerEnvironmentScript
               .scriptClass
               .getDeclaredConstructor()
               .newInstance();
-      gitHubContextResult = ghContextScript.getGitHubWorkflowContext();
+      gitHubContextResult = ghContextScript.getTestRunnerEnvironmentContext();
+    } else {
+      try {
+        Class<?> scriptClassGeneric = GitHubActionsWorkflowRunContext.class;
+        Class<? extends TestRunnerEnvironmentScript> scriptClass =
+            (Class<? extends TestRunnerEnvironmentScript>) scriptClassGeneric;
+        gitHubContextResult =
+            scriptClass.getDeclaredConstructor().newInstance().getTestRunnerEnvironmentContext();
+      } catch (ClassNotFoundException | ClassCastException classEx) {
+        throw new IllegalArgumentException(
+            "Script class not found: " + GitHubActionsWorkflowRunContext.class, classEx);
+      }
     }
 
     // setup the instance of each test script class
@@ -324,8 +336,9 @@ public class TestRunner {
         testScriptResults.stream().map(TestScriptResult::getSummary).collect(Collectors.toList());
 
     // append GitHub Context data if exists.
-    summary.setGithubRunId(gitHubContextResult.runId);
-    summary.setGithubRepoHtmlUrl(gitHubContextResult.repoHtmlUrl);
+    summary.setGithubRunId(gitHubContextResult.githubRunId);
+    summary.setGithubRepository(gitHubContextResult.githubRepository);
+    summary.setGithubServerUrl(gitHubContextResult.githubServerUrl);
 
     // call the cleanup method of each test script
     logger.info("Test Scripts: Calling the cleanup methods");

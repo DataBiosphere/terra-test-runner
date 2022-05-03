@@ -2,9 +2,9 @@ package bio.terra.testrunner.runner;
 
 import java.util.Map;
 
-public class GitHubContextScript {
+public class TestRunnerEnvironmentScript {
   /** Public constructor so that this class can be instantiated via reflection. */
-  public GitHubContextScript() {}
+  public TestRunnerEnvironmentScript() {}
 
   /**
    * Setter for any parameters required by the GitHub script. These parameters will be set by the
@@ -20,8 +20,8 @@ public class GitHubContextScript {
    * The GitHub script getGitHubWorkflowContext method looks up the GitHub Action Workflow runtime
    * context.
    */
-  public GitHubContextScriptResult getGitHubWorkflowContext() throws Exception {
+  public TestRunnerEnvironmentScriptResult getTestRunnerEnvironmentContext() throws Exception {
     throw new UnsupportedOperationException(
-        "getGitHubWorkflowContext must be overridden by sub-classes");
+        "getTestRunnerEnvironmentContext must be overridden by sub-classes");
   }
 }

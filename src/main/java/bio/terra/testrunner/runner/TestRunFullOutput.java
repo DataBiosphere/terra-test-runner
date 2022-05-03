@@ -46,9 +46,10 @@ public class TestRunFullOutput {
   // This can be used to facilitate grouping of test runner results on the dashboard.
   public String testSuiteName;
 
-  // GitHub Workflow Context data.
+  // GitHub Workflow Runtime Context
   public String githubRunId;
-  public String githubRepoHtmlUrl;
+  public String githubRepository;
+  public String githubServerUrl;
 
   public TestRunFullOutput(
       TestConfiguration testConfiguration,
@@ -70,7 +71,8 @@ public class TestRunFullOutput {
     this.endTimestamp = testRunSummary.getEndTimestamp();
     this.testSuiteName = testRunSummary.getTestSuiteName();
     this.githubRunId = testRunSummary.getGithubRunId();
-    this.githubRepoHtmlUrl = testRunSummary.getGithubRepoHtmlUrl();
+    this.githubServerUrl = testRunSummary.getGithubServerUrl();
+    this.githubRepository = testRunSummary.getGithubRepository();
   }
 
   // A mapper that unnest List<TestScriptResult> from TestScriptResult

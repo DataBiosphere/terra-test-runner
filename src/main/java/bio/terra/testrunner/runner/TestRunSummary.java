@@ -32,7 +32,8 @@ public class TestRunSummary {
 
   // GitHub Workflow Runtime Context
   private String githubRunId;
-  private String githubRepoHtmlUrl;
+  private String githubRepository;
+  private String githubServerUrl;
 
   public String getStartTimestamp() {
     return millisecondsToTimestampString(startTime);
@@ -66,12 +67,20 @@ public class TestRunSummary {
     this.githubRunId = githubRunId;
   }
 
-  public String getGithubRepoHtmlUrl() {
-    return githubRepoHtmlUrl;
+  public String getGithubRepository() {
+    return githubRepository;
   }
 
-  public void setGithubRepoHtmlUrl(String githubRepoHtmlUrl) {
-    this.githubRepoHtmlUrl = githubRepoHtmlUrl;
+  public void setGithubRepository(String githubRepository) {
+    this.githubRepository = githubRepository;
+  }
+
+  public String getGithubServerUrl() {
+    return githubServerUrl;
+  }
+
+  public void setGithubServerUrl(String githubServerUrl) {
+    this.githubServerUrl = githubServerUrl;
   }
 
   private static String millisecondsToTimestampString(long milliseconds) {
