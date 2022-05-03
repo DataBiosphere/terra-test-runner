@@ -83,7 +83,7 @@ public class ServerSpecification implements SpecificationInterface {
   // how to (optionally) lookup the version before each test run
   public List<VersionScriptSpecification> versionScripts;
 
-  public GitHubWorkflowContextSpecification githubWorkflowContextScript;
+  public GitHubContextSpecification githubWorkflowContextScript;
 
   public static final String resourceDirectory = "servers";
 

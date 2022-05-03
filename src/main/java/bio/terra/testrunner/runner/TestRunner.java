@@ -37,6 +37,7 @@ public class TestRunner {
   // test run outputs
   private List<VersionScriptResult> versionScriptResults;
   private List<TestScriptResult> testScriptResults;
+  private GitHubContextScriptResult gitHubContextResult;
   protected TestRunSummary summary;
 
   private static long secondsToWaitForPoolShutdown = 60;
@@ -152,6 +153,17 @@ public class TestRunner {
       }
     } else {
       logger.info("Version: Skipping version determination");
+    }
+
+    if (config.server.githubWorkflowContextScript != null) {
+      GitHubContextScript ghContextScript =
+          config
+              .server
+              .githubWorkflowContextScript
+              .scriptClass
+              .getDeclaredConstructor()
+              .newInstance();
+      gitHubContextResult = ghContextScript.getGitHubWorkflowContext();
     }
 
     // setup the instance of each test script class
@@ -310,6 +322,10 @@ public class TestRunner {
     // pull out the test script summary information into the summary object
     summary.testScriptResultSummaries =
         testScriptResults.stream().map(TestScriptResult::getSummary).collect(Collectors.toList());
+
+    // append GitHub Context data if exists.
+    summary.setGithubRunId(gitHubContextResult.runId);
+    summary.setGithubRepoHtmlUrl(gitHubContextResult.repoHtmlUrl);
 
     // call the cleanup method of each test script
     logger.info("Test Scripts: Calling the cleanup methods");

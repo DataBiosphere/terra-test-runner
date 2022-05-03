@@ -1,10 +1,10 @@
 package bio.terra.testrunner.runner;
 
-public class GitHubWorkflowScriptResult {
+public class GitHubContextScriptResult {
   public String runId;
   public String repoHtmlUrl;
 
-  public GitHubWorkflowScriptResult(GitHubWorkflowScriptResult.Builder builder) {
+  public GitHubContextScriptResult(GitHubContextScriptResult.Builder builder) {
     this.runId = builder.runId;
     this.repoHtmlUrl = builder.repoHtmlUrl;
   }
@@ -13,18 +13,18 @@ public class GitHubWorkflowScriptResult {
     private String runId;
     private String repoHtmlUrl;
 
-    public GitHubWorkflowScriptResult.Builder runId(String runId) {
+    public GitHubContextScriptResult.Builder runId(String runId) {
       this.runId = runId;
       return this;
     }
 
-    public GitHubWorkflowScriptResult.Builder repoHtmlUrl(String repoHtmlUrl) {
+    public GitHubContextScriptResult.Builder repoHtmlUrl(String repoHtmlUrl) {
       this.repoHtmlUrl = repoHtmlUrl;
       return this;
     }
 
-    public GitHubWorkflowScriptResult build() {
-      return new GitHubWorkflowScriptResult(this);
+    public GitHubContextScriptResult build() {
+      return new GitHubContextScriptResult(this);
     }
   }
 }

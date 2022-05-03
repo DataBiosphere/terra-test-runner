@@ -1,11 +1,10 @@
 package scripts.githubcontextscripts;
 
-import bio.terra.testrunner.runner.GitHubWorkflowScript;
-import bio.terra.testrunner.runner.GitHubWorkflowScriptResult;
-import bio.terra.testrunner.runner.config.ServerSpecification;
+import bio.terra.testrunner.runner.GitHubContextScript;
+import bio.terra.testrunner.runner.GitHubContextScriptResult;
 import java.util.Map;
 
-public class GitHubRunId extends GitHubWorkflowScript {
+public class GitHubRunId extends GitHubContextScript {
 
   private String runId;
   private String repoHtmlUrl;
@@ -36,9 +35,8 @@ public class GitHubRunId extends GitHubWorkflowScript {
   }
 
   /** This method pulls data from the GitHub Workflow runtime context. */
-  public GitHubWorkflowScriptResult getGitHubWorkflowContext(ServerSpecification server)
-      throws Exception {
-    return new GitHubWorkflowScriptResult.Builder()
+  public GitHubContextScriptResult getGitHubWorkflowContext() throws Exception {
+    return new GitHubContextScriptResult.Builder()
         .runId(System.getenv(runId))
         .repoHtmlUrl(System.getenv(repoHtmlUrl))
         .build();
