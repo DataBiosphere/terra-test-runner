@@ -22,11 +22,12 @@ public class GitHubRunId extends GitHubContextScript {
    */
   @Override
   public void setParametersMap(Map<String, String> parametersMap) throws Exception {
-    if (parametersMap == null || !parametersMap.containsKey(GITHUB_CONTEXT_RUN_ID)) {
+    if (!parametersMap.containsKey(GITHUB_CONTEXT_RUN_ID)
+        || !parametersMap.containsKey(GITHUB_CONTEXT_REPO_HTML_URL)) {
       throw new IllegalArgumentException(
           "Must provide GITHUB_CONTEXT_RUN_ID env in the parameters list");
     }
-    if (parametersMap == null || !parametersMap.containsKey(GITHUB_CONTEXT_REPO_HTML_URL)) {
+    if (!parametersMap.containsKey(GITHUB_CONTEXT_REPO_HTML_URL)) {
       throw new IllegalArgumentException(
           "Must provide GITHUB_CONTEXT_REPO_HTML_URL env in the parameters list");
     }

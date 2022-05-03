@@ -46,9 +46,9 @@ public class TestRunFullOutput {
   // This can be used to facilitate grouping of test runner results on the dashboard.
   public String testSuiteName;
 
-  // GitHub Workflow Runtime Context
-  private String githubRunId;
-  private String githubRepoHtmlUrl;
+  // GitHub Workflow Context data.
+  public String githubRunId;
+  public String githubRepoHtmlUrl;
 
   public TestRunFullOutput(
       TestConfiguration testConfiguration,
