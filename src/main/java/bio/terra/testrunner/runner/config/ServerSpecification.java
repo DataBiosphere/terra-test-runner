@@ -83,6 +83,7 @@ public class ServerSpecification implements SpecificationInterface {
   // how to (optionally) lookup the version before each test run
   public List<VersionScriptSpecification> versionScripts;
 
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   public TestRunnerEnvironmentSpecification testRunnerEnvironmentScript;
 
   public static final String resourceDirectory = "servers";
