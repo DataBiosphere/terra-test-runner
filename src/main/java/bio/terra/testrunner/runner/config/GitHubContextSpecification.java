@@ -13,8 +13,8 @@ import java.util.Map;
     value = "UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD",
     justification = "This POJO class is used for easy serialization to JSON using Jackson.")
 public class GitHubContextSpecification implements SpecificationInterface {
-  public String name;
-  public String description = "";
+  public String name = "";
+  public String description;
 
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   public Map<String, String> parametersMap = new HashMap<>();
