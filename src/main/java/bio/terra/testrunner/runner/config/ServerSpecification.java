@@ -83,6 +83,8 @@ public class ServerSpecification implements SpecificationInterface {
   // how to (optionally) lookup the version before each test run
   public List<VersionScriptSpecification> versionScripts;
 
+  public GitHubWorkflowContextSpecification githubWorkflowContextScript;
+
   public static final String resourceDirectory = "servers";
 
   ServerSpecification() {}
@@ -150,6 +152,10 @@ public class ServerSpecification implements SpecificationInterface {
 
     if (versionScripts != null && !versionScripts.isEmpty()) {
       versionScripts.forEach(versionScript -> versionScript.validate());
+    }
+
+    if (githubWorkflowContextScript != null) {
+      githubWorkflowContextScript.validate();
     }
 
     if (bufferClientServiceAccount != null) {
