@@ -166,16 +166,7 @@ public class TestRunner {
               .newInstance();
       gitHubContextResult = ghContextScript.getTestRunnerEnvironmentContext();
     } else {
-      try {
-        Class<?> scriptClassGeneric = GitHubActionsWorkflowRunContext.class;
-        Class<? extends TestRunnerEnvironmentScript> scriptClass =
-            (Class<? extends TestRunnerEnvironmentScript>) scriptClassGeneric;
-        gitHubContextResult =
-            scriptClass.getDeclaredConstructor().newInstance().getTestRunnerEnvironmentContext();
-      } catch (ClassNotFoundException | ClassCastException classEx) {
-        throw new IllegalArgumentException(
-            "Script class not found: " + GitHubActionsWorkflowRunContext.class, classEx);
-      }
+      gitHubContextResult = new GitHubActionsWorkflowRunContext().getTestRunnerEnvironmentContext();
     }
 
     // setup the instance of each test script class
