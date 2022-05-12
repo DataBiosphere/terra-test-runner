@@ -22,6 +22,7 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scripts.runtimeenvscripts.GitHubActionsWorkflowRunContext;
 
 public class TestRunner {
   private static final Logger logger = LoggerFactory.getLogger(TestRunner.class);
@@ -37,6 +38,7 @@ public class TestRunner {
   // test run outputs
   private List<VersionScriptResult> versionScriptResults;
   private List<TestScriptResult> testScriptResults;
+  private TestRunnerEnvironmentScriptResult gitHubContextResult;
   protected TestRunSummary summary;
 
   private static long secondsToWaitForPoolShutdown = 60;
@@ -152,6 +154,19 @@ public class TestRunner {
       }
     } else {
       logger.info("Version: Skipping version determination");
+    }
+
+    if (config.server.testRunnerEnvironmentScript != null) {
+      TestRunnerEnvironmentScript ghContextScript =
+          config
+              .server
+              .testRunnerEnvironmentScript
+              .scriptClass
+              .getDeclaredConstructor()
+              .newInstance();
+      gitHubContextResult = ghContextScript.getTestRunnerEnvironmentContext();
+    } else {
+      gitHubContextResult = new GitHubActionsWorkflowRunContext().getTestRunnerEnvironmentContext();
     }
 
     // setup the instance of each test script class
@@ -310,6 +325,11 @@ public class TestRunner {
     // pull out the test script summary information into the summary object
     summary.testScriptResultSummaries =
         testScriptResults.stream().map(TestScriptResult::getSummary).collect(Collectors.toList());
+
+    // append GitHub Context data if exists.
+    summary.setGithubRunId(gitHubContextResult.githubRunId);
+    summary.setGithubRepository(gitHubContextResult.githubRepository);
+    summary.setGithubServerUrl(gitHubContextResult.githubServerUrl);
 
     // call the cleanup method of each test script
     logger.info("Test Scripts: Calling the cleanup methods");
