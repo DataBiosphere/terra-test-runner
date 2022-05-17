@@ -1,8 +1,12 @@
 package bio.terra.testrunner.collector.config;
 
 import bio.terra.testrunner.collector.MeasurementCollectionScript;
+import bio.terra.testrunner.common.utils.LogsUtils;
 import bio.terra.testrunner.runner.config.SpecificationInterface;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @SuppressFBWarnings(
@@ -11,7 +15,10 @@ import java.util.Map;
 public class MeasurementCollectionScriptSpecification implements SpecificationInterface {
   public String name;
   public String description;
-  public Map<String, String> parameters;
+
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  public Map<String, String> parametersMap;
+
   public boolean saveRawDataPoints;
 
   private MeasurementCollectionScript scriptClassInstance;
@@ -41,5 +48,15 @@ public class MeasurementCollectionScriptSpecification implements SpecificationIn
       throw new IllegalArgumentException(
           "Error calling constructor of MeasurementCollectionScript class: " + name, niEx);
     }
+  }
+
+  /**
+   * Return parametersMap as a JSON string
+   *
+   * @return a Java String
+   */
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  public List<String> getParameters() {
+    return Arrays.asList(new String[] {LogsUtils.parametersToString(parametersMap)});
   }
 }

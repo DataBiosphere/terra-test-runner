@@ -22,6 +22,7 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scripts.runtimeenvscripts.GitHubActionsWorkflowRunContext;
 
 public class TestRunner {
   private static final Logger logger = LoggerFactory.getLogger(TestRunner.class);
@@ -37,6 +38,7 @@ public class TestRunner {
   // test run outputs
   private List<VersionScriptResult> versionScriptResults;
   private List<TestScriptResult> testScriptResults;
+  private TestRunnerEnvironmentScriptResult gitHubContextResult;
   protected TestRunSummary summary;
 
   private static long secondsToWaitForPoolShutdown = 60;
@@ -112,7 +114,7 @@ public class TestRunner {
       }
 
       // set any parameters specified by the configuration
-      deploymentScript.setParameters(config.server.deploymentScript.parameters);
+      deploymentScript.setParametersMap(config.server.deploymentScript.parametersMap);
 
       // call the deploy and waitForDeployToFinish methods to do the deployment
       logger.info("Deployment: Calling {}.deploy()", deploymentScript.getClass().getName());
@@ -138,7 +140,7 @@ public class TestRunner {
       for (VersionScriptSpecification spec : config.server.versionScripts) {
         VersionScript versionScript = spec.scriptClass.getDeclaredConstructor().newInstance();
         logger.info("Version: Instantiated {} class", versionScript.getClass().getName());
-        versionScript.setParameters(spec.parameters);
+        versionScript.setParametersMap(spec.parametersMap);
         if (versionScripts == null) {
           versionScripts = new ArrayList<>();
         }
@@ -154,6 +156,19 @@ public class TestRunner {
       logger.info("Version: Skipping version determination");
     }
 
+    if (config.server.testRunnerEnvironmentScript != null) {
+      TestRunnerEnvironmentScript ghContextScript =
+          config
+              .server
+              .testRunnerEnvironmentScript
+              .scriptClass
+              .getDeclaredConstructor()
+              .newInstance();
+      gitHubContextResult = ghContextScript.getTestRunnerEnvironmentContext();
+    } else {
+      gitHubContextResult = new GitHubActionsWorkflowRunContext().getTestRunnerEnvironmentContext();
+    }
+
     // setup the instance of each test script class
     logger.info(
         "Test Scripts: Fetching instance of each class, setting billing account and parameters");
@@ -167,7 +182,7 @@ public class TestRunner {
       testScriptInstance.setServer(config.server);
 
       // set any parameters specified by the configuration
-      testScriptInstance.setParameters(testScriptSpecification.parameters);
+      testScriptInstance.setParametersMap(testScriptSpecification.parametersMap);
 
       scripts.add(testScriptInstance);
     }
@@ -187,7 +202,7 @@ public class TestRunner {
           config.disruptiveScript.disruptiveScriptClassInstance();
       disruptiveScriptInstance.setBillingAccount(config.billingAccount);
       disruptiveScriptInstance.setServer(config.server);
-      disruptiveScriptInstance.setParameters(config.disruptiveScript.parameters);
+      disruptiveScriptInstance.setParametersMap(config.disruptiveScript.parametersMap);
 
       // create a thread pool for running its disrupt method
       disruptionThreadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
@@ -310,6 +325,11 @@ public class TestRunner {
     // pull out the test script summary information into the summary object
     summary.testScriptResultSummaries =
         testScriptResults.stream().map(TestScriptResult::getSummary).collect(Collectors.toList());
+
+    // append GitHub Context data if exists.
+    summary.setGithubRunId(gitHubContextResult.githubRunId);
+    summary.setGithubRepository(gitHubContextResult.githubRepository);
+    summary.setGithubServerUrl(gitHubContextResult.githubServerUrl);
 
     // call the cleanup method of each test script
     logger.info("Test Scripts: Calling the cleanup methods");

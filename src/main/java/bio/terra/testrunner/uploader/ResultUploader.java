@@ -25,7 +25,7 @@ public class ResultUploader {
     for (UploadScriptSpecification specification : uploadList.uploadScripts) {
       // setup an instance of each upload script class
       UploadScript script = specification.scriptClassInstance();
-      script.setParameters(specification.parameters);
+      script.setParametersMap(specification.parametersMap);
 
       // upload the results somewhere
       logger.info("Executing upload script: {}", specification.description);

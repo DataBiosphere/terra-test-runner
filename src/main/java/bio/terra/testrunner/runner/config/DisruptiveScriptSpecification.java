@@ -1,7 +1,11 @@
 package bio.terra.testrunner.runner.config;
 
+import bio.terra.testrunner.common.utils.LogsUtils;
 import bio.terra.testrunner.runner.DisruptiveScript;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @SuppressFBWarnings(
@@ -9,7 +13,9 @@ import java.util.Map;
     justification = "This POJO class is used for easy serialization to JSON using Jackson.")
 public class DisruptiveScriptSpecification implements SpecificationInterface {
   public String name;
-  public Map<String, String> parameters;
+
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  public Map<String, String> parametersMap;
 
   private DisruptiveScript disruptiveScriptClassInstance;
 
@@ -33,5 +39,15 @@ public class DisruptiveScriptSpecification implements SpecificationInterface {
       throw new IllegalArgumentException(
           "Error calling constructor of Disruptive Script class: " + name, niEx);
     }
+  }
+
+  /**
+   * Return parametersMap as a JSON string
+   *
+   * @return a Java String
+   */
+  @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+  public List<String> getParameters() {
+    return Arrays.asList(new String[] {LogsUtils.parametersToString(parametersMap)});
   }
 }

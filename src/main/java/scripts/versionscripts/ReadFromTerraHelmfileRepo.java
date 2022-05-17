@@ -30,20 +30,21 @@ public class ReadFromTerraHelmfileRepo extends VersionScript {
    * Test Runner based on the current Test Configuration, and can be used by the version script
    * methods.
    *
-   * @param parameters list of string parameters supplied by the version list
+   * @param parametersMap map of string key-value pairs supplied by the server.versionScripts
+   *     configuration
    */
   @Override
-  public void setParameters(Map<String, String> parameters) throws Exception {
-    if (parameters == null
-        || !parameters.containsKey(APP_NAME_PARAMETER_KEY)
-        || !parameters.containsKey(BASE_FILE_PATH_PARAMETER_KEY)
-        || !parameters.containsKey(OVERRIDE_FILE_PATH_PARAMETER_KEY)) {
+  public void setParametersMap(Map<String, String> parametersMap) throws Exception {
+    if (parametersMap == null
+        || !parametersMap.containsKey(APP_NAME_PARAMETER_KEY)
+        || !parametersMap.containsKey(BASE_FILE_PATH_PARAMETER_KEY)
+        || !parametersMap.containsKey(OVERRIDE_FILE_PATH_PARAMETER_KEY)) {
       throw new IllegalArgumentException(
           "Must provide app-name, base-file-path, and override-file-path as parameters");
     }
-    appName = parameters.get(APP_NAME_PARAMETER_KEY);
-    baseFilePath = parameters.get(BASE_FILE_PATH_PARAMETER_KEY);
-    overrideFilePath = parameters.get(OVERRIDE_FILE_PATH_PARAMETER_KEY);
+    appName = parametersMap.get(APP_NAME_PARAMETER_KEY);
+    baseFilePath = parametersMap.get(BASE_FILE_PATH_PARAMETER_KEY);
+    overrideFilePath = parametersMap.get(OVERRIDE_FILE_PATH_PARAMETER_KEY);
   }
 
   /**

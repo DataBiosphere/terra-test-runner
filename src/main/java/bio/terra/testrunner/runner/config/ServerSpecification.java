@@ -2,10 +2,11 @@ package bio.terra.testrunner.runner.config;
 
 import bio.terra.testrunner.common.utils.FileUtils;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * An instance of this class represents a single Terra environment or deployment. It contains all
@@ -42,11 +43,16 @@ public class ServerSpecification implements SpecificationInterface {
   // Workspace Manager-related fields
   public String workspaceManagerUri;
 
-  // Policy Service-related fields
-  // Formally, Terraform used the externalcreds module to identify this service.
-  public String policyManagerUri;
+  // External Credentials Manager
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  public String externalCredentialsManagerUri;
+
+  // Drs Hub
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  public String drsHubUri;
 
   // Catalog Service
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   public String catalogUri;
 
   // =============================================
@@ -77,6 +83,9 @@ public class ServerSpecification implements SpecificationInterface {
   // Version: information required to get the server version
   // how to (optionally) lookup the version before each test run
   public List<VersionScriptSpecification> versionScripts;
+
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  public TestRunnerEnvironmentSpecification testRunnerEnvironmentScript;
 
   public static final String resourceDirectory = "servers";
 
@@ -145,6 +154,10 @@ public class ServerSpecification implements SpecificationInterface {
 
     if (versionScripts != null && !versionScripts.isEmpty()) {
       versionScripts.forEach(versionScript -> versionScript.validate());
+    }
+
+    if (testRunnerEnvironmentScript != null) {
+      testRunnerEnvironmentScript.validate();
     }
 
     if (bufferClientServiceAccount != null) {

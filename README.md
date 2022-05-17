@@ -223,8 +223,9 @@ start a local Data Repo server by executing the Gradle bootRun task from that
 directory. This is useful for debugging or testing local server code changes.
 
 You need to modify the path for your own machine. See
-deploymentScript.parameters below.
+deploymentScript.parameters (version 0.1.2-SNAPSHOT or below) or deploymentScript.parametersMap (version 0.1.3-SNAPSHOT or above).
 
+For version up to 0.1.2-SNAPSHOT
 ```json
 {
   "name": "localhost",
@@ -235,6 +236,24 @@ deploymentScript.parameters below.
   "deploymentScript": {
     "name": "LaunchLocalProcess",
     "parameters": {
+      "tdr-file-path": "file:///Users/marikomedlock/Workspaces/jade-data-repo/"
+    }
+  },
+  "skipDeployment": false,
+  "skipKubernetes": true
+}
+```
+For version up to 0.1.3-SNAPSHOT or above
+```json
+{
+  "name": "localhost",
+  "description": "Server running locally. Supports launching the server in a separate process. Does not support modifying Kubernetes post-deployment.",
+  "datarepoUri": "http://localhost:8080/",
+  "samUri": "https://sam.dsde-dev.broadinstitute.org",
+  "samResourceIdForDatarepo": "broad-jade-dev",
+  "deploymentScript": {
+    "name": "LaunchLocalProcess",
+    "parametersMap": {
       "tdr-file-path": "file:///Users/marikomedlock/Workspaces/jade-data-repo/"
     }
   },
@@ -705,7 +724,8 @@ available fields:
   fields:
     * name: Name of the measurement collection script class to run
     * description: Description of the parametrized metric
-    * parameters: (optional) parameters to pass to the metric collection script
+    * parameters: (optional) parameters to pass to the metric collection script (up to version 0.1.2-SNAPSHOT, replaced with parametersMap since version 0.1.3-SNAPSHOT)
+    * parametersMap: (optional) parametersMap to pass to the metric collection script (version 0.1.3-SNAPSHOT or above)
 
 ## Development
 

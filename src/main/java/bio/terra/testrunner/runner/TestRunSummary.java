@@ -30,6 +30,11 @@ public class TestRunSummary {
   // This can be used to facilitate grouping of test runner results on the dashboard.
   private String testSuiteName;
 
+  // GitHub Workflow Runtime Context
+  private String githubRunId;
+  private String githubRepository;
+  private String githubServerUrl;
+
   public String getStartTimestamp() {
     return millisecondsToTimestampString(startTime);
   }
@@ -52,6 +57,30 @@ public class TestRunSummary {
 
   public void setTestSuiteName(String testSuiteName) {
     this.testSuiteName = testSuiteName;
+  }
+
+  public String getGithubRunId() {
+    return githubRunId;
+  }
+
+  public void setGithubRunId(String githubRunId) {
+    this.githubRunId = githubRunId;
+  }
+
+  public String getGithubRepository() {
+    return githubRepository;
+  }
+
+  public void setGithubRepository(String githubRepository) {
+    this.githubRepository = githubRepository;
+  }
+
+  public String getGithubServerUrl() {
+    return githubServerUrl;
+  }
+
+  public void setGithubServerUrl(String githubServerUrl) {
+    this.githubServerUrl = githubServerUrl;
   }
 
   private static String millisecondsToTimestampString(long milliseconds) {

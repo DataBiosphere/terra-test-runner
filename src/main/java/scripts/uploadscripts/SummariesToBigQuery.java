@@ -51,18 +51,18 @@ public class SummariesToBigQuery extends UploadScript {
    * Setter for any parameters required by the upload script. These parameters will be set by the
    * Result Uploader based on the current Upload List, and can be used by the upload script methods.
    *
-   * @param parameters list of string parameters supplied by the upload list
+   * @param parametersMap map of string key-value pairs supplied by the upload list
    */
   @Override
-  public void setParameters(Map<String, String> parameters) throws Exception {
-    if (parameters == null
-        || !parameters.containsKey(BQ_PROJECT_ID_PARAMETER_KEY)
-        || !parameters.containsKey(BQ_DATASET_NAME_PARAMETER_KEY)) {
+  public void setParametersMap(Map<String, String> parametersMap) throws Exception {
+    if (parametersMap == null
+        || !parametersMap.containsKey(BQ_PROJECT_ID_PARAMETER_KEY)
+        || !parametersMap.containsKey(BQ_DATASET_NAME_PARAMETER_KEY)) {
       throw new IllegalArgumentException(
           "Must provide BigQuery project-id and dataset-name keys in the parameters list");
     }
-    projectId = parameters.get(BQ_PROJECT_ID_PARAMETER_KEY);
-    datasetName = parameters.get(BQ_DATASET_NAME_PARAMETER_KEY);
+    projectId = parametersMap.get(BQ_PROJECT_ID_PARAMETER_KEY);
+    datasetName = parametersMap.get(BQ_DATASET_NAME_PARAMETER_KEY);
   }
 
   private static String testRunTableName = "testRun";
@@ -174,7 +174,7 @@ public class SummariesToBigQuery extends UploadScript {
     rowContent.put("userJourneyThreadPoolSize", testScriptSpecification.userJourneyThreadPoolSize);
     rowContent.put("expectedTimeForEach", testScriptSpecification.expectedTimeForEach);
     rowContent.put("expectedTimeForEachUnit", testScriptSpecification.expectedTimeForEachUnit);
-    rowContent.put("parameters", testScriptSpecification.parameters);
+    rowContent.put("parameters", testScriptSpecification.getParameters());
 
     rowContent.put("description", testScriptResult.testScriptDescription);
     rowContent.put("elapsedTime_min", testScriptResult.elapsedTimeStatistics.min);
