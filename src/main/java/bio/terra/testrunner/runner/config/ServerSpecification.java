@@ -1,8 +1,8 @@
 package bio.terra.testrunner.runner.config;
 
 import bio.terra.testrunner.common.utils.FileUtils;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 import java.util.List;
