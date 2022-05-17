@@ -3,6 +3,7 @@ package bio.terra.testrunner.uploader.config;
 import bio.terra.testrunner.common.utils.FileUtils;
 import bio.terra.testrunner.runner.config.ServiceAccountSpecification;
 import bio.terra.testrunner.runner.config.SpecificationInterface;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 import java.util.List;
@@ -32,7 +33,7 @@ public class UploadList implements SpecificationInterface {
    */
   public static UploadList fromJSONFile(String resourceFileName) throws Exception {
     // use Jackson to map the stream contents to a UploadList object
-    ObjectMapper objectMapper = new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper().enable(JsonParser.Feature.ALLOW_COMMENTS);
 
     // read in the upload list file
     InputStream inputStream =

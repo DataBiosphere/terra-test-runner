@@ -1,5 +1,6 @@
 package bio.terra.testrunner.runner.config;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -13,7 +14,7 @@ public interface SpecificationInterface {
   default String display() {
     try {
       // use Jackson to map the specification object to a JSON-formatted text block
-      ObjectMapper objectMapper = new ObjectMapper();
+      ObjectMapper objectMapper = new ObjectMapper().enable(JsonParser.Feature.ALLOW_COMMENTS);
       return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
     } catch (JsonProcessingException jpEx) {
       logger.error(
