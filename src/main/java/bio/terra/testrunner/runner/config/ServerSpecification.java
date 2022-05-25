@@ -55,6 +55,10 @@ public class ServerSpecification implements SpecificationInterface {
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   public String catalogUri;
 
+  // Rawls Service
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  public String rawlsUri;
+
   // =============================================
   // Cluster & deployment: information required to manipulate Kubernetes and deploy
   // Kubernetes cluster specification
