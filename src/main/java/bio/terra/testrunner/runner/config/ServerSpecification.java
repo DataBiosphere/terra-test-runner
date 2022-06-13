@@ -44,7 +44,6 @@ public class ServerSpecification implements SpecificationInterface {
   public String workspaceManagerUri;
 
   // External Credentials Manager
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   public String externalCredentialsManagerUri;
 
   // Drs Hub
@@ -52,7 +51,6 @@ public class ServerSpecification implements SpecificationInterface {
   public String drsHubUri;
 
   // Catalog Service
-  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   public String catalogUri;
 
   // Rawls Service
