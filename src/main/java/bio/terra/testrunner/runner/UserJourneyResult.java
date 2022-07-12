@@ -3,6 +3,7 @@ package bio.terra.testrunner.runner;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import org.apache.commons.lang.StringUtils;
 
 @SuppressFBWarnings(
     value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
@@ -18,6 +19,7 @@ public class UserJourneyResult {
   public boolean exceptionWasThrown;
   public String exceptionStackTrace;
   public String exceptionMessage;
+  public int retryAttempts = 0;
 
   public UserJourneyResult() {}
 
@@ -38,7 +40,10 @@ public class UserJourneyResult {
    */
   public void saveExceptionThrown(Throwable exceptionThrown) {
     exceptionWasThrown = true;
-    exceptionMessage = exceptionThrown.getMessage();
+    exceptionMessage =
+        StringUtils.isBlank(exceptionMessage)
+            ? exceptionThrown.getMessage()
+            : String.format("%s\n%s", exceptionMessage, exceptionThrown.getMessage());
 
     StringWriter stackTraceStr = new StringWriter();
     exceptionThrown.printStackTrace(new PrintWriter(stackTraceStr));

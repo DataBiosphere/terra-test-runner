@@ -245,7 +245,12 @@ public class TestRunner {
         // parameters
         Future<UserJourneyResult> userJourneyFuture =
             threadPool.submit(
-                new UserJourneyThread(testScript, testScriptSpecification.description, testUser));
+                new UserJourneyThread(
+                    testScript,
+                    testScriptSpecification.description,
+                    testUser,
+                    config.maxRetries,
+                    config.timeToWait));
         userJourneyFutures.add(userJourneyFuture);
       }
 
@@ -262,7 +267,7 @@ public class TestRunner {
 
       threadPool.shutdown();
       long totalTerminationTime =
-          testScriptSpecification.expectedTimeForEach
+          (testScriptSpecification.expectedTimeForEach + config.maxRetries * config.timeToWait)
               * testScriptSpecification.numberOfUserJourneyThreadsToRun;
       boolean terminatedByItself =
           threadPool.awaitTermination(
@@ -397,27 +402,58 @@ public class TestRunner {
     TestScript testScript;
     String userJourneyDescription;
     TestUserSpecification testUser;
+    int maxRetries;
+    long timeToWait;
 
     public UserJourneyThread(
-        TestScript testScript, String userJourneyDescription, TestUserSpecification testUser) {
+        TestScript testScript,
+        String userJourneyDescription,
+        TestUserSpecification testUser,
+        int maxRetries,
+        long timeToWait) {
       this.testScript = testScript;
       this.userJourneyDescription = userJourneyDescription;
       this.testUser = testUser;
+      this.maxRetries = maxRetries;
+      this.timeToWait = timeToWait;
     }
 
     public UserJourneyResult call() {
       UserJourneyResult result =
           new UserJourneyResult(userJourneyDescription, Thread.currentThread().getName());
+      RetryLogic retryLogic = new RetryLogic(maxRetries, timeToWait);
 
       long startTime = System.nanoTime();
-      try {
-        testScript.userJourney(testUser);
-      } catch (Throwable ex) {
-        result.saveExceptionThrown(ex);
-      }
+      tryDoUserJourney(testScript, testUser, result, retryLogic);
       result.elapsedTimeNS = System.nanoTime() - startTime;
 
       return result;
+    }
+  }
+
+  private static void tryDoUserJourney(
+      TestScript testScript,
+      TestUserSpecification testUser,
+      UserJourneyResult result,
+      RetryLogic retryLogic) {
+    try {
+      testScript.userJourney(testUser);
+    } catch (Throwable ex) {
+      try {
+        retryLogic.retry(
+            () -> {
+              try {
+                tryDoUserJourney(testScript, testUser, result, retryLogic);
+              } catch (Exception userJourneyEx) {
+                result.retryAttempts++;
+                result.saveExceptionThrown(userJourneyEx);
+              }
+              return null;
+            });
+      } catch (Exception retryInterrupted) {
+        result.saveExceptionThrown(retryInterrupted);
+      }
+      result.saveExceptionThrown(ex);
     }
   }
 
