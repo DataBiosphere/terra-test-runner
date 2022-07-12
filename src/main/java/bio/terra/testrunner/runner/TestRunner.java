@@ -448,7 +448,6 @@ public class TestRunner {
                 result.retryAttempts++;
                 result.saveExceptionThrown(userJourneyEx);
               }
-              return null;
             });
       } catch (Exception retryInterrupted) {
         result.saveExceptionThrown(retryInterrupted);

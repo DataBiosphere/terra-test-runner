@@ -43,7 +43,7 @@ public class UserJourneyResult {
     exceptionMessage =
         StringUtils.isBlank(exceptionMessage)
             ? exceptionThrown.getMessage()
-            : String.format("%s\n%s", exceptionMessage, exceptionThrown.getMessage());
+            : String.format("%s%n%s", exceptionMessage, exceptionThrown.getMessage());
 
     StringWriter stackTraceStr = new StringWriter();
     exceptionThrown.printStackTrace(new PrintWriter(stackTraceStr));

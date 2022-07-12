@@ -33,6 +33,6 @@ public class RetryLogic {
 
   @FunctionalInterface
   interface RetryImpl {
-    Boolean run() throws Exception;
+    void run() throws Exception;
   }
 }
