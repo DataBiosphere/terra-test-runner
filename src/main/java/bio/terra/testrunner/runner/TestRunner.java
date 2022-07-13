@@ -440,6 +440,8 @@ public class TestRunner {
       RetryLogic retryLogic) {
     try {
       testScript.userJourney(testUser);
+      // The exceptionWasThrown property keeps track of whether exceptions were thrown in the last
+      // attempt.
       result.exceptionWasThrown = false;
     } catch (Throwable ex) {
       try {
