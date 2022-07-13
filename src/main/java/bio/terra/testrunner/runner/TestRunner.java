@@ -431,6 +431,8 @@ public class TestRunner {
     }
   }
 
+  // Retry logic config applies only to user journey threads.
+  // Test setup / cleanup task runs only once.
   private static void tryDoUserJourney(
       TestScript testScript,
       TestUserSpecification testUser,
@@ -438,21 +440,22 @@ public class TestRunner {
       RetryLogic retryLogic) {
     try {
       testScript.userJourney(testUser);
+      result.exceptionWasThrown = false;
     } catch (Throwable ex) {
       try {
+        result.saveExceptionThrown(ex);
+        result.retryAttempts++;
         retryLogic.retry(
             () -> {
               try {
                 tryDoUserJourney(testScript, testUser, result, retryLogic);
               } catch (Exception userJourneyEx) {
-                result.retryAttempts++;
                 result.saveExceptionThrown(userJourneyEx);
               }
             });
       } catch (Exception retryInterrupted) {
         result.saveExceptionThrown(retryInterrupted);
       }
-      result.saveExceptionThrown(ex);
     }
   }
 
