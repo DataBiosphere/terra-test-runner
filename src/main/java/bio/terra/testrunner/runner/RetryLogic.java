@@ -33,7 +33,16 @@ public class RetryLogic {
   }
 
   public void waitForNextRetry() throws Exception {
-    logger.info("Sleeping for {} milliseconds before exit or next retry.", timeToWait);
+    if (retryAttempts < maxRetries)
+      logger.info(
+          "{} retry attempt(s) left. Waiting for {} milliseconds before exiting or next retry.",
+          maxRetries - retryAttempts,
+          timeToWait);
+    else
+      logger.info(
+          "Used all {} retry attempts. Waiting for {} milliseconds before exiting.",
+          maxRetries,
+          timeToWait);
     TimeUnit.MILLISECONDS.sleep(timeToWait);
   }
 
