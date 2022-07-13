@@ -1,6 +1,7 @@
 package bio.terra.testrunner.runner.config;
 
 import bio.terra.testrunner.common.utils.FileUtils;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
@@ -26,6 +27,12 @@ public class TestConfiguration implements SpecificationInterface {
   public List<TestScriptSpecification> testScripts;
   public List<TestUserSpecification> testUsers = new ArrayList<>();
   public DisruptiveScriptSpecification disruptiveScript;
+
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  public int maxRetries = 3; // default = 3 retries
+
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  public long timeToWait = 2000; // default = 2000 ms
 
   public static final String resourceDirectory = "configs";
   public static final String serverFileEnvironmentVarName = "TEST_RUNNER_SERVER_SPECIFICATION_FILE";

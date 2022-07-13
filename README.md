@@ -96,6 +96,12 @@ The scaling specification includes:
 
 * Number of different users making the User Journey calls.
 
+Retry settings (0.1.6-SNAPSHOT):
+
+* Added `maxRetries` and `timeToWait` properties.
+  * `maxRetries`: maximum number of retries per user journey thread (default: 3)
+  * `timeToWait`: wait time (milliseconds) till next retry (default: 2000 ms)
+
 The application specification includes (this section applies to resiliency test
 type)
 
