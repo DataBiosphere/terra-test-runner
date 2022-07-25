@@ -15,6 +15,7 @@ The `Test Runner Framework` can be installed through dependency declaration for 
     * [Test Script Specification](#test-runner-test-script-spec)
     * [Test Configuration](#test-runner-test-config)
     * [Test Suite](#test-runner-test-suite)
+  * [Test User Specification](#test-runner-test-user-spec)
 
 # Gradle
 
@@ -1076,6 +1077,474 @@ The file `FULL_testRunOutput.json` contains all the test results as shown below.
 }
 ```
 
+### <a name="test-runner-test-user-spec"></a>Test User Specification
+
+Many tests require test users authentication, their credentials are specified in Test User Specification files and must reside in `src/main/resources/testusers` directory.
+
+The following screenshots show a new test class `GetProxyGroup` that requires user authentication. The additional files needed are surrounded by red boxes.
+
+!['Test User Authentication'](https://drive.google.com/uc?export=view&id=1LpzqzfNPVSm57caLS4mkz6qN3vCMJNLK)
+
+!['Test User Authentication'](https://drive.google.com/uc?export=view&id=194gNwa97-0s-k_THU4eSEEOY2Cy7AMNk)
+
+First we need to update `build.sbt` by including the `Google OAuth Client` in `libraryDependencies`. Save the new `build.sbt` and reload it in `Build tool window`.
+
+`"com.google.auth" % "google-auth-library-oauth2-http" % "1.8.1"`
+
+`build.sbt`
+```scala
+import Settings._
+import Testing._
+
+lazy val root = project
+  .in(file("."))
+  .settings(rootSettings: _*)
+  .withTestSettings
+
+val samVersion  = "0.1-bf9c033-SNAP"
+val testRunnerVersion = "0.1.6-SNAPSHOT"
+
+lazy val testRunner = project
+  .in(file("test-runner"))
+  .settings(
+    name := "test-runner",
+    resolvers ++= commonResolvers,
+    libraryDependencies ++= Seq(
+      "org.broadinstitute.dsde.workbench" % "sam-client_2.13" % samVersion,
+      "com.google.auth" % "google-auth-library-oauth2-http" % "1.8.1",
+      "bio.terra" % "terra-test-runner" % testRunnerVersion
+    )
+  )
+
+Revolver.settings
+Global / excludeLintKeys += debugSettings // To avoid lint warning
+
+javaOptions in reStart += "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5050"
+
+// When JAVA_OPTS are specified in the environment, they are usually meant for the application
+// itself rather than sbt, but they are not passed by default to the application, which is a forked
+// process. This passes them through to the "re-start" command, which is probably what a developer
+// would normally expect.
+// for some reason using ++= causes revolver not to find the main class so do the stupid map below
+//javaOptions in reStart ++= sys.env.getOrElse("JAVA_OPTS", "").split(" ").toSeq
+sys.env.getOrElse("JAVA_OPTS", "").split(" ").toSeq.map { opt =>
+  javaOptions in reStart += opt
+}
+
+addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
+```
+
+Manually create `testrunner.sh` under `scripts` directory and use the code below.
+
+`scripts/testrunner.sh`
+```bash
+#!/bin/bash
+
+set -eux
+
+VAULT_TOKEN=${1:-$(cat "$HOME"/.vault-token)}
+
+DSDE_TOOLBOX_DOCKER_IMAGE=broadinstitute/dsde-toolbox:consul-0.20.0
+
+SAM_ACCOUNT_VAULT_PATH=secret/dsde/firecloud/qa/sam/sam-account.json
+FIRECLOUD_ACCOUNT_VAULT_PATH=secret/dsde/firecloud/qa/common/firecloud-account.json
+
+docker run --rm -e VAULT_TOKEN="${VAULT_TOKEN}" \
+    $DSDE_TOOLBOX_DOCKER_IMAGE \
+    vault read -format=json "${SAM_ACCOUNT_VAULT_PATH}" \
+    | jq -r .data > test-runner/src/main/resources/rendered/sam-qa.json
+
+docker run --rm -e VAULT_TOKEN="${VAULT_TOKEN}" \
+    $DSDE_TOOLBOX_DOCKER_IMAGE \
+    vault read -format=json "${FIRECLOUD_ACCOUNT_VAULT_PATH}" \
+    | jq -r .data > test-runner/src/main/resources/rendered/firecloud-qa.json
+```
+
+Open a shell and run `./scripts/testrunner.sh` to download `firecloud-qa.json` into `test-runner/src/main/resources/rendered` directory.
+
+Now manually create the following files.
+
+* `test-runner/src/main/resources/serviceaccounts/firecloud-qa.json`
+* `test-runner/src/main/resources/testusers/harry-potter-qa.json`
+
+`test-runner/src/main/resources/serviceaccounts/firecloud-qa.json`
+```json
+{
+  "name": "firecloud-qa@broad-dsde-qa.iam.gserviceaccount.com",
+  "jsonKeyFilename": "firecloud-qa.json",
+  "jsonKeyDirectoryPath": "test-runner/src/main/resources/rendered"
+}
+```
+`test-runner/src/main/resources/testusers/harry-potter-qa.json`
+```json
+{
+  "name": "Harry Potter",
+  "userEmail": "harry.potter@quality.firecloud.org",
+  "delegatorServiceAccountFile": "firecloud-qa.json"
+}
+```
+
+We need a HTTP Client that supports user authentication so we will write a simple extension of the `Sam` `ApiClient` and call it `SamClient`.
+
+`test-runner/src/main/scala/scripts/client/SamClient.scala`
+```scala
+package scripts.client
+
+import bio.terra.testrunner.common.utils.AuthenticationUtils
+import bio.terra.testrunner.runner.config.{ServerSpecification, TestUserSpecification}
+import org.broadinstitute.dsde.workbench.client.sam.ApiClient
+import com.google.auth.oauth2.{AccessToken, GoogleCredentials}
+import org.slf4j.LoggerFactory
+
+class SamClient extends ApiClient {
+  val logger = LoggerFactory.getLogger(classOf[SamClient])
+
+  @throws(classOf[Exception])
+  def this(server: ServerSpecification, testUser: TestUserSpecification) {
+    this()
+    setBasePath(server.samUri)
+    if (testUser != null) {
+      val userCredential: GoogleCredentials = AuthenticationUtils
+        .getDelegatedUserCredential(testUser, AuthenticationUtils.userLoginScopes)
+
+      val accessToken: AccessToken = AuthenticationUtils.getAccessToken(userCredential)
+
+      if (accessToken != null) setAccessToken(accessToken.getTokenValue)
+      logger.info("Access token=***{}", accessToken.getTokenValue()
+        .substring(accessToken.getTokenValue().length - 7))
+    }
+  }
+}
+```
+
+The test class `GetProxyGroup` will use the `SamClient` to make HTTP requests.
+
+`test-runner/src/main/scala/scripts/testscripts/GetProxyGroup.scala`
+```scala
+package scripts.testscripts
+
+import bio.terra.testrunner.runner.TestScript
+import bio.terra.testrunner.runner.config.TestUserSpecification
+import org.broadinstitute.dsde.workbench.client.sam.api.{GoogleApi, UsersApi}
+import org.slf4j.LoggerFactory
+import scripts.client.SamClient
+
+import java.util.List
+
+class GetProxyGroup extends TestScript{
+  val logger = LoggerFactory.getLogger(classOf[GetProxyGroup])
+
+  @throws(classOf[Exception])
+  override def setup(testUsers: List[TestUserSpecification]): Unit = {
+    logger.info("setup")
+  }
+
+  @throws(classOf[Exception])
+  override def userJourney(testUser: TestUserSpecification): Unit = {
+    val client = new SamClient(server, testUser)
+    val usersApi = new UsersApi(client)
+    val googleApi = new GoogleApi(client)
+    val userStatusInfo = usersApi.getUserStatusInfo()
+    val proxyGroup = googleApi.getProxyGroup(userStatusInfo.getUserEmail())
+    logger.info("User={}", userStatusInfo.getUserEmail())
+    logger.info("Proxy Group={}", proxyGroup)
+  }
+
+  @throws(classOf[Exception])
+  override def cleanup(testUsers: List[TestUserSpecification]): Unit = {
+    logger.info("cleanup")
+  }
+}
+```
+
+We can now configure the test, let's create the config file `GetProxyGroup.json` under `test-runner/src/main/resources/configs/perf` directory. Notice that we have added the test user specification file `harry-potter-qa.json` instructing `Test Runner` to use the appropriate credentials for user authentication.
+
+`test-runner/src/main/resources/configs/perf/GetProxyGroup.json`
+```json
+{
+  "name": "GetProxyGroup",
+  "description": "Should retrieve a user's proxy group as any user.",
+  "serverSpecificationFile": "sam-ichang-comic-lizard-bee.json",
+  "kubernetes": {},
+  "application": {},
+  "testScripts": [
+    {
+      "name": "GetProxyGroup",
+      "numberOfUserJourneyThreadsToRun": 10,
+      "userJourneyThreadPoolSize": 2,
+      "expectedTimeForEach": 5,
+      "expectedTimeForEachUnit": "SECONDS"
+    }
+  ],
+  "testUserFiles": [ "harry-potter-qa.json" ]
+}
+```
+
+Let's update the test suite to point to `GetProxyGroup.json`.
+
+`test-runner/src/main/resources/suites/perf`
+```json
+{
+  "name": "FullPerf",
+  "description": "All perf tests",
+  "serverSpecificationFile": "sam-ichang-comic-lizard-bee.json",
+  "testConfigurationFiles": [
+    "perf/GetProxyGroup.json"
+  ]
+}
+```
+
+Run the test suite again with the `sbt` command.
+
+`sbt "testRunner/runMain bio.terra.testrunner.common.commands.RunTest suites/perf/FullPerf.json /tmp/scala-testrunner"`
+
+If all goes well, you'll see the following console output.
+
+```console
+[info] welcome to sbt 1.6.2 (AdoptOpenJDK Java 11.0.11)
+[info] loading global plugins from /Users/ichang/.sbt/1.0/plugins
+[info] loading settings for project sam-build from plugins.sbt ...
+[info] loading project definition from /Users/ichang/repos/broadinstitute/sam/project
+[info] loading settings for project root from build.sbt ...
+[info] set current project to sam (in build file:/Users/ichang/repos/broadinstitute/sam/)
+[info] compiling 1 Scala source to /Users/ichang/repos/broadinstitute/sam/test-runner/target/scala-2.12/classes ...
+[info] running bio.terra.testrunner.common.commands.RunTest suites/perf/FullPerf.json /tmp/scala-testrunner
+19:13:16.513 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - ==== READING IN TEST SUITE/CONFIGURATION(S) ====
+19:13:16.699 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.config.TestSuite - Parsing the test suite file as JSON
+19:13:16.821 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.config.TestSuite - Parsing the test configuration file as JSON
+19:13:16.835 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Found a test suite: FullPerf
+19:13:16.836 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.config.TestSuite - Validating the test configurations
+19:13:16.836 [sbt-bg-threads-1] DEBUG bio.terra.testrunner.runner.config.TestConfiguration - Validating the server, Kubernetes and application specifications
+19:13:16.836 [sbt-bg-threads-1] DEBUG bio.terra.testrunner.runner.config.TestConfiguration - Validating the test script specifications
+19:13:16.838 [sbt-bg-threads-1] DEBUG bio.terra.testrunner.runner.config.TestConfiguration - Validating the test user specifications
+19:13:16.839 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - ==== EXECUTING TEST CONFIGURATION (1) GetProxyGroup ====
+19:13:16.871 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - {
+  "name" : "GetProxyGroup",
+  "description" : "Should retrieve a user's proxy group as any user.",
+  "serverSpecificationFile" : "sam-ichang-comic-lizard-bee.json",
+  "billingAccount" : null,
+  "isFunctional" : false,
+  "resourceFileName" : "perf/GetProxyGroup.json",
+  "testUserFiles" : [ "harry-potter-qa.json" ],
+  "server" : {
+    "name" : "sam-ichang-comic-lizard-bee",
+    "description" : "Sam BEE",
+    "samUri" : "https://sam.fiab-ichang-comic-lizard.bee.envs-terra.bio",
+    "datarepoUri" : null,
+    "samResourceIdForDatarepo" : null,
+    "bufferUri" : null,
+    "bufferClientServiceAccountFile" : null,
+    "bufferClientServiceAccount" : null,
+    "workspaceManagerUri" : null,
+    "externalCredentialsManagerUri" : null,
+    "catalogUri" : null,
+    "cluster" : null,
+    "testRunnerServiceAccountFile" : "testrunner-sa.json",
+    "testRunnerServiceAccount" : {
+      "name" : "testrunner-perf@broad-dsde-perf.iam.gserviceaccount.com",
+      "jsonKeyDirectoryPath" : "test-runner/src/main/resources/rendered",
+      "jsonKeyFilename" : "testrunner-sa.json"
+    },
+    "testRunnerK8SServiceAccountFile" : null,
+    "testRunnerK8SServiceAccount" : null,
+    "deploymentScript" : {
+      "name" : "",
+      "scriptClass" : null,
+      "parameters" : [ "{}" ]
+    },
+    "skipKubernetes" : true,
+    "skipDeployment" : true,
+    "versionScripts" : null
+  },
+  "kubernetes" : {
+    "numberOfInitialPods" : null
+  },
+  "application" : {
+    "maxStairwayThreads" : 20,
+    "maxBulkFileLoad" : 1000000,
+    "maxBulkFileLoadArray" : 1000000,
+    "loadConcurrentFiles" : 80,
+    "loadConcurrentIngests" : 2,
+    "loadDriverWaitSeconds" : 1,
+    "loadHistoryCopyChunkSize" : 1000,
+    "loadHistoryWaitSeconds" : 2
+  },
+  "testScripts" : [ {
+    "name" : "GetProxyGroup",
+    "numberOfUserJourneyThreadsToRun" : 10,
+    "userJourneyThreadPoolSize" : 2,
+    "expectedTimeForEach" : 5,
+    "expectedTimeForEachUnit" : "SECONDS",
+    "expectedTimeForEachUnitObj" : "SECONDS",
+    "description" : "GetProxyGroup",
+    "parameters" : [ "{}" ]
+  } ],
+  "testUsers" : [ {
+    "name" : "Harry Potter",
+    "userEmail" : "harry.potter@quality.firecloud.org",
+    "delegatorServiceAccountFile" : "firecloud-qa.json",
+    "delegatorServiceAccount" : {
+      "name" : "firecloud-qa@broad-dsde-qa.iam.gserviceaccount.com",
+      "jsonKeyDirectoryPath" : "test-runner/src/main/resources/rendered",
+      "jsonKeyFilename" : "firecloud-qa.json"
+    }
+  } ],
+  "disruptiveScript" : null
+}
+19:13:16.875 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Deployment: Skipping deployment
+19:13:16.875 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Kubernetes: Skipping Kubernetes configuration post-deployment
+19:13:16.875 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Version: Skipping version determination
+19:13:16.876 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Test Scripts: Fetching instance of each class, setting billing account and parameters
+19:13:16.876 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Test Scripts: Calling the setup methods
+19:13:16.876 [sbt-bg-threads-1] INFO scripts.testscripts.GetProxyGroup - setup
+19:13:16.876 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Test Scripts: Creating a thread pool for each TestScript and kicking off the user journeys
+19:13:16.877 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Test Scripts: Waiting until all threads either finish or time out
+19:13:17.564 [pool-9-thread-1] INFO scripts.client.SamClient - Access token=***qZw0214
+19:13:17.564 [pool-9-thread-2] INFO scripts.client.SamClient - Access token=***ydw0214
+19:13:18.014 [pool-9-thread-1] INFO scripts.testscripts.GetProxyGroup - User=harry.potter@quality.firecloud.org
+19:13:18.014 [pool-9-thread-1] INFO scripts.testscripts.GetProxyGroup - Proxy Group=eb6fPROXY_2658347593447d41f898b@quality.firecloud.org
+19:13:18.014 [pool-9-thread-2] INFO scripts.testscripts.GetProxyGroup - User=harry.potter@quality.firecloud.org
+19:13:18.014 [pool-9-thread-2] INFO scripts.testscripts.GetProxyGroup - Proxy Group=eb6fPROXY_2658347593447d41f898b@quality.firecloud.org
+19:13:18.148 [pool-9-thread-1] INFO scripts.client.SamClient - Access token=***SUQ0214
+19:13:18.231 [pool-9-thread-2] INFO scripts.client.SamClient - Access token=***pUQ0214
+19:13:18.522 [pool-9-thread-1] INFO scripts.testscripts.GetProxyGroup - User=harry.potter@quality.firecloud.org
+19:13:18.522 [pool-9-thread-1] INFO scripts.testscripts.GetProxyGroup - Proxy Group=eb6fPROXY_2658347593447d41f898b@quality.firecloud.org
+19:13:18.614 [pool-9-thread-2] INFO scripts.testscripts.GetProxyGroup - User=harry.potter@quality.firecloud.org
+19:13:18.615 [pool-9-thread-2] INFO scripts.testscripts.GetProxyGroup - Proxy Group=eb6fPROXY_2658347593447d41f898b@quality.firecloud.org
+19:13:18.637 [pool-9-thread-1] INFO scripts.client.SamClient - Access token=***BUQ0214
+19:13:18.713 [pool-9-thread-2] INFO scripts.client.SamClient - Access token=***QUQ0214
+19:13:19.013 [pool-9-thread-1] INFO scripts.testscripts.GetProxyGroup - User=harry.potter@quality.firecloud.org
+19:13:19.013 [pool-9-thread-1] INFO scripts.testscripts.GetProxyGroup - Proxy Group=eb6fPROXY_2658347593447d41f898b@quality.firecloud.org
+19:13:19.092 [pool-9-thread-2] INFO scripts.testscripts.GetProxyGroup - User=harry.potter@quality.firecloud.org
+19:13:19.092 [pool-9-thread-2] INFO scripts.testscripts.GetProxyGroup - Proxy Group=eb6fPROXY_2658347593447d41f898b@quality.firecloud.org
+19:13:19.133 [pool-9-thread-1] INFO scripts.client.SamClient - Access token=***4UQ0214
+19:13:19.240 [pool-9-thread-2] INFO scripts.client.SamClient - Access token=***xdw0214
+19:13:19.497 [pool-9-thread-1] INFO scripts.testscripts.GetProxyGroup - User=harry.potter@quality.firecloud.org
+19:13:19.497 [pool-9-thread-1] INFO scripts.testscripts.GetProxyGroup - Proxy Group=eb6fPROXY_2658347593447d41f898b@quality.firecloud.org
+19:13:19.611 [pool-9-thread-2] INFO scripts.testscripts.GetProxyGroup - User=harry.potter@quality.firecloud.org
+19:13:19.612 [pool-9-thread-2] INFO scripts.testscripts.GetProxyGroup - Proxy Group=eb6fPROXY_2658347593447d41f898b@quality.firecloud.org
+19:13:19.617 [pool-9-thread-1] INFO scripts.client.SamClient - Access token=***aZw0214
+19:13:19.743 [pool-9-thread-2] INFO scripts.client.SamClient - Access token=***XZw0214
+19:13:19.996 [pool-9-thread-1] INFO scripts.testscripts.GetProxyGroup - User=harry.potter@quality.firecloud.org
+19:13:19.997 [pool-9-thread-1] INFO scripts.testscripts.GetProxyGroup - Proxy Group=eb6fPROXY_2658347593447d41f898b@quality.firecloud.org
+19:13:20.110 [pool-9-thread-2] INFO scripts.testscripts.GetProxyGroup - User=harry.potter@quality.firecloud.org
+19:13:20.110 [pool-9-thread-2] INFO scripts.testscripts.GetProxyGroup - Proxy Group=eb6fPROXY_2658347593447d41f898b@quality.firecloud.org
+19:13:20.110 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Test Scripts: Compiling the results from all thread pools
+19:13:20.135 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Test Scripts: Calling the cleanup methods
+19:13:20.136 [sbt-bg-threads-1] INFO scripts.testscripts.GetProxyGroup - cleanup
+19:13:20.136 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Deployment: Skipping deployment teardown
+19:13:20.136 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - ==== TEST RUN RESULTS (1) GetProxyGroup ====
+19:13:20.141 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - {
+  "id" : "d565641a-4432-4ee8-8897-9257f268876d",
+  "startTime" : 1658790796875,
+  "startUserJourneyTime" : 1658790796876,
+  "endUserJourneyTime" : 1658790800110,
+  "endTime" : 1658790800136,
+  "testScriptResultSummaries" : [ {
+    "testScriptName" : "GetProxyGroup",
+    "testScriptDescription" : "GetProxyGroup",
+    "elapsedTimeStatistics" : {
+      "min" : 477.323829,
+      "max" : 1135.000024,
+      "mean" : 634.7685503,
+      "standardDeviation" : 265.78516604744215,
+      "median" : 503.89229750000004,
+      "percentile95" : 1135.000024,
+      "percentile99" : 1135.000024,
+      "sum" : 6347.685503
+    },
+    "totalRun" : 10,
+    "numCompleted" : 10,
+    "numExceptionsThrown" : 0,
+    "isFailure" : false
+  } ],
+  "startTimestamp" : "2022-07-25T23:13:16.0000875Z",
+  "startUserJourneyTimestamp" : "2022-07-25T23:13:16.0000876Z",
+  "endUserJourneyTimestamp" : "2022-07-25T23:13:20.0000110Z",
+  "endTimestamp" : "2022-07-25T23:13:20.0000136Z",
+  "testSuiteName" : "FullPerf",
+  "githubRunId" : null,
+  "githubRepository" : null,
+  "githubServerUrl" : null
+}
+19:13:20.142 [sbt-bg-threads-1] DEBUG bio.terra.testrunner.runner.TestRunner - outputDirectoryCreated /tmp/scala-testrunner/GetProxyGroup_d565641a-4432-4ee8-8897-9257f268876d: true
+19:13:20.142 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Test run results written to directory: /tmp/scala-testrunner/GetProxyGroup_d565641a-4432-4ee8-8897-9257f268876d
+19:13:20.156 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Rendered test configuration written to file: RENDERED_testConfiguration.json
+19:13:20.161 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - All user journey results written to file: RAWDATA_userJourneyResults.json
+19:13:20.162 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Test run summary written to file: SUMMARY_testRun.json
+19:13:20.172 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Test run full output written to file: FULL_testRunOutput.json
+19:13:20.173 [sbt-bg-threads-1] INFO bio.terra.testrunner.runner.TestRunner - Version script result written to file: ENV_versionResult.json
+PASSED test configurations
+GetProxyGroup
+
+FAILED test configurations
+
+[success] Total time: 13 s, completed Jul 25, 2022, 7:13:25 PM
+```
+
+We have just successfully refactored Scala test [SamApiSpec] (https://github.com/broadinstitute/sam/blob/develop/automation/src/test/scala/org/broadinstitute/dsde/workbench/sam/api/SamApiSpec.scala#L152-L180) using `Test Runner Framework`.
+
+You can now also refactor the previous `GetSamSystemStatus.scala` to use `SamClient`. Notice that we explicitly pass a `null` to `SamClient` since user authentication is not required.
+
+`test-runner/src/main/scala/scripts/testscripts/GetSamSystemStatus.scala`
+```scala
+package scripts.testscripts
+
+import bio.terra.testrunner.runner.TestScript
+import bio.terra.testrunner.runner.config.TestUserSpecification
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import org.broadinstitute.dsde.workbench.client.sam.api.StatusApi
+import org.slf4j.LoggerFactory
+import scripts.client.SamClient
+
+import java.lang.reflect.Type
+import java.util.HashMap
+import java.util.List
+
+class GetSamSystemStatus extends TestScript {
+  val logger = LoggerFactory.getLogger(classOf[GetSamSystemStatus])
+
+  var counter = ThreadLocal.withInitial[Int](() => 0)
+
+  @throws(classOf[Exception])
+  override def setup(testUsers: List[TestUserSpecification]): Unit = {
+    logger.info("setup")
+  }
+
+  @throws(classOf[Exception])
+  override def userJourney(testUser: TestUserSpecification): Unit = {
+    val client = new SamClient(server, null)
+    val api = new StatusApi(client)
+    counter.set(counter.get + 1)
+    if (counter.get <= 2) {
+      logger.info("Attempt={}", counter.get)
+      throw new Exception("Service hanged")
+    }
+    val status = api.getSystemStatus()
+    logger.info("systems: {}", status.getSystems())
+    val gson = new Gson()
+    val t : Type = new TypeToken[HashMap[String, HashMap[String, Boolean]]]() {}.getType()
+    val systems : HashMap[String, HashMap[String, Boolean]] = gson.fromJson(api.getSystemStatus().getSystems().toString(), t)
+
+    logger.info("Attempt={} {}", counter.get, if (status.getOk()) "passed" else "failed")
+    systems.forEach {
+      case(k, v) => {
+        v.get("ok") match {
+          case true => logger.info("System '{}' passed", k)
+          case false => logger.info("System '{}' failed", k)
+        }
+      }
+    }
+    counter.set(0)
+  }
+
+  @throws(classOf[Exception])
+  override def cleanup(testUsers: List[TestUserSpecification]): Unit = {
+    logger.info("cleanup")
+  }
+}
+```
 
 ### Summary
 
