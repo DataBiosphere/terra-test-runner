@@ -1482,7 +1482,7 @@ FAILED test configurations
 [success] Total time: 13 s, completed Jul 25, 2022, 7:13:25 PM
 ```
 
-We have just successfully ported Scala test [SamApiSpec] (https://github.com/broadinstitute/sam/blob/develop/automation/src/test/scala/org/broadinstitute/dsde/workbench/sam/api/SamApiSpec.scala#L152-L180) using `Test Runner Framework`.
+We have just successfully ported Scala test [SamApiSpec](https://github.com/broadinstitute/sam/blob/develop/automation/src/test/scala/org/broadinstitute/dsde/workbench/sam/api/SamApiSpec.scala#L152-L180) using `Test Runner Framework`.
 
 You can now also refactor the previous `GetSamSystemStatus.scala` to use `SamClient`. Notice that we explicitly pass a `null` to `SamClient` since user authentication is not required.
 
