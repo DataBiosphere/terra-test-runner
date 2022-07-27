@@ -26,7 +26,7 @@ The independent release test types and their definitions are still being activel
 
 # Developers Guide
 
-* [[Quick Start|Quick Start]]
+* [Quick Start](https://github.com/DataBiosphere/terra-test-runner/wiki/Quick-Start)
 
 
 

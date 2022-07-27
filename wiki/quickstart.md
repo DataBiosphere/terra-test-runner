@@ -1560,7 +1560,7 @@ The `Test Runner Framework` contains a `Gradle Plugin` implementation to provide
 
 | Task Name | Description | Gradle | Maven | Sbt |
 |-----------|-------------|--------|-------|-----|
-| PrintHelp | Output available task list to console | <pre>./gralew printHelp</pre> | <pre>mvn compile exec:java -Dexec.mainClass="bio.terra.testrunner.common.commands.PrintHelp"</pre> | <pre>sbt runMain bio.terra.testrunner.common.commands.PrintHelp</pre> |
+| PrintHelp | Output available task list to console | <pre>./gradlew printHelp</pre> | <pre>mvn compile exec:java -Dexec.mainClass="bio.terra.testrunner.common.commands.PrintHelp"</pre> | <pre>sbt runMain bio.terra.testrunner.common.commands.PrintHelp</pre> |
 | RunTest   | Launch Test Runner | <pre>./gradlew runTest --args="suites/FullIntegration.json /tmp" --scan</pre> | <pre>mvn compile exec:java -Dexec.mainClass="bio.terra.testrunner.common.commands.RunTest" -Dexec.args="suites/FullIntegration.json /tmp"</pre> | <pre>sbt runMain bio.terra.testrunner.common.commands.RunTest "suites/FullIntegration.json" "/tmp"</pre> |
 | UploadResults | Upload test results to GCS bucket | <pre>./gradlew uploadResults --args="CompressDirectoryToTerraKernelK8S.json /tmp" --scan</pre> | <pre>mvn compile exec:java -Dexec.mainClass="bio.terra.testrunner.common.commands.UploadResults" -Dexec.args="CompressDirectoryToTerraKernelK8S.json /tmp"</pre> | <pre>sbt runMain bio.terra.testrunner.common.commands.UploadResults "CompressDirectoryToTerraKernelK8S.json" "/tmp"</pre> |
 
