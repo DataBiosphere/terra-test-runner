@@ -3,7 +3,7 @@ package bio.terra.testrunner.runner;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 @SuppressFBWarnings(
     value = "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD",
