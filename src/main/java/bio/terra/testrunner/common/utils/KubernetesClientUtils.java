@@ -312,7 +312,7 @@ public final class KubernetesClientUtils {
     // Get the Terra Component Version ConfigMap for the namespace.
     V1ConfigMap config =
         getKubernetesClientCoreObject()
-            .readNamespacedConfigMap("terra-component-version", namespace, null, null, null);
+            .readNamespacedConfigMap("terra-component-version", namespace, null);
     Map<String, String> configMap = config.getData();
     return configMap.entrySet().stream()
         .collect(
@@ -382,11 +382,12 @@ public final class KubernetesClientUtils {
     if (namespace == null || namespace.isEmpty()) {
       list =
           getKubernetesClientCoreObject()
-              .listPodForAllNamespaces(null, null, null, null, null, null, null, null, null);
+              .listPodForAllNamespaces(null, null, null, null, null, null, null, null, null, null);
     } else {
       list =
           getKubernetesClientCoreObject()
-              .listNamespacedPod(namespace, null, null, null, null, null, null, null, null, null);
+              .listNamespacedPod(
+                  namespace, null, null, null, null, null, null, null, null, null, null);
     }
     return list.getItems();
   }
@@ -403,12 +404,13 @@ public final class KubernetesClientUtils {
     if (namespace == null || namespace.isEmpty()) {
       list =
           getKubernetesClientAppsObject()
-              .listDeploymentForAllNamespaces(null, null, null, null, null, null, null, null, null);
+              .listDeploymentForAllNamespaces(
+                  null, null, null, null, null, null, null, null, null, null);
     } else {
       list =
           getKubernetesClientAppsObject()
               .listNamespacedDeployment(
-                  namespace, null, null, null, null, null, null, null, null, null);
+                  namespace, null, null, null, null, null, null, null, null, null, null);
     }
     return list.getItems();
   }
@@ -470,7 +472,8 @@ public final class KubernetesClientUtils {
             deployment,
             null,
             null,
-            null);
+            null,
+            "Warn");
   }
 
   /** Select any pod from api pods and delete pod. */
