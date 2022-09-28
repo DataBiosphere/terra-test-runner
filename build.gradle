@@ -90,8 +90,6 @@ java {
     }
 }
 
-//compileJava.dependsOn spotlessApply
-
 apply from: "$rootDir/gradle/dependency-locking.gradle"
 apply from: "$rootDir/gradle/publishing.gradle"
 apply from: "$rootDir/gradle/spotbugs.gradle"

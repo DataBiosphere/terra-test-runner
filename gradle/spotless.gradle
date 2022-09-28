@@ -10,4 +10,4 @@ spotless {
         targetExclude("${buildDir}/**")
     }
 }
-build.dependsOn spotlessApply
+compileJava.dependsOn tasks.spotlessApply
