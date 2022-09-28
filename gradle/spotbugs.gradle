@@ -1,0 +1,10 @@
+// static analysis
+spotbugsMain {
+    reports {
+        html {
+            enabled = true
+            destination = file("$buildDir/reports/spotbugs/main.txt")
+            stylesheet = 'fancy.xsl'
+        }
+    }
+}
