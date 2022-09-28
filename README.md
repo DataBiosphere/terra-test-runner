@@ -40,8 +40,10 @@ Jump to sections below:
     * [Add a new measurement collection script](#Add-a-new-measurement-collection-script)
     * [Add a new measurement list](#Add-a-new-measurement-list)
 * [Development](#Development)
+    * [Requirements](#Requirements)
     * [Package structure](#Package-structure)
     * [Debug a test configuration or script](#Debug-a-test-configuration-or-script)
+    * [Dependencies](#Dependencies)
     * [Linters](#Linters)
     * [Publish to Artifactory](#Publish-to-Artifactory)
 * [Troubleshooting](#Troubleshooting)
@@ -735,6 +737,10 @@ available fields:
 
 ## Development
 
+#### Requirements
+
+Java 17
+
 #### Package structure
 
 All the Java code is in the src/main/java directory.
@@ -778,6 +784,17 @@ architecture related to streaming test results from `GCS` bucket to `BigQuery`.
   debug. Then change the method to call the constructor of the test script class
   you want to debug. Run the test script main method in debug mode.
 
+#### Dependencies 
+
+We use Gradle's [dependency locking](https://docs.gradle.org/current/userguide/dependency_locking.html)
+to ensure that builds use the same transitive dependencies, so they're reproducible. 
+This means that adding or updating a dependency requires telling Gradle to save the change. 
+If you're getting errors that mention "dependency lock state" after changing a dep, you need to do this step.
+
+```
+./gradlew dependencies --write-locks
+```
+
 #### Linters
 
 Run the linters before putting up a PR. The output of the spotbugs plugin is in
@@ -795,7 +812,7 @@ Vault token is either passed as the first argument to the script, or is stored
 at `$HOME/.vault-token`.
 
 ```
-./publish.sh
+./tools/publish.sh
 ```
 
 The library is published to the URL:

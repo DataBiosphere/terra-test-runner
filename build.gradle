@@ -2,19 +2,17 @@ plugins {
     id 'java'
     id 'idea'
     id 'java-gradle-plugin'
+    id 'java-library'
     id 'maven-publish'
-    id 'com.jfrog.artifactory' version '4.17.2'
-    id 'com.diffplug.spotless' version '5.5.1'
-    id 'com.github.spotbugs' version '4.0.0'
+
+    id 'com.jfrog.artifactory' version '4.28.2'
+    id 'com.github.spotbugs' version '5.0.12'
+    id 'com.diffplug.spotless' version '6.10.0'
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-
+// TODO(PF-1981) - Move version to settings.gradle
 group 'bio.terra'
-version '0.1.7-SNAPSHOT'
-
-def artifactory_username = System.getenv('ARTIFACTORY_USERNAME')
-def artifactory_password = System.getenv('ARTIFACTORY_PASSWORD')
+version '0.1.8-SNAPSHOT'
 
 gradlePlugin {
     plugins {
@@ -25,117 +23,83 @@ gradlePlugin {
     }
 }
 
+// If true, search local repository (~/.m2/repository/) first for dependencies.
+def useMavenLocal = false
 repositories {
-    jcenter()
+    if (useMavenLocal) {
+        mavenLocal() // must be listed first to take effect
+    }
     mavenCentral()
     google()
     maven {
         url 'https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot-local/'
-        credentials {
-            username = "${artifactory_username}"
-            password = "${artifactory_password}"
-        }
     }
 }
 
 dependencies {
+    // Common utils
+    implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+
+    // JSON processing
     ext {
-        apacheMath = '3.6.1'
-        apacheLang = '3.12.0'
-        findbugsAnnotations = "3.0.1"
-        jackson = '2.11.3'
-        kubernetesClient = '16.0.0'
-        logback = '1.2.3'
-        slf4j = '1.7.30'
-
-        googleCloud = '1.124.2'
-        googleLogging = '1.102.0'
-        googleMonitoring = '2.0.7'
-        googleOauth2 = '0.22.0'
-        googleStorage = '1.113.2'
-        googleContainer = "v1-rev93-1.25.0"
-
-        jgit = "5.13.0.202109080827-r"
+        jackson = '2.13.4'
     }
-
-    implementation group: 'org.apache.commons', name: 'commons-math3', version: "${apacheMath}"
-    implementation group: 'org.apache.commons', name: 'commons-lang3', version: "${apacheLang}"
-    compileOnly "com.google.code.findbugs:annotations:${findbugsAnnotations}"
     implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: "${jackson}"
     implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: "${jackson}"
-    implementation group: 'io.kubernetes', name: 'client-java', version: "${kubernetesClient}"
-    implementation group: 'ch.qos.logback', name: 'logback-classic', version: "${logback}"
-    implementation group: 'org.slf4j', name: 'slf4j-api', version: "${slf4j}"
 
-    implementation group: 'com.google.cloud', name: 'google-cloud-bigquery', version: "${googleCloud}"
-    implementation group: 'com.google.cloud', name: 'google-cloud-logging', version: "${googleLogging}"
-    implementation group: 'com.google.cloud', name: 'google-cloud-monitoring', version: "${googleMonitoring}"
-    implementation group: 'com.google.auth', name: 'google-auth-library-oauth2-http', version: "${googleOauth2}"
-    implementation group: 'com.google.cloud', name: 'google-cloud-storage', version: "${googleStorage}"
-    implementation group: 'com.google.apis', name: 'google-api-services-container', version: "${googleContainer}"
+    // Misc. Services
+    implementation group: 'io.kubernetes', name: 'client-java', version: '16.0.0'
+    implementation group: 'org.eclipse.jgit', name: 'org.eclipse.jgit', version: '6.3.0.202209071007-r'
+    implementation group: 'org.graalvm.compiler', name: 'compiler', version: '22.2.0'
 
-    implementation group: 'org.eclipse.jgit', name: 'org.eclipse.jgit', version: "${jgit}"
+    // Google dependencies
+    implementation platform('com.google.cloud:libraries-bom:26.0.0') // use common bom
+    implementation group: 'com.google.cloud', name: 'google-cloud-bigquery'
+    implementation group: 'com.google.cloud', name: 'google-cloud-logging'
+    implementation group: 'com.google.cloud', name: 'google-cloud-monitoring'
+    implementation group: 'com.google.auth', name: 'google-auth-library-oauth2-http'
+    implementation group: 'com.google.cloud', name: 'google-cloud-storage'
+    implementation group: 'com.google.apis', name: 'google-api-services-container', version: 'v1-rev93-1.25.0'
 
-    // Force transitive log4j version to at least 2.17.0 for security concerns.
+    // Logging
+    ext {
+        apacheLog = '2.18.0'
+    }
+    // Force transitive log4j version to at least 2.17.0 for security concerns
     implementation('org.apache.logging.log4j:log4j-api') {
         version {
-            require "2.17.0"
+            require "${apacheLog}"
         }
     }
     implementation('org.apache.logging.log4j:log4j-to-slf4j') {
         version {
-            require "2.17.0"
+            require "${apacheLog}"
         }
     }
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.4.1'
+
+    // Spotbugs
+    implementation group: 'com.github.spotbugs', name: 'spotbugs-annotations', version: '4.7.2'
 }
 
-test {
-    useJUnitPlatform()
-    testLogging {
-        events = ["passed", "failed", "skipped"]
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 
-spotless {
-    java {
-        googleJavaFormat()
+// for scans
+if (hasProperty('buildScan')) {
+    buildScan {
+        termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+        termsOfServiceAgree = 'yes'
     }
 }
 
-publishing {
-    publications {
-        testRunnerLibrary(MavenPublication) {
-            from components.java
-            versionMapping {
-                usage("java-runtime") {
-                    fromResolutionResult()
-                }
-            }
-        }
-    }
-}
-
-gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.hasTask(artifactoryPublish) &&
-            (artifactory_username == null || artifactory_password == null)) {
-        throw new GradleException("Set env vars ARTIFACTORY_USERNAME and ARTIFACTORY_PASSWORD to publish")
-    }
-}
-
-artifactory {
-    publish {
-        contextUrl = 'https://broadinstitute.jfrog.io/broadinstitute'
-        repository {
-            repoKey = 'libs-snapshot-local'
-            username = "${artifactory_username}"
-            password = "${artifactory_password}"
-        }
-        defaults {
-            publications('testRunnerLibrary')
-            publishArtifacts = true
-            publishPom = true
-        }
-    }
-}
-
-compileJava.dependsOn spotlessApply
+apply from: "$rootDir/gradle/dependency-locking.gradle"
+apply from: "$rootDir/gradle/publishing.gradle"
+apply from: "$rootDir/gradle/spotbugs.gradle"
+apply from: "$rootDir/gradle/spotless.gradle"
+apply from: "$rootDir/gradle/test.gradle"

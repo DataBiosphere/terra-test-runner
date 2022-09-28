@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 
 public final class KubernetesClientUtils {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesClientUtils.class);
+  private static final Random random = new Random();
 
   private static int maximumSecondsToWaitForReplicaSetSizeChange = 500;
   private static int secondsIntervalToPollReplicaSetSizeChange = 5;
@@ -495,7 +496,7 @@ public final class KubernetesClientUtils {
                 pod ->
                     deploymentComponentLabel.equals(
                         pod.getMetadata().getLabels().get(componentLabel)))
-            .skip(new Random().nextInt((int) podCount))
+            .skip(random.nextInt((int) podCount))
             .findFirst()
             .get()
             .getMetadata()

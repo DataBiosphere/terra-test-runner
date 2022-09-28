@@ -10,7 +10,9 @@ public final class GitRelease {
   private String gitDir;
   private Repository repository;
 
-  /** @param gitDir is the local .git directory where config is located */
+  /**
+   * @param gitDir is the local .git directory where config is located
+   */
   public GitRelease(String gitDir) {
     this.gitDir = gitDir;
   }
