@@ -1,9 +1,13 @@
 // static analysis
+spotbugs {
+    effort = 'max'
+    includeFilter = file("gradle/config/spotbugs/exclude.xml")
+}
 spotbugsMain {
     reports {
         html {
-            enabled = true
-            destination = file("$buildDir/reports/spotbugs/main.txt")
+            required = true
+            outputLocation = file("$buildDir/reports/spotbugs/main.html")
             stylesheet = 'fancy.xsl'
         }
     }

@@ -16,11 +16,10 @@ public final class AuthenticationUtils {
 
   // the list of scopes we request from end users when they log in. this should always match exactly
   // what the UI requests, so our tests represent actual user behavior
-  public static final List<String> userLoginScopes =
-      Collections.unmodifiableList(Arrays.asList("openid", "email", "profile"));
+  public static final List<String> userLoginScopes = List.of("openid", "email", "profile");
 
   public static final List<String> cloudPlatformScope =
-      Collections.unmodifiableList(Arrays.asList("https://www.googleapis.com/auth/cloud-platform"));
+      List.of("https://www.googleapis.com/auth/cloud-platform");
 
   /**
    * Build a domain-wide delegated user credential with the the specified scopes.
