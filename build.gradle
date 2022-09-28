@@ -2,19 +2,16 @@ plugins {
     id 'java'
     id 'idea'
     id 'java-gradle-plugin'
+    id 'java-library'
     id 'maven-publish'
-    id 'com.jfrog.artifactory' version '4.17.2'
-    id 'com.diffplug.spotless' version '5.5.1'
-    id 'com.github.spotbugs' version '4.0.0'
+
+    id 'com.jfrog.artifactory' version '4.28.2'
+    id 'com.diffplug.spotless' version '6.10.0'
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-
+// TODO(PF-1981) - Move version to settings.gradle
 group 'bio.terra'
 version '0.1.7-SNAPSHOT'
-
-def artifactory_username = System.getenv('ARTIFACTORY_USERNAME')
-def artifactory_password = System.getenv('ARTIFACTORY_PASSWORD')
 
 gradlePlugin {
     plugins {
@@ -25,16 +22,16 @@ gradlePlugin {
     }
 }
 
+// If true, search local repository (~/.m2/repository/) first for dependencies.
+def useMavenLocal = false
 repositories {
-    jcenter()
+    if (useMavenLocal) {
+        mavenLocal() // must be listed first to take effect
+    }
     mavenCentral()
     google()
     maven {
         url 'https://broadinstitute.jfrog.io/broadinstitute/libs-snapshot-local/'
-        credentials {
-            username = "${artifactory_username}"
-            password = "${artifactory_password}"
-        }
     }
 }
 
@@ -89,55 +86,14 @@ dependencies {
     }
 }
 
-test {
-    useJUnitPlatform()
-    testLogging {
-        events = ["passed", "failed", "skipped"]
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
     }
 }
 
-spotless {
-    java {
-        googleJavaFormat()
-    }
-}
-
-publishing {
-    publications {
-        testRunnerLibrary(MavenPublication) {
-            from components.java
-            versionMapping {
-                usage("java-runtime") {
-                    fromResolutionResult()
-                }
-            }
-        }
-    }
-}
-
-gradle.taskGraph.whenReady { taskGraph ->
-    if (taskGraph.hasTask(artifactoryPublish) &&
-            (artifactory_username == null || artifactory_password == null)) {
-        throw new GradleException("Set env vars ARTIFACTORY_USERNAME and ARTIFACTORY_PASSWORD to publish")
-    }
-}
-
-artifactory {
-    publish {
-        contextUrl = 'https://broadinstitute.jfrog.io/broadinstitute'
-        repository {
-            repoKey = 'libs-snapshot-local'
-            username = "${artifactory_username}"
-            password = "${artifactory_password}"
-        }
-        defaults {
-            publications('testRunnerLibrary')
-            publishArtifacts = true
-            publishPom = true
-        }
-    }
-}
-
-compileJava.dependsOn spotlessApply
+//compileJava.dependsOn spotlessApply
 
 apply from: "$rootDir/gradle/dependency-locking.gradle"
+apply from: "$rootDir/gradle/publishing.gradle"
+apply from: "$rootDir/gradle/spotless.gradle"

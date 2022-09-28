@@ -1,0 +1,13 @@
+// automatic code formatting
+spotless {
+    groovyGradle {
+        target "${rootDir}/**/*.gradle"
+        indentWithSpaces()
+    }
+    java {
+        googleJavaFormat()
+        removeUnusedImports()
+        targetExclude("${buildDir}/**")
+    }
+}
+build.dependsOn spotlessApply
