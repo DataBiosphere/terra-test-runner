@@ -139,3 +139,5 @@ artifactory {
 }
 
 compileJava.dependsOn spotlessApply
+
+apply from: "$rootDir/gradle/dependency-locking.gradle"
