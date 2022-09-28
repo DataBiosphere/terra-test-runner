@@ -812,7 +812,7 @@ Vault token is either passed as the first argument to the script, or is stored
 at `$HOME/.vault-token`.
 
 ```
-./publish.sh
+./tools/publish.sh
 ```
 
 The library is published to the URL:
