@@ -12,7 +12,7 @@ plugins {
 
 // TODO(PF-1981) - Move version to settings.gradle
 group 'bio.terra'
-version '0.1.7-SNAPSHOT'
+version '0.1.8-SNAPSHOT'
 
 gradlePlugin {
     plugins {
