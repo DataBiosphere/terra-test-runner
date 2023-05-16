@@ -49,7 +49,7 @@ dependencies {
     implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: "${jackson}"
 
     // Misc. Services
-    implementation group: 'io.kubernetes', name: 'client-java', version: '16.0.0'
+    implementation group: 'io.kubernetes', name: 'client-java', version: '18.0.0'
     implementation group: 'org.eclipse.jgit', name: 'org.eclipse.jgit', version: '6.3.0.202209071007-r'
     implementation group: 'org.graalvm.compiler', name: 'compiler', version: '22.2.0'
 
