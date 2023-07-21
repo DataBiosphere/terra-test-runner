@@ -58,7 +58,7 @@ public class TestRunnerPlugin implements Plugin<Project> {
 
     // create the tasks
     logger.debug("Adding the TestRunner tasks to {}", project.getName());
-    Class[] commandClasses = {
+    Class<?>[] commandClasses = {
       CollectMeasurements.class,
       LockAndRunTest.class,
       LockNamespace.class,
@@ -68,10 +68,10 @@ public class TestRunnerPlugin implements Plugin<Project> {
       UploadResults.class
     };
     TaskContainer taskContainer = project.getTasks();
-    for (Class commandClass : commandClasses) {
-      taskContainer
-          .create(commandClass.getSimpleName(), TestRunnerTask.class)
-          .setMain(commandClass.getCanonicalName());
+    for (Class<?> commandClass : commandClasses) {
+      TestRunnerTask task =
+          taskContainer.create(commandClass.getSimpleName(), TestRunnerTask.class);
+      task.getMainClass().set(commandClass.getCanonicalName());
     }
 
     // set the classpath of all tasks to sourceSets.main.runtimeClasspath
