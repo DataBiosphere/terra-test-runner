@@ -839,7 +839,7 @@ dependencies {
 }
 ```
 
-Now you can build and run your project with the new version of the plugin.
+Now you can build your project with the new version of the plugin.
 
 
 #### Publish to Artifactory
