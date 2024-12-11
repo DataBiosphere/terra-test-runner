@@ -12,7 +12,7 @@ plugins {
 
 // TODO(PF-1981) - Move version to settings.gradle
 group 'bio.terra'
-version '0.2.0-SNAPSHOT'
+version '0.2.1-SNAPSHOT'
 
 gradlePlugin {
     plugins {
@@ -43,18 +43,18 @@ dependencies {
 
     // JSON processing
     ext {
-        jackson = '2.13.4'
+        jackson = '2.14.0'
     }
     implementation group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: "${jackson}"
     implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: "${jackson}"
 
     // Misc. Services
-    implementation group: 'io.kubernetes', name: 'client-java', version: '18.0.0'
-    implementation group: 'org.eclipse.jgit', name: 'org.eclipse.jgit', version: '6.3.0.202209071007-r'
+    implementation group: 'io.kubernetes', name: 'client-java', version: '22.0.0'
+    implementation group: 'org.eclipse.jgit', name: 'org.eclipse.jgit', version: '6.7.0.202309050840-r'
     implementation group: 'org.graalvm.compiler', name: 'compiler', version: '22.2.0'
 
     // Google dependencies
-    implementation platform('com.google.cloud:libraries-bom:26.0.0') // use common bom
+    implementation platform('com.google.cloud:libraries-bom:26.51.0') // use common bom
     implementation group: 'com.google.cloud', name: 'google-cloud-bigquery'
     implementation group: 'com.google.cloud', name: 'google-cloud-logging'
     implementation group: 'com.google.cloud', name: 'google-cloud-monitoring'
@@ -78,7 +78,7 @@ dependencies {
         }
     }
     implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
-    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.4.1'
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.5.12'
 
     // Spotbugs
     implementation group: 'com.github.spotbugs', name: 'spotbugs-annotations', version: '4.7.2'
