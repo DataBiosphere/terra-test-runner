@@ -12,7 +12,7 @@ plugins {
 
 // TODO(PF-1981) - Move version to settings.gradle
 group 'bio.terra'
-version '0.2.0-SNAPSHOT'
+version '0.2.1-SNAPSHOT'
 
 gradlePlugin {
     plugins {
@@ -54,7 +54,7 @@ dependencies {
     implementation group: 'org.graalvm.compiler', name: 'compiler', version: '22.2.0'
 
     // Google dependencies
-    implementation platform('com.google.cloud:libraries-bom:26.0.0') // use common bom
+    implementation platform('com.google.cloud:libraries-bom:26.51.0') // use common bom
     implementation group: 'com.google.cloud', name: 'google-cloud-bigquery'
     implementation group: 'com.google.cloud', name: 'google-cloud-logging'
     implementation group: 'com.google.cloud', name: 'google-cloud-monitoring'
