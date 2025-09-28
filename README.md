@@ -845,14 +845,13 @@ Now you can build your project with the new version of the plugin.
 #### Publish to Artifactory
 
 Publish the Test Runner library after making changes, once your PR is merged up.
-The script assumes a valid Vault token is either passed as the first argument
-to the script, or is stored at `$HOME/.vault-token`.
 
 ```
 ./tools/publish.sh
 ```
 
 The library is published to the URL:
+> **TODO:** update this link for GAR
 https://broadinstitute.jfrog.io/artifactory/libs-snapshot-local/bio/terra/terra-test-runner
 
 ## Troubleshooting

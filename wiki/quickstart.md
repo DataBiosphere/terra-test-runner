@@ -103,6 +103,7 @@ export ARTIFACTORY_PASSWORD=$(docker run -e VAULT_TOKEN=$VAULT_TOKEN ${DSDE_TOOL
 
 If you are starting out with a brand new `Scala` project, then you need the following code in `build.sbt` to be able to use `Test Runner Framework`. It is up to you to place some of these code in common project settings (see [https://github.com/broadinstitute/sam/blob/develop/project/Settings.scala](https://github.com/broadinstitute/sam/blob/develop/project/Settings.scala)). Once you save changes to `build.sbt`, reload the project as described in [here](#sbt-reload).
 
+> **TODO:** update the steps below for GAR
 ```scala
 val artifactory_username = sys.env.get("ARTIFACTORY_USERNAME").getOrElse("")
 val artifactory_password = sys.env.get("ARTIFACTORY_PASSWORD").getOrElse("")
