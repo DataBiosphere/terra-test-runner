@@ -1,3 +1,5 @@
+> **TODO:** Update instructions and ensure the guidance for integrating `test-runner` is correct and up to date.
+
 The `Test Runner Framework` can be installed through dependency declaration for the following build tools. Throughout this Wiki,  `IntelliJ` IDE has been used to demonstrate the steps of creating and launching test classes. These steps will work for any compatible IDE.
 
 * [Gradle](#gradle)
@@ -34,8 +36,6 @@ The following Java projects integrate `Test Runner Framework` using `Gradle` bui
 # Sbt
 
 ### <a name="sbt-overview"></a>Overview
-
-> **TODO:** Update instructions and ensure the guidance for integrating `test-runner` is correct and up to date.
 
 In this section, we will show you how to integrate `Test Runner Framework` with the [`Sam` service repository](https://github.com/broadinstitute/sam) to run tests against `BEE`. The `Sam` service repo is structured as a `Scala` project.
 
@@ -105,7 +105,6 @@ export ARTIFACTORY_PASSWORD=$(docker run -e VAULT_TOKEN=$VAULT_TOKEN ${DSDE_TOOL
 
 If you are starting out with a brand new `Scala` project, then you need the following code in `build.sbt` to be able to use `Test Runner Framework`. It is up to you to place some of these code in common project settings (see [https://github.com/broadinstitute/sam/blob/develop/project/Settings.scala](https://github.com/broadinstitute/sam/blob/develop/project/Settings.scala)). Once you save changes to `build.sbt`, reload the project as described in [here](#sbt-reload).
 
-> **TODO:** update the steps below for GAR
 ```scala
 val artifactory_username = sys.env.get("ARTIFACTORY_USERNAME").getOrElse("")
 val artifactory_password = sys.env.get("ARTIFACTORY_PASSWORD").getOrElse("")
