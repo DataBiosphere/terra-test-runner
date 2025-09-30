@@ -39,7 +39,7 @@ The following Java projects integrate `Test Runner Framework` using `Gradle` bui
 
 In this section, we will show you how to integrate `Test Runner Framework` with the [`Sam` service repository](https://github.com/broadinstitute/sam) to run tests against `BEE`. The `Sam` service repo is structured as a `Scala` project.
 
-The build workflow [https://github.com/broadinstitute/sam/blob/develop/.github/workflows/build.yml](https://github.com/broadinstitute/sam/blob/develop/.github/workflows/build.yml) is triggered by a pull request and a new version of `Sam` client is published to `Google Artifact Registry` through the `generateAndPublishClient` job. For example, `0.1-bf9c033-SNAP` below is just a version tag published on `07-20-2022`.
+The build workflow [https://github.com/broadinstitute/sam/blob/develop/.github/workflows/build.yml](https://github.com/broadinstitute/sam/blob/develop/.github/workflows/build.yml) is triggered by a pull request and a new version of `Sam` client is published to `Artifactory` through the `generateAndPublishClient` job. For example, `0.1-bf9c033-SNAP` below is just a version tag published on `07-20-2022`.
 
 * [https://broadinstitute.jfrog.io/artifactory/libs-release-local/org/broadinstitute/dsde/workbench/sam-client_2.13/0.1-bf9c033-SNAP/](https://broadinstitute.jfrog.io/artifactory/libs-release-local/org/broadinstitute/dsde/workbench/sam-client_2.13/0.1-bf9c033-SNAP/)
 
