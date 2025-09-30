@@ -851,8 +851,7 @@ Publish the Test Runner library after making changes, once your PR is merged up.
 ```
 
 The library is published to the URL:
-> **TODO:** update this link for GAR
-https://broadinstitute.jfrog.io/artifactory/libs-snapshot-local/bio/terra/terra-test-runner
+https://console.cloud.google.com/artifacts/maven/dsp-artifact-registry/us-central1/libs-snapshot-standard/bio.terra:terra-test-runner?project=dsp-artifact-registry
 
 ## Troubleshooting
 
